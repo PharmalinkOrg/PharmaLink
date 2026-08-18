@@ -1,0 +1,80 @@
+.superadmin-layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 256px 1fr;
+}
+
+.sidebar {
+  padding: 24px 16px;
+  background: #1e293b;
+  color: #ffffff;
+}
+
+.brand {
+  margin: 0 0 32px;
+  font-size: 1.25rem;
+}
+
+.brand span {
+  display: block;
+  margin-top: 4px;
+  color: #b7c7e2;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sidebar nav {
+  display: grid;
+  gap: 4px;
+}
+
+.sidebar a {
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #dbe7fb;
+  text-decoration: none;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+  background: #334a6e;
+  color: #ffffff;
+}
+
+.main-content {
+  padding: 40px;
+}
+
+.page-title {
+  margin: 0;
+  color: #1e293b;
+  font-size: 2rem;
+}
+
+.page-copy {
+  color: #617086;
+}
+
+@media (max-width: 760px) {
+  .superadmin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    padding: 16px;
+  }
+
+  .brand {
+    margin-bottom: 16px;
+  }
+
+  .sidebar nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .main-content {
+    padding: 24px;
+  }
+}

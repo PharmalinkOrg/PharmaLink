@@ -1,6 +1,5 @@
 const requireRole = (...allowedRoles) => {
   return (req, res, next) => {
-    // userMiddleware must run first
     if (!req.pharmaUser) {
       return res.status(401).json({
         success: false,

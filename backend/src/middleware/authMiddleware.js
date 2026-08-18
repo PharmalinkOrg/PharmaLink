@@ -4,7 +4,6 @@ const authenticateUser = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization
 
-    // Check if Authorization header exists
     if (!authHeader) {
       return res.status(401).json({
         success: false,
@@ -12,7 +11,6 @@ const authenticateUser = async (req, res, next) => {
       })
     }
 
-    // Check Bearer token format
     if (!authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
@@ -29,7 +27,6 @@ const authenticateUser = async (req, res, next) => {
       })
     }
 
-    // Verify the token with Supabase Auth
     const {
       data: { user },
       error,
@@ -42,7 +39,6 @@ const authenticateUser = async (req, res, next) => {
       })
     }
 
-    // Make authenticated Supabase user available to controllers
     req.authUser = user
 
     next()

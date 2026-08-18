@@ -1,8 +1,7 @@
-const supabase = require('../config/supabase')
+const supabaseAdmin = require('../config/supabaseAdmin')
 
 const loadPharmaUser = async (req, res, next) => {
   try {
-    // authMiddleware must run first
     if (!req.authUser) {
       return res.status(401).json({
         success: false,
@@ -11,16 +10,15 @@ const loadPharmaUser = async (req, res, next) => {
     }
 
     const email = req.authUser.email
-    
+
     if (!email) {
       return res.status(401).json({
         success: false,
         message: 'Authenticated user email not found',
       })
     }
-    console.log('Looking up PharmaLink user with email:', email)
-    // Find the corresponding PharmaLink user
-    const { data: pharmaUser, error } = await supabase
+
+    const { data: pharmaUser, error } = await supabaseAdmin
       .from('users')
       .select(`
         user_id,
@@ -54,7 +52,6 @@ const loadPharmaUser = async (req, res, next) => {
       })
     }
 
-    // Only ACTIVE PharmaLink accounts can access the system
     if (pharmaUser.status !== 'ACTIVE') {
       return res.status(403).json({
         success: false,
@@ -62,7 +59,6 @@ const loadPharmaUser = async (req, res, next) => {
       })
     }
 
-    // Make the application user available to controllers
     req.pharmaUser = pharmaUser
 
     next()

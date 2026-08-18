@@ -1,18 +1,18 @@
-const supabase = require('../config/supabase')
+const supabaseAdmin = require('../config/supabaseAdmin')
 
 // GET inventory for a specific pharmacy
 const getPharmacyInventory = async (req, res) => {
   try {
     const pharmacyId = Number(req.params.pharmacyId)
 
-    if (!pharmacyId) {
+    if (!Number.isInteger(pharmacyId) || pharmacyId <= 0) {
       return res.status(400).json({
         success: false,
         message: 'Invalid pharmacy ID',
       })
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('inventory')
       .select(`
         inventory_id,
