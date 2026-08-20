@@ -1,12 +1,14 @@
 import { Route, Routes } from 'react-router-dom'
 import AdminLayout from '../components/layout/AdminLayout'
+import ProtectedRoute from '../components/auth/ProtectedRoute'
 import DashboardPage from '../pages/DashboardPage'
+import InventoryPage from '../pages/InventoryPage'
+import LoginPage from '../pages/LoginPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import PlaceholderPage from '../pages/PlaceholderPage'
 
 const placeholderPages = [
   ['medicines', 'Medicines'],
-  ['inventory', 'Inventory'],
   ['prescriptions', 'Prescriptions'],
   ['reservations', 'Reservations'],
   ['medicine-requests', 'Medicine Requests'],
@@ -19,12 +21,16 @@ const placeholderPages = [
 function AppRoutes() {
   return (
     <Routes>
-      <Route element={<AdminLayout />}>
-        <Route index element={<DashboardPage />} />
-        {placeholderPages.map(([path, title]) => (
-          <Route key={path} path={path} element={<PlaceholderPage title={title} />} />
-        ))}
-        <Route path="*" element={<NotFoundPage />} />
+      <Route path="login" element={<LoginPage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AdminLayout />}>
+          <Route index element={<DashboardPage />} />
+          <Route path="inventory" element={<InventoryPage />} />
+          {placeholderPages.map(([path, title]) => (
+            <Route key={path} path={path} element={<PlaceholderPage title={title} />} />
+          ))}
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
       </Route>
     </Routes>
   )

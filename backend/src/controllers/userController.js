@@ -1,4 +1,86 @@
 const supabase = require('../config/supabase')
+const supabaseAdmin = require('../config/supabaseAdmin')
+
+const getCurrentUserProfile = (req, res) => {
+  return res.status(200).json({
+    success: true,
+    data: req.pharmaUser,
+  })
+}
+
+const updateCurrentUserProfile = async (req, res) => {
+  try {
+    const { first_name, last_name, phone } = req.body
+
+    if (!first_name || first_name.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: 'First name is required',
+      })
+    }
+
+    if (!last_name || last_name.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: 'Last name is required',
+      })
+    }
+
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update({
+        first_name: first_name.trim(),
+        last_name: last_name.trim(),
+        phone: phone?.trim() || null,
+      })
+      .eq('user_id', req.pharmaUser.user_id)
+
+    if (error) {
+      console.error('PharmaLink profile update error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        userId: req.pharmaUser.user_id,
+      })
+
+      return res.status(500).json({
+        success: false,
+        message: `Failed to update profile: ${error.message}`,
+      })
+    }
+
+    const { data: user, error: readError } = await supabaseAdmin
+      .from('users')
+      .select(
+        'user_id, pharmacy_id, role, first_name, last_name, email, phone, status, created_at, updated_at, last_login_at'
+      )
+      .eq('user_id', req.pharmaUser.user_id)
+      .single()
+
+    if (readError || !user) {
+      console.error('PharmaLink profile read-back error:', readError)
+
+      return res.status(500).json({
+        success: false,
+        message: 'Profile was saved but could not be reloaded',
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: user,
+    })
+  } catch (error) {
+    console.error('Update profile error:', error)
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+    })
+  }
+}
 
 const createPharmacyAdmin = async (req, res) => {
   try {
@@ -116,7 +198,7 @@ const createPharmacyAdmin = async (req, res) => {
       })
     }
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Pharmacy admin created successfully',
       data: user,
@@ -124,7 +206,45 @@ const createPharmacyAdmin = async (req, res) => {
   } catch (error) {
     console.error('Create pharmacy admin error:', error)
 
-    res.status(500).json({
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+    })
+  }
+}
+
+const getSuperAdminUsers = async (req, res) => {
+  try {
+    const { data: users, error } = await supabaseAdmin
+      .from('users')
+      .select(
+        'user_id, pharmacy_id, role, first_name, last_name, email, phone, status, created_at, updated_at, last_login_at'
+      )
+      .in('role', ['PHARMACY_ADMIN', 'CUSTOMER'])
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Get Super Admin users error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      })
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to fetch users',
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: users || [],
+    })
+  } catch (error) {
+    console.error('Get Super Admin users server error:', error)
+
+    return res.status(500).json({
       success: false,
       message: 'Server error',
     })
@@ -132,5 +252,8 @@ const createPharmacyAdmin = async (req, res) => {
 }
 
 module.exports = {
+  getCurrentUserProfile,
   createPharmacyAdmin,
+  updateCurrentUserProfile,
+  getSuperAdminUsers,
 }

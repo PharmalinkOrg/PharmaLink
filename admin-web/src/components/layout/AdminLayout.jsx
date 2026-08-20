@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { useAuth } from '../auth/useAuth'
 import '../../App.css'
 
 const navigation = [
@@ -15,6 +16,8 @@ const navigation = [
 ]
 
 function AdminLayout() {
+  const { user, signOut } = useAuth()
+
   return (
     <div className="admin-layout">
       <aside className="sidebar">
@@ -29,6 +32,10 @@ function AdminLayout() {
             </NavLink>
           ))}
         </nav>
+        <div className="sidebar-account">
+          <span>{user.first_name} {user.last_name}</span>
+          <button type="button" onClick={signOut}>Sign out</button>
+        </div>
       </aside>
       <main className="main-content">
         <Outlet />

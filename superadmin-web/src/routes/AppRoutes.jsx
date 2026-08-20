@@ -1,14 +1,15 @@
 import { Route, Routes } from 'react-router-dom'
 import SuperAdminLayout from '../components/layout/SuperAdminLayout'
 import DashboardPage from '../pages/DashboardPage'
+import LoginPage from '../pages/LoginPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import PlaceholderPage from '../pages/PlaceholderPage'
+import UsersPage from '../pages/UsersPage'
 
 const placeholderPages = [
   ['pharmacies', 'Pharmacies'],
   ['pharmacy-admins', 'Pharmacy Admins'],
   ['customers', 'Customers'],
-  ['users', 'Users'],
   ['reports', 'Reports'],
   ['audit-logs', 'Audit Logs'],
   ['notifications', 'Notifications'],
@@ -18,11 +19,21 @@ const placeholderPages = [
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/login" element={<LoginPage />} />
+
       <Route element={<SuperAdminLayout />}>
         <Route index element={<DashboardPage />} />
+
         {placeholderPages.map(([path, title]) => (
-          <Route key={path} path={path} element={<PlaceholderPage title={title} />} />
+          <Route
+            key={path}
+            path={path}
+            element={<PlaceholderPage title={title} />}
+          />
         ))}
+
+        <Route path="users" element={<UsersPage />} />
+
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

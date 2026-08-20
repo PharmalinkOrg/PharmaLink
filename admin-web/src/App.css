@@ -57,6 +57,215 @@
   color: #5f6c68;
 }
 
+.sidebar-account {
+  display: grid;
+  gap: 8px;
+  margin-top: 28px;
+  padding: 14px 12px;
+  border-top: 1px solid #3c7468;
+  color: #dce9e5;
+  font-size: 0.85rem;
+}
+
+.sidebar-account button,
+.secondary-button,
+.table-actions button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.sidebar-account button {
+  padding: 0;
+  color: #b7d4cc;
+}
+
+.login-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background: #edf5f2;
+}
+
+.login-card,
+.inventory-form,
+.inventory-table-wrap {
+  background: #ffffff;
+  border: 1px solid #dce8e3;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(22, 61, 51, 0.07);
+}
+
+.login-card {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 410px);
+  padding: 32px;
+}
+
+.login-card h1,
+.login-card p,
+.login-card label,
+.inventory-form h3,
+.inventory-form label {
+  margin: 0;
+}
+
+.eyebrow {
+  color: #17634f;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.login-card label,
+.inventory-form label {
+  display: grid;
+  gap: 6px;
+  color: #40534d;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.login-card input,
+.inventory-form input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #b8cbc4;
+  border-radius: 8px;
+  color: #1f2933;
+  background: #ffffff;
+}
+
+.primary-button,
+.secondary-button {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.primary-button {
+  border: 0;
+  background: #17634f;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.primary-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.secondary-button {
+  border: 1px solid #b8cbc4;
+  color: #17634f;
+}
+
+.form-error,
+.form-notice {
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.form-error {
+  color: #9f1239;
+  background: #fff1f2;
+}
+
+.form-notice {
+  color: #166534;
+  background: #f0fdf4;
+}
+
+.inventory-page {
+  max-width: 1280px;
+}
+
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.inventory-form {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.inventory-form h3 {
+  color: #18332d;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-actions,
+.table-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.inventory-table-wrap {
+  overflow-x: auto;
+}
+
+.inventory-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.inventory-table th,
+.inventory-table td {
+  padding: 14px;
+  border-bottom: 1px solid #e5ece9;
+  font-size: 0.9rem;
+}
+
+.inventory-table th {
+  color: #527168;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.table-actions button:first-child {
+  color: #17634f;
+}
+
+.table-actions button:last-child {
+  color: #b42318;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.status-pill.available { color: #166534; background: #dcfce7; }
+.status-pill.low_stock { color: #9a3412; background: #ffedd5; }
+.status-pill.out_of_stock { color: #9f1239; background: #ffe4e6; }
+
 @media (max-width: 760px) {
   .admin-layout {
     grid-template-columns: 1fr;
@@ -76,5 +285,9 @@
 
   .main-content {
     padding: 24px;
+  }
+
+  .inventory-grid {
+    grid-template-columns: 1fr;
   }
 }
