@@ -460,7 +460,136 @@ const getCustomerReservations = async (req, res) => {
   }
 }
 
+/**
+ * Get a single reservation for the authenticated customer
+ * GET /api/reservations/:reservationId
+ */
+const getReservationById = async (req, res) => {
+  try {
+    // Customer ID comes from the authenticated PharmaLink user.
+    const customerId = req.pharmaUser?.user_id
+
+    if (!customerId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authenticated customer not found',
+      })
+    }
+
+    const reservationId = Number(req.params.reservationId)
+
+    // --------------------------------------------------
+    // Validate reservation ID
+    // --------------------------------------------------
+    if (!Number.isInteger(reservationId) || reservationId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid reservation ID is required',
+      })
+    }
+
+    // --------------------------------------------------
+    // Get reservation
+    // --------------------------------------------------
+    const {
+      data: reservation,
+      error,
+    } = await supabaseAdmin
+      .from('reservations')
+      .select(`
+        reservation_id,
+        customer_id,
+        pharmacy_id,
+        prescription_id,
+        reservation_date,
+        pickup_date,
+        pickup_time,
+        status,
+        notes,
+        confirmed_by,
+        confirmed_at,
+        completed_at,
+        created_at,
+        updated_at,
+
+        pharmacies (
+          pharmacy_id,
+          name,
+          address,
+          status
+        ),
+
+        reservation_items (
+          reservation_item_id,
+          reservation_id,
+          medicine_id,
+          quantity,
+          unit_price,
+          created_at,
+
+          medicines (
+            medicine_id,
+            generic_name,
+            brand_name,
+            dosage,
+            dosage_form,
+            requires_prescription,
+            status
+          )
+        )
+      `)
+      .eq('reservation_id', reservationId)
+      .eq('customer_id', customerId)
+      .maybeSingle()
+
+    // --------------------------------------------------
+    // Supabase error
+    // --------------------------------------------------
+    if (error) {
+      console.error(
+        'Get reservation by ID error:',
+        error
+      )
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to load reservation',
+      })
+    }
+
+    // --------------------------------------------------
+    // Reservation not found
+    // --------------------------------------------------
+    if (!reservation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Reservation not found',
+      })
+    }
+
+    // --------------------------------------------------
+    // Success
+    // --------------------------------------------------
+    return res.status(200).json({
+      success: true,
+      message: 'Reservation loaded successfully',
+      data: reservation,
+    })
+  } catch (error) {
+    console.error(
+      'Get reservation by ID server error:',
+      error
+    )
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+    })
+  }
+}
+
 module.exports = {
   createReservation,
   getCustomerReservations,
+  getReservationById,
 }

@@ -11,6 +11,8 @@ import PharmaciesPage from '../pages/PharmaciesPage'
 import PharmacyDetailsPage from '../pages/PharmacyDetailsPage'
 import ProfilePage from '../pages/ProfilePage'
 import ReservationsPage from '../pages/ReservationsPage'
+import MyReservationsPage from '../pages/MyReservationsPage'
+import ReservationDetailsPage from '../pages/ReservationDetailsPage'
 import PlaceholderPage from '../pages/PlaceholderPage'
 import NotFoundPage from '../pages/NotFoundPage'
 
@@ -53,10 +55,22 @@ function AppRoutes() {
           element={<MedicineDetailsPage />}
         />
 
-        {/* Reservations */}
+        {/* Create reservation */}
         <Route
           path="reservations"
           element={<ReservationsPage />}
+        />
+
+        {/* My reservations */}
+        <Route
+          path="my-reservations"
+          element={<MyReservationsPage />}
+        />
+
+        {/* Reservation details */}
+        <Route
+          path="my-reservations/:reservationId"
+          element={<ReservationDetailsPage />}
         />
 
         {/* Upload prescription */}

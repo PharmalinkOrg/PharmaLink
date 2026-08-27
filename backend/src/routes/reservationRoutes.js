@@ -3,6 +3,7 @@ const express = require('express')
 const {
   createReservation,
   getCustomerReservations,
+  getReservationById,
 } = require('../controllers/reservationController')
 
 const authenticateUser = require('../middleware/authMiddleware')
@@ -21,6 +22,18 @@ router.get(
   loadPharmaUser,
   requireRole('CUSTOMER'),
   getCustomerReservations
+)
+
+/**
+ * Get customer's reservation by ID
+ * GET /api/reservations/:reservationId
+ */
+router.get(
+  '/:reservationId',
+  authenticateUser,
+  loadPharmaUser,
+  requireRole('CUSTOMER'),
+  getReservationById
 )
 
 /**
