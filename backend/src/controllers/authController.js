@@ -98,7 +98,6 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body
 
-    // Validate email
     if (!email) {
       return res.status(400).json({
         success: false,
@@ -106,7 +105,6 @@ const login = async (req, res) => {
       })
     }
 
-    // Validate password
     if (!password) {
       return res.status(400).json({
         success: false,
@@ -114,7 +112,6 @@ const login = async (req, res) => {
       })
     }
 
-    // Sign in using Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -159,6 +156,7 @@ const customerLogin = async (req, res) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase()
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
       password,
@@ -169,7 +167,7 @@ const customerLogin = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid email or password' })
     }
 
-    const { data: customer, error: customerError } = await supabase
+    const { data: customer, error: customerError } = await supabaseAdmin
       .from('users')
       .select('user_id, role, status')
       .eq('email', normalizedEmail)
