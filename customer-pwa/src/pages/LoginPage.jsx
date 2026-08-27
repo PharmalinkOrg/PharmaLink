@@ -35,9 +35,10 @@ function LoginPage() {
       }
 
       localStorage.setItem(SESSION_KEY, JSON.stringify({
-        accessToken: response.data.session.access_token,
-        user: response.data.user,
-      }))
+  accessToken: response.data.session.access_token,
+  refreshToken: response.data.session.refresh_token,
+  user: response.data.user,
+}))
       navigate('/profile')
     } catch (requestError) {
       setError(requestError.message)

@@ -190,6 +190,61 @@
   opacity: 0.65;
 }
 
+.profile-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.profile-logout-button {
+  padding: 10px 16px;
+  border: 1px solid #dce8e3;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #a23d35;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.profile-logout-button:hover {
+  background: #fbf1f0;
+  border-color: #e6c9c5;
+}
+
+.profile-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #edf2f0;
+}
+
+.profile-avatar-image,
+.profile-avatar-placeholder {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.profile-avatar-image {
+  object-fit: cover;
+  border: 2px solid #dce8e3;
+}
+
+.profile-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #17634f;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
 .auth-page {
   display: grid;
   min-height: 100vh;

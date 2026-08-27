@@ -10,7 +10,7 @@ const getCurrentUserProfile = (req, res) => {
 
 const updateCurrentUserProfile = async (req, res) => {
   try {
-    const { first_name, last_name, phone } = req.body
+    const { first_name, last_name, phone, avatar_url } = req.body
 
     if (!first_name || first_name.trim() === '') {
       return res.status(400).json({
@@ -32,6 +32,7 @@ const updateCurrentUserProfile = async (req, res) => {
         first_name: first_name.trim(),
         last_name: last_name.trim(),
         phone: phone?.trim() || null,
+        ...(avatar_url !== undefined ? { avatar_url } : {}),
       })
       .eq('user_id', req.pharmaUser.user_id)
 
@@ -53,7 +54,7 @@ const updateCurrentUserProfile = async (req, res) => {
     const { data: user, error: readError } = await supabaseAdmin
       .from('users')
       .select(
-        'user_id, pharmacy_id, role, first_name, last_name, email, phone, status, created_at, updated_at, last_login_at'
+        'user_id, pharmacy_id, role, first_name, last_name, email, phone, avatar_url, status, created_at, updated_at, last_login_at'
       )
       .eq('user_id', req.pharmaUser.user_id)
       .single()

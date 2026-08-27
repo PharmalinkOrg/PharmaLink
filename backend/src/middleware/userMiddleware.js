@@ -28,6 +28,7 @@ const loadPharmaUser = async (req, res, next) => {
         last_name,
         email,
         phone,
+        avatar_url,
         status,
         created_at,
         updated_at,
