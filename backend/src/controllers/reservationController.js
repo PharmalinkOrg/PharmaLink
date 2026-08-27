@@ -490,14 +490,13 @@ const getPharmacyReservations = async (req, res) => {
         created_at,
         updated_at,
 
-        users!reservations_customer_id_fkey (
-          user_id,
-          first_name,
-          last_name,
-          email,
-          phone
-        ),
-
+        users!fk_reservations_customer (
+            user_id,
+            first_name,
+            last_name,
+            email,
+            phone
+            ),
         reservation_items (
           reservation_item_id,
           reservation_id,
@@ -552,10 +551,204 @@ const getPharmacyReservations = async (req, res) => {
   }
 }
 
-/**
- * Get a single reservation for the authenticated customer
- * GET /api/reservations/:reservationId
- */
+    /**
+     * Update reservation status for the authenticated pharmacy
+     * PATCH /api/reservations/:reservationId/status
+     */
+    const updateReservationStatus = async (req, res) => {
+    try {
+        const pharmacyId = req.pharmaUser?.pharmacy_id
+        const adminUserId = req.pharmaUser?.user_id
+
+        if (!pharmacyId) {
+        return res.status(400).json({
+            success: false,
+            message: 'Pharmacy account is not assigned to a pharmacy',
+        })
+        }
+
+        if (!adminUserId) {
+        return res.status(401).json({
+            success: false,
+            message: 'Authenticated pharmacy admin not found',
+        })
+        }
+
+        const reservationId = Number(req.params.reservationId)
+        const { status } = req.body
+
+        // --------------------------------------------------
+        // Validate reservation ID
+        // --------------------------------------------------
+
+        if (!Number.isInteger(reservationId) || reservationId <= 0) {
+        return res.status(400).json({
+            success: false,
+            message: 'Valid reservation ID is required',
+        })
+        }
+
+        // --------------------------------------------------
+        // Validate status
+        // --------------------------------------------------
+
+        const allowedStatuses = [
+        'CONFIRMED',
+        'COMPLETED',
+        'CANCELLED',
+        ]
+
+        if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid reservation status',
+        })
+        }
+
+        // --------------------------------------------------
+        // Get reservation belonging to this pharmacy
+        // --------------------------------------------------
+
+        const {
+        data: reservation,
+        error: reservationError,
+        } = await supabaseAdmin
+        .from('reservations')
+        .select(`
+            reservation_id,
+            customer_id,
+            pharmacy_id,
+            status,
+            confirmed_by,
+            confirmed_at,
+            completed_at
+        `)
+        .eq('reservation_id', reservationId)
+        .eq('pharmacy_id', Number(pharmacyId))
+        .maybeSingle()
+
+        if (reservationError) {
+        console.error(
+            'Get reservation for status update error:',
+            reservationError
+        )
+
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to load reservation',
+        })
+        }
+
+        if (!reservation) {
+        return res.status(404).json({
+            success: false,
+            message: 'Reservation not found',
+        })
+        }
+
+        // --------------------------------------------------
+        // Validate status transition
+        // --------------------------------------------------
+
+        const currentStatus = reservation.status
+
+        const validTransitions = {
+        PENDING: ['CONFIRMED', 'CANCELLED'],
+        CONFIRMED: ['COMPLETED', 'CANCELLED'],
+        }
+
+        if (
+        !validTransitions[currentStatus] ||
+        !validTransitions[currentStatus].includes(status)
+        ) {
+        return res.status(400).json({
+            success: false,
+            message:
+            `Reservation cannot be changed from ${currentStatus} to ${status}`,
+        })
+        }
+
+        // --------------------------------------------------
+        // Build update
+        // --------------------------------------------------
+
+        const updateData = {
+        status,
+        }
+
+        if (status === 'CONFIRMED') {
+        updateData.confirmed_by = adminUserId
+        updateData.confirmed_at = new Date().toISOString()
+        }
+
+        if (status === 'COMPLETED') {
+        updateData.completed_at = new Date().toISOString()
+        }
+
+        if (status === 'CANCELLED') {
+        updateData.confirmed_by = null
+        updateData.confirmed_at = null
+        }
+
+        // --------------------------------------------------
+        // Update reservation
+        // --------------------------------------------------
+
+        const {
+        data: updatedReservation,
+        error: updateError,
+        } = await supabaseAdmin
+        .from('reservations')
+        .update(updateData)
+        .eq('reservation_id', reservationId)
+        .eq('pharmacy_id', Number(pharmacyId))
+        .select(`
+            reservation_id,
+            customer_id,
+            pharmacy_id,
+            prescription_id,
+            reservation_date,
+            pickup_date,
+            pickup_time,
+            status,
+            notes,
+            confirmed_by,
+            confirmed_at,
+            completed_at,
+            created_at,
+            updated_at
+        `)
+        .single()
+
+        if (updateError) {
+        console.error(
+            'Update reservation status error:',
+            updateError
+        )
+
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to update reservation status',
+        })
+        }
+
+        return res.status(200).json({
+        success: true,
+        message: `Reservation ${status.toLowerCase()} successfully`,
+        data: updatedReservation,
+        })
+    } catch (error) {
+        console.error(
+        'Update reservation status server error:',
+        error
+        )
+
+        return res.status(500).json({
+        success: false,
+        message: 'Server error',
+        })
+    }
+    }
 const getReservationById = async (req, res) => {
   try {
     const customerId = req.pharmaUser?.user_id
@@ -682,4 +875,5 @@ module.exports = {
   getCustomerReservations,
   getReservationById,
   getPharmacyReservations,
+  updateReservationStatus,
 }

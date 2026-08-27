@@ -5,6 +5,7 @@ const {
   getCustomerReservations,
   getReservationById,
   getPharmacyReservations,
+  updateReservationStatus,
 } = require('../controllers/reservationController')
 
 const authenticateUser = require('../middleware/authMiddleware')
@@ -37,10 +38,14 @@ router.get(
   getPharmacyReservations
 )
 
-/**
- * Get a single customer reservation
- * GET /api/reservations/:reservationId
- */
+router.patch(
+  '/:reservationId/status',
+  authenticateUser,
+  loadPharmaUser,
+  requireRole('PHARMACY_ADMIN'),
+  updateReservationStatus
+)
+
 router.get(
   '/:reservationId',
   authenticateUser,

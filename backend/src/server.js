@@ -11,11 +11,12 @@ const userRoutes = require('./routes/userRoutes')
 const customerInventoryRoutes = require('./routes/customerInventoryRoutes')
 const medicineRoutes = require('./routes/medicineRoutes')
 const reservationRoutes = require('./routes/reservationRoutes')
+const dashboardRoutes = require('./routes/dashboardRoutes')
 
 const app = express()
 
 const PORT = process.env.PORT || 5000
-
+  
 // --------------------------------------------------
 // Allowed frontend origins
 // --------------------------------------------------
@@ -55,6 +56,8 @@ app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 
 app.use('/api/medicines', medicineRoutes)
+
+app.use('/api/dashboard', dashboardRoutes)
 
 app.use('/api/reservations', reservationRoutes)
 

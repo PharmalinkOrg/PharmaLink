@@ -6,18 +6,17 @@ import InventoryPage from '../pages/InventoryPage'
 import LoginPage from '../pages/LoginPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import PlaceholderPage from '../pages/PlaceholderPage'
+import ReservationsPage from '../pages/ReservationsPage'
 
 const placeholderPages = [
   ['medicines', 'Medicines'],
   ['prescriptions', 'Prescriptions'],
-  ['reservations', 'Reservations'],
   ['medicine-requests', 'Medicine Requests'],
   ['customers', 'Customers'],
   ['sales', 'Sales'],
   ['reports', 'Reports'],
   ['settings', 'Settings'],
 ]
-
 function AppRoutes() {
   return (
     <Routes>
@@ -26,6 +25,8 @@ function AppRoutes() {
         <Route element={<AdminLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="inventory" element={<InventoryPage />} />
+          <Route path="reservations" element={<ReservationsPage />} />
+          
           {placeholderPages.map(([path, title]) => (
             <Route key={path} path={path} element={<PlaceholderPage title={title} />} />
           ))}
