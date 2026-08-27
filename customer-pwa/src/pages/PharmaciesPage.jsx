@@ -10,7 +10,7 @@ import {
   Search,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { apiRequest } from '../api'
+import { apiRequest } from '../lib/api'
 
 function PharmaciesPage() {
   const navigate = useNavigate()
@@ -110,7 +110,10 @@ function PharmaciesPage() {
 
       {/* Search */}
       <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
-        <Search size={19} className="shrink-0 text-slate-400" />
+        <Search
+          size={19}
+          className="shrink-0 text-slate-400"
+        />
 
         <input
           type="search"
@@ -125,16 +128,21 @@ function PharmaciesPage() {
       {/* Filters */}
       <div className="mt-4 flex items-center justify-between">
         <p className="text-xs font-bold text-slate-500">
-          {filteredPharmacies.length} pharmacies
+          {filteredPharmacies.length}{' '}
+          {filteredPharmacies.length === 1
+            ? 'pharmacy'
+            : 'pharmacies'}
         </p>
 
         <button
           type="button"
-          onClick={() => setShowActiveOnly((current) => !current)}
+          onClick={() =>
+            setShowActiveOnly((current) => !current)
+          }
           className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
             showActiveOnly
               ? 'border-emerald-700 bg-emerald-700 text-white'
-              : 'border-slate-200 bg-white text-slate-500'
+              : 'border-slate-200 bg-white text-slate-500 hover:border-emerald-300 hover:text-emerald-700'
           }`}
         >
           Active only
@@ -154,7 +162,9 @@ function PharmaciesPage() {
 
                 <div className="flex-1">
                   <div className="h-4 w-40 rounded bg-slate-200" />
+
                   <div className="mt-2 h-3 w-56 rounded bg-slate-100" />
+
                   <div className="mt-3 h-3 w-32 rounded bg-slate-100" />
                 </div>
               </div>
@@ -177,7 +187,7 @@ function PharmaciesPage() {
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="mt-4 rounded-xl bg-red-600 px-4 py-2.5 text-xs font-bold text-white"
+            className="mt-4 rounded-xl bg-red-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-red-700"
           >
             Try again
           </button>
@@ -193,7 +203,9 @@ function PharmaciesPage() {
                 key={pharmacy.pharmacy_id}
                 type="button"
                 onClick={() =>
-                  navigate(`/pharmacy/${pharmacy.pharmacy_id}`)
+                  navigate(
+                    `/pharmacy/${pharmacy.pharmacy_id}`
+                  )
                 }
                 className="group w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-emerald-300 hover:shadow-md"
               >
@@ -216,7 +228,11 @@ function PharmaciesPage() {
                             size={13}
                             className="mt-0.5 shrink-0"
                           />
-                          <span>{pharmacy.address}</span>
+
+                          <span>
+                            {pharmacy.address ||
+                              'Address not available'}
+                          </span>
                         </p>
                       </div>
 
@@ -241,6 +257,7 @@ function PharmaciesPage() {
                             size={13}
                             className="text-emerald-600"
                           />
+
                           {pharmacy.contact_number}
                         </span>
                       )}
@@ -251,6 +268,7 @@ function PharmaciesPage() {
                             size={13}
                             className="shrink-0 text-emerald-600"
                           />
+
                           <span className="truncate">
                             {pharmacy.email}
                           </span>
@@ -265,6 +283,7 @@ function PharmaciesPage() {
                           size={13}
                           className="text-emerald-600"
                         />
+
                         Pharmacy information
                       </span>
 
@@ -288,8 +307,8 @@ function PharmaciesPage() {
               </h2>
 
               <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                Try searching for another pharmacy or turn off the
-                Active only filter.
+                Try searching for another pharmacy or turn
+                off the Active only filter.
               </p>
 
               <button
@@ -298,7 +317,7 @@ function PharmaciesPage() {
                   setSearchTerm('')
                   setShowActiveOnly(false)
                 }}
-                className="mt-4 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white"
+                className="mt-4 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-emerald-800"
               >
                 Clear filters
               </button>

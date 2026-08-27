@@ -10,7 +10,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { apiRequest } from '../api'
+import { apiRequest } from '../lib/api'
 
 function PharmacyDetailsPage() {
   const navigate = useNavigate()
