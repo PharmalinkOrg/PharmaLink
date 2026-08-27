@@ -9,6 +9,7 @@ const inventoryRoutes = require('./routes/inventoryRoutes')
 const userRoutes = require('./routes/userRoutes')
 const customerInventoryRoutes = require('./routes/customerInventoryRoutes')
 const medicineRoutes = require('./routes/medicineRoutes')
+const reservationRoutes = require('./routes/reservationRoutes')
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -32,6 +33,7 @@ app.use(cookieParser())
 app.use('/api/pharmacies', pharmacyRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/medicines', medicineRoutes)
+app.use('/api/reservations', reservationRoutes)
 app.use('/api/users', userRoutes)
 
 // Protected pharmacy-admin inventory routes

@@ -251,3 +251,42 @@ GET http://localhost:5000/api/pharmacies/1/inventory
 Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImY4ZGI5OTBmLTUwZGItNDJmYy1iZWY2LWI3ZmU3M2QzM2VhOCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2RtY2txbmJtcmtidGZ4cmhmd2J1LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5YTk2MmQwMC05NGU2LTQyNGYtYWQwNC02ZjcyYjAwZDY2OGYiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzg2Njk2OTA3LCJpYXQiOjE3ODY2OTMzMDcsImVtYWlsIjoicGhhcm1hY3lhZG1pbkBwaGFybWFsaW5rLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWxfdmVyaWZpZWQiOnRydWV9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzg2NjkzMzA3fV0sInNlc3Npb25faWQiOiJlYTQzMDlkNC0yY2UxLTQxMzQtYTg2ZC01ZTcxNWE3OWM3ZjciLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.I1CdgfgywL4drALImeUXZ2E8QzPDofTqRB0zABwibrF9aOzXZ00jxa9LamaU4oMRATXPMdzua-nuCSqLTAhTpg
 #### Get Super Admin User Info
 GET http://localhost:5000/api/users/superadmin
+
+###
+POST http://localhost:5000/api/auth/customer-login
+Content-Type: application/json
+
+{
+  "email": "desamparado@gmail.com",
+  "password": "Desamparado123!"
+}
+
+###
+POST http://localhost:5000/api/reservations
+Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImY4ZGI5OTBmLTUwZGItNDJmYy1iZWY2LWI3ZmU3M2QzM2VhOCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2RtY2txbmJtcmtidGZ4cmhmd2J1LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIyZjRjMjk2Ni00NWMyLTRkYTItYTFmNC0yYTdkYWNiZTM3MzgiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzg3ODQwNTQ5LCJpYXQiOjE3ODc4MzY5NDksImVtYWlsIjoiZGVzYW1wYXJhZG9AZ21haWwuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbF92ZXJpZmllZCI6dHJ1ZX0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3ODc4MzY5NDl9XSwic2Vzc2lvbl9pZCI6ImMzNTQwYzk0LTljMzAtNDQxMi1iY2Y0LWIwN2E5Y2MxNjY5NCIsImlzX2Fub255bW91cyI6ZmFsc2V9.rt2a8-LomAdzX4RDyJzI74zZCUvi_-sdMEUuyYeZrAastqjAbx4JREFILFuNi5vHMfNKRXWEj5BA28yRZUlRoA
+Content-Type: application/json
+
+{
+  "pharmacy_id": 1,
+  "pickup_date": "2026-08-30",
+  "pickup_time": "15:00:00",
+  "notes": "Test reservation"
+}
+
+###
+POST http://localhost:5000/api/reservations
+Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImY4ZGI5OTBmLTUwZGItNDJmYy1iZWY2LWI3ZmU3M2QzM2VhOCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2RtY2txbmJtcmtidGZ4cmhmd2J1LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIyZjRjMjk2Ni00NWMyLTRkYTItYTFmNC0yYTdkYWNiZTM3MzgiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzg3ODQwNTQ5LCJpYXQiOjE3ODc4MzY5NDksImVtYWlsIjoiZGVzYW1wYXJhZG9AZ21haWwuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbF92ZXJpZmllZCI6dHJ1ZX0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3ODc4MzY5NDl9XSwic2Vzc2lvbl9pZCI6ImMzNTQwYzk0LTljMzAtNDQxMi1iY2Y0LWIwN2E5Y2MxNjY5NCIsImlzX2Fub255bW91cyI6ZmFsc2V9.rt2a8-LomAdzX4RDyJzI74zZCUvi_-sdMEUuyYeZrAastqjAbx4JREFILFuNi5vHMfNKRXWEj5BA28yRZUlRoA
+Content-Type: application/json
+
+{
+  "pharmacy_id": 1,
+  "pickup_date": "2026-08-30",
+  "pickup_time": "15:00",
+  "notes": "Test reservation with medicine",
+  "items": [
+    {
+      "medicine_id": 1,
+      "quantity": 2
+    }
+  ]
+}
