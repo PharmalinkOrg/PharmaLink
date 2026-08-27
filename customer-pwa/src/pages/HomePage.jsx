@@ -1,25 +1,35 @@
 import { useNavigate } from 'react-router-dom'
+import {
+  Bell,
+  ChevronRight,
+  FileText,
+  MapPin,
+  Pill,
+  Plus,
+  Search,
+  Sparkles,
+} from 'lucide-react'
 
 const categories = [
   'All',
-  'Vitamins',
   'Pain Relief',
-  'Antibiotics',
+  'Vitamins',
   'Cough & Cold',
+  'First Aid',
 ]
 
 const nearbyPharmacies = [
   {
-    name: 'Rose Pharmacy',
-    distance: '0.8 km',
-    status: 'Open',
-    medicine: 'Paracetamol available',
+    name: 'PharmaLink Pharmacy',
+    distance: '0.8 km away',
+    status: 'Open now',
+    availability: 'Medicines available',
   },
   {
-    name: 'Southstar Drug',
-    distance: '1.2 km',
-    status: 'Open',
-    medicine: 'Paracetamol available',
+    name: 'City Care Pharmacy',
+    distance: '1.2 km away',
+    status: 'Open now',
+    availability: 'Medicines available',
   },
 ]
 
@@ -27,161 +37,152 @@ function HomePage() {
   const navigate = useNavigate()
 
   return (
-    <section className="home-page">
+    <section className="mx-auto w-full max-w-2xl px-4 pb-28 pt-5 sm:px-6">
       {/* Header */}
-      <header className="home-header">
+      <header className="mb-5 flex items-start justify-between">
         <div>
-          <h2 className="home-greeting">Welcome, Josh!</h2>
-
-          <p className="home-location">
-            <span aria-hidden="true">⌖</span>
-            <span>Sambag 1, Cebu City</span>
+          <p className="mb-1 text-sm font-medium text-teal-700">
+            PharmaLink
           </p>
+
+          <h1 className="text-xl font-extrabold tracking-tight text-slate-800 sm:text-2xl">
+            Good day!
+          </h1>
+
+          <div className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500">
+            <MapPin size={14} strokeWidth={2} />
+            <span>Finding pharmacies near you</span>
+          </div>
         </div>
 
         <button
-          className="home-notification"
           type="button"
           aria-label="Notifications"
+          className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100"
         >
-          ♡
-          <span className="notification-dot">3</span>
+          <Bell size={21} strokeWidth={2} />
+
+          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+            2
+          </span>
         </button>
       </header>
 
-      {/* Main medicine search */}
+      {/* Search */}
       <button
-        className="home-search"
         type="button"
         onClick={() => navigate('/search')}
-        aria-label="Search for medicine"
+        className="flex min-h-12 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-left shadow-sm transition hover:border-teal-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
       >
-        <span className="home-search-icon" aria-hidden="true">
-          ⌕
+        <Search
+          size={20}
+          strokeWidth={2}
+          className="shrink-0 text-slate-400"
+        />
+
+        <span className="flex-1 text-sm text-slate-400">
+          Search for a medicine...
         </span>
 
-        <span className="home-search-placeholder">
-          Search medicine by brand or name...
-        </span>
-
-        <span className="home-search-mic" aria-hidden="true">
-          ♫
+        <span className="text-xs text-slate-400">
+          Search
         </span>
       </button>
 
-      {/* Active Reservation */}
-      <section className="home-section">
-        <div className="home-section-heading">
-          <h2>Active Reservation</h2>
+      {/* Quick Actions */}
+      <section className="mt-7">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-extrabold text-slate-700">
+            What do you need?
+          </h2>
         </div>
 
-        <button
-          className="reservation-card"
-          type="button"
-          onClick={() => navigate('/reservations')}
-        >
-          <div className="reservation-top">
-            <div className="pharmacy-avatar">
-              RP
-            </div>
-
-            <div className="reservation-info">
-              <strong>Rose Pharmacy</strong>
-              <span>Paracetamol 500mg</span>
-            </div>
-
-            <span className="reservation-status">
-              Ready for Pickup
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => navigate('/search')}
+            className="group flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-50 text-cyan-700 transition group-hover:bg-cyan-100">
+              <Pill size={21} />
             </span>
-          </div>
 
-          <div className="reservation-progress-labels">
-            <span>Processing</span>
-            <span>Ready</span>
-            <span>Picked Up</span>
-          </div>
+            <span className="text-xs font-bold text-slate-600">
+              Search Medicine
+            </span>
+          </button>
 
-          <div className="reservation-progress">
-            <div
-              className="reservation-progress-fill"
-              style={{ width: '70%' }}
-            />
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/upload-prescription')}
+            className="group flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-50 text-cyan-700 transition group-hover:bg-cyan-100">
+              <FileText size={21} />
+            </span>
 
-          <span className="reservation-details">
-            View details
-          </span>
-        </button>
-      </section>
+            <span className="text-xs font-bold text-slate-600">
+              Upload Prescription
+            </span>
+          </button>
 
-      {/* Quick Actions */}
-      <section className="home-quick-actions">
-        <button
-          className="quick-action-card"
-          type="button"
-          onClick={() => navigate('/upload-prescription')}
-        >
-          <span className="quick-action-icon" aria-hidden="true">
-            ⇧
-          </span>
-          <span>Upload Prescription</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => navigate('/request-medicine')}
+            className="group flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-50 text-cyan-700 transition group-hover:bg-cyan-100">
+              <Plus size={21} />
+            </span>
 
-        <button
-          className="quick-action-card"
-          type="button"
-          onClick={() => navigate('/request-medicine')}
-        >
-          <span className="quick-action-icon" aria-hidden="true">
-            +
-          </span>
-          <span>Request Medicine</span>
-        </button>
+            <span className="text-xs font-bold text-slate-600">
+              Request Medicine
+            </span>
+          </button>
 
-        <button
-          className="quick-action-card"
-          type="button"
-          onClick={() => navigate('/pharmacies')}
-        >
-          <span className="quick-action-icon" aria-hidden="true">
-            ⌂
-          </span>
-          <span>Nearby Pharmacies</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => navigate('/pharmacies')}
+            className="group flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-50 text-cyan-700 transition group-hover:bg-cyan-100">
+              <MapPin size={21} />
+            </span>
 
-        <button
-          className="quick-action-card"
-          type="button"
-          onClick={() => navigate('/search')}
-        >
-          <span className="quick-action-icon quick-action-ai" aria-hidden="true">
-            ✦
-          </span>
-          <span>AI Support</span>
-        </button>
+            <span className="text-xs font-bold text-slate-600">
+              Nearby Pharmacies
+            </span>
+          </button>
+        </div>
       </section>
 
       {/* Categories */}
-      <section className="home-section">
-        <div className="home-section-heading">
-          <h2>Categories</h2>
+      <section className="mt-7">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-extrabold text-slate-700">
+            Browse categories
+          </h2>
 
           <button
-            className="home-view-all"
             type="button"
             onClick={() => navigate('/search')}
+            className="text-xs font-bold text-slate-500 transition hover:text-teal-700"
           >
-            View All
+            View all
           </button>
         </div>
 
-        <div className="category-list">
+        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {categories.map((category, index) => (
             <button
               key={category}
-              className={`category-chip ${index === 0 ? 'active' : ''}`}
               type="button"
               onClick={() => navigate('/search')}
+              className={`shrink-0 rounded-full border px-4 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                index === 0
+                  ? 'border-teal-700 bg-teal-700 text-white'
+                  : 'border-slate-200 bg-white text-slate-500 hover:border-teal-300 hover:text-teal-700'
+              }`}
             >
               {category}
             </button>
@@ -190,75 +191,81 @@ function HomePage() {
       </section>
 
       {/* Nearby Pharmacies */}
-      <section className="home-section">
-        <div className="home-section-heading">
-          <h2>Nearby Pharmacies</h2>
+      <section className="mt-7">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-extrabold text-slate-700">
+            Nearby pharmacies
+          </h2>
 
           <button
-            className="home-view-all"
             type="button"
             onClick={() => navigate('/pharmacies')}
+            className="text-xs font-bold text-slate-500 transition hover:text-teal-700"
           >
-            View All
+            View all
           </button>
         </div>
 
-        <div className="pharmacy-list">
+        <div className="space-y-2.5">
           {nearbyPharmacies.map((pharmacy) => (
             <button
               key={pharmacy.name}
-              className="nearby-pharmacy-card"
               type="button"
-              onClick={() => navigate('/search')}
+              onClick={() => navigate('/pharmacies')}
+              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-teal-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
-              <span
-                className="nearby-pharmacy-icon"
-                aria-hidden="true"
-              >
-                ⌂
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-700">
+                <Pill size={19} />
               </span>
 
-              <span className="nearby-pharmacy-info">
-                <strong>{pharmacy.name}</strong>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-bold text-slate-700">
+                  {pharmacy.name}
+                </span>
 
-                <span>
+                <span className="mt-0.5 block text-xs text-slate-500">
                   {pharmacy.distance} · {pharmacy.status}
                 </span>
 
-                <small>{pharmacy.medicine}</small>
+                <span className="mt-0.5 block text-[11px] font-medium text-teal-700">
+                  {pharmacy.availability}
+                </span>
               </span>
 
-              <span className="pharmacy-arrow" aria-hidden="true">
-                ›
-              </span>
+              <ChevronRight
+                size={19}
+                className="shrink-0 text-slate-400"
+              />
             </button>
           ))}
         </div>
       </section>
 
-      {/* AI Assistance */}
-      <section className="home-ai-card">
-        <div className="home-ai-content">
-          <span className="home-ai-icon" aria-hidden="true">
-            ✦
+      {/* AI Assistant */}
+      <section className="mt-7 overflow-hidden rounded-2xl bg-slate-800 p-4 shadow-md">
+        <div className="flex gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-700 text-teal-200">
+            <Sparkles size={19} />
           </span>
 
           <div>
-            <h2>Need help finding a medicine?</h2>
+            <h2 className="text-sm font-bold text-white">
+              Need help finding a medicine?
+            </h2>
 
-            <p>
-              Our AI assistant can help you search and navigate
-              PharmaLink quickly.
+            <p className="mt-1 text-xs leading-relaxed text-slate-300">
+              Ask PharmaLink AI about medicines, reservations,
+              prescriptions, or how to use the app.
             </p>
           </div>
         </div>
 
         <button
-          className="home-ai-button"
           type="button"
           onClick={() => navigate('/search')}
+          className="mt-4 flex min-h-9 w-full items-center justify-center rounded-lg bg-teal-100 px-4 text-xs font-extrabold text-teal-900 transition hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-slate-800"
         >
-          Ask AI
+          Ask PharmaLink AI
         </button>
       </section>
     </section>

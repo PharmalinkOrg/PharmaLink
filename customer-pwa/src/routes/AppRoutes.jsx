@@ -6,6 +6,9 @@ import NotFoundPage from '../pages/NotFoundPage'
 import LoginPage from '../pages/LoginPage'
 import ProfilePage from '../pages/ProfilePage'
 import PlaceholderPage from '../pages/PlaceholderPage'
+import PharmaciesPage from '../pages/PharmaciesPage'
+import MedicineDetailsPage from '../pages/MedicineDetailsPage'
+import SearchPage from '../pages/SearchPage'
 
 function AppRoutes() {
   return (
@@ -18,16 +21,22 @@ function AppRoutes() {
       <Route element={<CustomerLayout />}>
         <Route index element={<HomePage />} />
 
+        {/* Medicine search */}
+        <Route path="search" element={<SearchPage />} />
+
+        {/* Medicine details */}
         <Route
-          path="search"
-          element={<PlaceholderPage title="Search medicines" />}
+          path="medicine/:medicineId"
+          element={<MedicineDetailsPage />}
         />
 
+        {/* Reservations */}
         <Route
           path="reservations"
           element={<PlaceholderPage title="My reservations" />}
         />
 
+        {/* Other customer features */}
         <Route
           path="upload-prescription"
           element={<PlaceholderPage title="Upload prescription" />}
@@ -38,13 +47,13 @@ function AppRoutes() {
           element={<PlaceholderPage title="Request medicine" />}
         />
 
-        <Route
-          path="pharmacies"
-          element={<PlaceholderPage title="Nearby pharmacies" />}
-        />
+        {/* Pharmacies */}
+        <Route path="pharmacies" element={<PharmaciesPage />} />
 
+        {/* Profile */}
         <Route path="profile" element={<ProfilePage />} />
 
+        {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
