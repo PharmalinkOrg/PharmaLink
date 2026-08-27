@@ -7,6 +7,7 @@ const pharmacyRoutes = require('./routes/pharmacyRoutes')
 const authRoutes = require('./routes/authRoutes')
 const inventoryRoutes = require('./routes/inventoryRoutes')
 const userRoutes = require('./routes/userRoutes')
+const customerInventoryRoutes = require('./routes/customerInventoryRoutes')
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -30,8 +31,12 @@ app.use(cookieParser())
 app.use('/api/pharmacies', pharmacyRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
+
+// Protected pharmacy-admin inventory routes
 app.use('/api/pharmacies', inventoryRoutes)
 
+// Public customer inventory route
+app.use('/api/pharmacies', customerInventoryRoutes)
 app.get('/', (req, res) => {
   res.json({
     message: 'Pharmalink Backend API is running',

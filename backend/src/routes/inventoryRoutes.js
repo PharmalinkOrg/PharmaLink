@@ -2,6 +2,7 @@ const express = require('express')
 
 const {
   getPharmacyInventory,
+  getPublicPharmacyInventory,
   createInventory,
   updateInventory,
   deleteInventory,
@@ -14,7 +15,21 @@ const pharmacyAccess = require('../middleware/pharmacyAccessMiddleware')
 
 const router = express.Router()
 
-// GET inventory for a pharmacy
+// GET publicly available medicines for a pharmacy
+router.get(
+  '/:pharmacyId/inventory/public',
+  getPublicPharmacyInventory
+)
+
+/**
+ * GET inventory for a pharmacy
+ *
+ * SUPER_ADMIN:
+ * Can view inventory for any pharmacy.
+ *
+ * PHARMACY_ADMIN:
+ * Can view inventory for their own pharmacy.
+ */
 router.get(
   '/:pharmacyId/inventory',
   authenticateUser,
@@ -24,7 +39,15 @@ router.get(
   getPharmacyInventory
 )
 
-// CREATE inventory for a pharmacy
+/**
+ * CREATE inventory
+ *
+ * SUPER_ADMIN:
+ * Can create inventory for any pharmacy.
+ *
+ * PHARMACY_ADMIN:
+ * Can create inventory for their own pharmacy.
+ */
 router.post(
   '/:pharmacyId/inventory',
   authenticateUser,
@@ -34,6 +57,15 @@ router.post(
   createInventory
 )
 
+/**
+ * UPDATE inventory
+ *
+ * SUPER_ADMIN:
+ * Can update inventory for any pharmacy.
+ *
+ * PHARMACY_ADMIN:
+ * Can update inventory for their own pharmacy.
+ */
 router.patch(
   '/:pharmacyId/inventory/:inventoryId',
   authenticateUser,
@@ -43,6 +75,15 @@ router.patch(
   updateInventory
 )
 
+/**
+ * DELETE inventory
+ *
+ * SUPER_ADMIN:
+ * Can delete inventory for any pharmacy.
+ *
+ * PHARMACY_ADMIN:
+ * Can delete inventory for their own pharmacy.
+ */
 router.delete(
   '/:pharmacyId/inventory/:inventoryId',
   authenticateUser,
@@ -51,5 +92,6 @@ router.delete(
   pharmacyAccess,
   deleteInventory
 )
+
 
 module.exports = router
