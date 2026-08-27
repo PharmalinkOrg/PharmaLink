@@ -72,6 +72,45 @@ const getMedicineById = async (req, res) => {
   }
 }
 
+/**
+ * GET all medicines
+ * GET /api/medicines
+ */
+const getMedicines = async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('medicines')
+      .select(medicineColumns)
+      .eq('status', 'ACTIVE')
+      .order('generic_name', { ascending: true })
+
+    if (error) {
+      console.error('Get medicines error:', error)
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve medicines',
+        error: error.message,
+        code: error.code,
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      data,
+    })
+  } catch (error) {
+    console.error('Get medicines server error:', error)
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    })
+  }
+}
+
 module.exports = {
   getMedicineById,
+  getMedicines,
 }

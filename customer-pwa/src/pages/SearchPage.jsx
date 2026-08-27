@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, MapPin, Search, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { apiRequest } from '../lib/api'
 
 const categories = [
   'All',
@@ -11,64 +12,40 @@ const categories = [
   'Digestive',
 ]
 
-const medicines = [
-  {
-    id: 1,
-    name: 'Paracetamol',
-    brand: 'Biogesic',
-    dosage: '500 mg',
-    form: 'Tablet',
-    category: 'Pain Relief',
-    pharmacies: 3,
-    availability: 'Available',
-  },
-  {
-    id: 2,
-    name: 'Paracetamol',
-    brand: 'Tempra',
-    dosage: '500 mg',
-    form: 'Tablet',
-    category: 'Pain Relief',
-    pharmacies: 2,
-    availability: 'Available',
-  },
-  {
-    id: 3,
-    name: 'Cetirizine',
-    brand: 'Allerkast',
-    dosage: '10 mg',
-    form: 'Tablet',
-    category: 'Allergy',
-    pharmacies: 4,
-    availability: 'Available',
-  },
-  {
-    id: 4,
-    name: 'Vitamin C',
-    brand: 'Ceelin',
-    dosage: '500 mg',
-    form: 'Tablet',
-    category: 'Vitamins',
-    pharmacies: 5,
-    availability: 'Available',
-  },
-  {
-    id: 5,
-    name: 'Loperamide',
-    brand: 'Diatabs',
-    dosage: '2 mg',
-    form: 'Capsule',
-    category: 'Digestive',
-    pharmacies: 1,
-    availability: 'Limited',
-  },
-]
-
 function SearchPage() {
   const navigate = useNavigate()
 
+  const [medicines, setMedicines] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const fetchMedicines = async () => {
+      try {
+        setLoading(true)
+        setError('')
+
+        const response = await apiRequest('/medicines')
+
+        if (!response.success) {
+          throw new Error(
+            response.message || 'Failed to retrieve medicines',
+          )
+        }
+
+        setMedicines(response.data || [])
+      } catch (error) {
+        console.error('Fetch medicines error:', error)
+        setError(error.message || 'Failed to load medicines')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMedicines()
+  }, [])
 
   const filteredMedicines = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase()
@@ -76,17 +53,18 @@ function SearchPage() {
     return medicines.filter((medicine) => {
       const matchesCategory =
         selectedCategory === 'All' ||
-        medicine.category === selectedCategory
+        medicine.category_name === selectedCategory
 
       const matchesSearch =
         !normalizedSearch ||
-        medicine.name.toLowerCase().includes(normalizedSearch) ||
-        medicine.brand.toLowerCase().includes(normalizedSearch) ||
-        medicine.category.toLowerCase().includes(normalizedSearch)
+        medicine.generic_name?.toLowerCase().includes(normalizedSearch) ||
+        medicine.brand_name?.toLowerCase().includes(normalizedSearch) ||
+        medicine.dosage?.toLowerCase().includes(normalizedSearch) ||
+        medicine.dosage_form?.toLowerCase().includes(normalizedSearch)
 
       return matchesCategory && matchesSearch
     })
-  }, [searchTerm, selectedCategory])
+  }, [medicines, searchTerm, selectedCategory])
 
   return (
     <section className="mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
@@ -182,21 +160,56 @@ function SearchPage() {
       <div className="mt-6">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-extrabold text-slate-700">
-            {searchTerm ? 'Search results' : 'Popular medicines'}
+            {searchTerm ? 'Search results' : 'Available medicines'}
           </h2>
 
-          <span className="text-xs text-slate-400">
-            {filteredMedicines.length} found
-          </span>
+          {!loading && !error && (
+            <span className="text-xs text-slate-400">
+              {filteredMedicines.length} found
+            </span>
+          )}
         </div>
 
-        {filteredMedicines.length > 0 ? (
+        {/* Loading state */}
+        {loading && (
+          <div className="rounded-2xl border border-slate-200 bg-white px-5 py-10 text-center shadow-sm">
+            <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-emerald-600" />
+
+            <p className="mt-3 text-xs font-semibold text-slate-500">
+              Loading medicines...
+            </p>
+          </div>
+        )}
+
+        {/* Error state */}
+        {!loading && error && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-10 text-center">
+            <h3 className="text-sm font-bold text-red-700">
+              Unable to load medicines
+            </h3>
+
+            <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-red-600">
+              {error}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-4 rounded-xl bg-red-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-red-700"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {/* Medicine results */}
+        {!loading && !error && filteredMedicines.length > 0 && (
           <div className="space-y-3">
             {filteredMedicines.map((medicine) => (
               <button
-                key={medicine.id}
+                key={medicine.medicine_id}
                 type="button"
-                onClick={() => navigate(`/medicine/${medicine.id}`)}
+                onClick={() => navigate(`/medicine/${medicine.medicine_id}`)}
                 className="group w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-emerald-300 hover:shadow-md"
               >
                 <div className="flex items-start gap-3">
@@ -210,37 +223,27 @@ function SearchPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <h3 className="truncate text-sm font-extrabold text-slate-800">
-                          {medicine.name}
+                          {medicine.generic_name}
                         </h3>
 
                         <p className="mt-0.5 text-xs text-slate-500">
-                          {medicine.brand}
+                          {medicine.brand_name}
                         </p>
                       </div>
 
-                      <span
-                        className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${
-                          medicine.availability === 'Available'
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-amber-50 text-amber-700'
-                        }`}
-                      >
-                        {medicine.availability}
+                      <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">
+                        Active
                       </span>
                     </div>
 
                     <p className="mt-2 text-xs text-slate-500">
-                      {medicine.dosage} • {medicine.form}
+                      {medicine.dosage} • {medicine.dosage_form}
                     </p>
 
                     <div className="mt-3 flex items-center justify-between">
                       <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
                         <MapPin size={14} className="text-emerald-600" />
-                        {medicine.pharmacies}{' '}
-                        {medicine.pharmacies === 1
-                          ? 'pharmacy'
-                          : 'pharmacies'}{' '}
-                        nearby
+                        View pharmacy availability
                       </span>
 
                       <span className="flex items-center gap-1 text-xs font-bold text-emerald-700 transition group-hover:gap-2">
@@ -253,8 +256,10 @@ function SearchPage() {
               </button>
             ))}
           </div>
-        ) : (
-          /* Empty state */
+        )}
+
+        {/* Empty state */}
+        {!loading && !error && filteredMedicines.length === 0 && (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
               <Search size={21} />
@@ -265,8 +270,8 @@ function SearchPage() {
             </h3>
 
             <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-slate-500">
-              Try another medicine name, brand, or category. You can also ask
-              PharmaLink AI for assistance.
+              Try another medicine name, brand, dosage, or form. You can also
+              ask PharmaLink AI for assistance.
             </p>
 
             <button
