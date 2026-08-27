@@ -6,6 +6,8 @@ import {
   MapPin,
   Navigation,
   Phone,
+  Pill,
+  AlertCircle,
 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
@@ -15,8 +17,13 @@ function PharmacyDetailsPage() {
   const { pharmacyId } = useParams()
 
   const [pharmacy, setPharmacy] = useState(null)
+  const [medicines, setMedicines] = useState([])
+
   const [loading, setLoading] = useState(true)
+  const [medicinesLoading, setMedicinesLoading] = useState(true)
+
   const [error, setError] = useState('')
+  const [medicinesError, setMedicinesError] = useState('')
 
   useEffect(() => {
     const loadPharmacy = async () => {
@@ -29,6 +36,7 @@ function PharmacyDetailsPage() {
         setPharmacy(response.data)
       } catch (error) {
         console.error('Failed to load pharmacy:', error)
+
         setError(
           error.message || 'Unable to load pharmacy information.'
         )
@@ -37,8 +45,30 @@ function PharmacyDetailsPage() {
       }
     }
 
+    const loadMedicines = async () => {
+      try {
+        setMedicinesLoading(true)
+        setMedicinesError('')
+
+        const response = await apiRequest(
+          `/pharmacies/${pharmacyId}/inventory/public`
+        )
+
+        setMedicines(response.data || [])
+      } catch (error) {
+        console.error('Failed to load pharmacy medicines:', error)
+
+        setMedicinesError(
+          error.message || 'Unable to load pharmacy medicines.'
+        )
+      } finally {
+        setMedicinesLoading(false)
+      }
+    }
+
     if (pharmacyId) {
       loadPharmacy()
+      loadMedicines()
     }
   }, [pharmacyId])
 
@@ -55,6 +85,38 @@ function PharmacyDetailsPage() {
 
       default:
         return 'bg-slate-100 text-slate-500'
+    }
+  }
+
+  const getInventoryStatusClasses = (status) => {
+    switch (status) {
+      case 'AVAILABLE':
+        return 'bg-emerald-50 text-emerald-700'
+
+      case 'LOW_STOCK':
+        return 'bg-amber-50 text-amber-700'
+
+      case 'OUT_OF_STOCK':
+        return 'bg-red-50 text-red-700'
+
+      default:
+        return 'bg-slate-100 text-slate-500'
+    }
+  }
+
+  const formatInventoryStatus = (status) => {
+    switch (status) {
+      case 'AVAILABLE':
+        return 'Available'
+
+      case 'LOW_STOCK':
+        return 'Low stock'
+
+      case 'OUT_OF_STOCK':
+        return 'Out of stock'
+
+      default:
+        return status || 'Unknown'
     }
   }
 
@@ -80,11 +142,11 @@ function PharmacyDetailsPage() {
         </h1>
 
         <p className="mt-1 text-sm leading-relaxed text-slate-500">
-          View information about this registered pharmacy.
+          View pharmacy information and available medicines.
         </p>
       </div>
 
-      {/* Loading */}
+      {/* Pharmacy Loading */}
       {loading && (
         <div className="space-y-4">
           <div className="animate-pulse rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -104,15 +166,10 @@ function PharmacyDetailsPage() {
               <div className="h-12 rounded-xl bg-slate-100" />
             </div>
           </div>
-
-          <div className="animate-pulse rounded-2xl border border-slate-200 bg-slate-100 p-5">
-            <div className="h-4 w-32 rounded bg-slate-200" />
-            <div className="mt-3 h-3 w-56 rounded bg-slate-200" />
-          </div>
         </div>
       )}
 
-      {/* Error */}
+      {/* Pharmacy Error */}
       {!loading && error && (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-10 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-red-500 shadow-sm">
@@ -143,12 +200,10 @@ function PharmacyDetailsPage() {
           {/* Main Pharmacy Card */}
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-start gap-4">
-              {/* Pharmacy Icon */}
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
                 <MapPin size={25} />
               </div>
 
-              {/* Pharmacy Name */}
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -203,7 +258,8 @@ function PharmacyDetailsPage() {
                   </p>
 
                   <p className="mt-0.5 text-sm font-semibold text-slate-700">
-                    {pharmacy.contact_number || 'No contact number provided'}
+                    {pharmacy.contact_number ||
+                      'No contact number provided'}
                   </p>
                 </div>
               </div>
@@ -227,6 +283,191 @@ function PharmacyDetailsPage() {
             </div>
           </div>
 
+          {/* Available Medicines */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                <Pill size={19} />
+              </div>
+
+              <div>
+                <h2 className="text-sm font-extrabold text-slate-800">
+                  Available medicines
+                </h2>
+
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Medicines currently available at this pharmacy.
+                </p>
+              </div>
+            </div>
+
+            {/* Medicine Loading */}
+            {medicinesLoading && (
+              <div className="mt-5 space-y-3">
+                {[1, 2].map((item) => (
+                  <div
+                    key={item}
+                    className="animate-pulse rounded-xl border border-slate-100 p-4"
+                  >
+                    <div className="flex gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-slate-200" />
+
+                      <div className="flex-1">
+                        <div className="h-4 w-40 rounded bg-slate-200" />
+                        <div className="mt-2 h-3 w-28 rounded bg-slate-100" />
+                        <div className="mt-3 h-3 w-20 rounded bg-slate-100" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Medicine Error */}
+            {!medicinesLoading && medicinesError && (
+              <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle
+                    size={18}
+                    className="mt-0.5 shrink-0 text-red-600"
+                  />
+
+                  <div>
+                    <p className="text-xs font-bold text-red-700">
+                      Unable to load medicines
+                    </p>
+
+                    <p className="mt-1 text-xs leading-relaxed text-red-600">
+                      {medicinesError}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Medicine List */}
+            {!medicinesLoading &&
+              !medicinesError &&
+              medicines.length > 0 && (
+                <div className="mt-5 space-y-3">
+                  {medicines.map((item) => {
+                    const medicine = item.medicine
+
+                    return (
+                      <div
+                        key={item.inventory_id}
+                        className="rounded-xl border border-slate-200 p-4"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                            <Pill size={18} />
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <h3 className="text-sm font-extrabold text-slate-800">
+                                  {medicine?.generic_name ||
+                                    'Unknown medicine'}
+                                </h3>
+
+                                {medicine?.brand_name && (
+                                  <p className="mt-0.5 text-xs text-slate-500">
+                                    {medicine.brand_name}
+                                  </p>
+                                )}
+                              </div>
+
+                              <span
+                                className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${getInventoryStatusClasses(
+                                  item.status
+                                )}`}
+                              >
+                                {formatInventoryStatus(item.status)}
+                              </span>
+                            </div>
+
+                            <div className="mt-3 grid grid-cols-2 gap-2">
+                              <div className="rounded-lg bg-slate-50 p-2.5">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                  Dosage
+                                </p>
+
+                                <p className="mt-0.5 text-xs font-semibold text-slate-700">
+                                  {medicine?.dosage || 'Not specified'}
+                                </p>
+                              </div>
+
+                              <div className="rounded-lg bg-slate-50 p-2.5">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                  Form
+                                </p>
+
+                                <p className="mt-0.5 text-xs font-semibold text-slate-700">
+                                  {medicine?.dosage_form ||
+                                    'Not specified'}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                  Price
+                                </p>
+
+                                <p className="mt-0.5 text-sm font-extrabold text-emerald-700">
+                                  ₱{Number(item.unit_price).toFixed(2)}
+                                </p>
+                              </div>
+
+                              <div className="text-right">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                  Stock
+                                </p>
+
+                                <p className="mt-0.5 text-xs font-bold text-slate-700">
+                                  {item.quantity} available
+                                </p>
+                              </div>
+                            </div>
+
+                            {medicine?.requires_prescription && (
+                              <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2">
+                                <p className="text-[10px] font-bold text-amber-700">
+                                  Prescription required
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+            {/* No Medicines */}
+            {!medicinesLoading &&
+              !medicinesError &&
+              medicines.length === 0 && (
+                <div className="mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center">
+                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm">
+                    <Pill size={19} />
+                  </div>
+
+                  <h3 className="mt-3 text-sm font-bold text-slate-700">
+                    No medicines available
+                  </h3>
+
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                    This pharmacy currently has no medicines available
+                    for viewing.
+                  </p>
+                </div>
+              )}
+          </div>
+
           {/* Location Card */}
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
             <div className="flex min-h-44 flex-col items-center justify-center px-5 text-center">
@@ -244,7 +485,7 @@ function PharmacyDetailsPage() {
             </div>
           </div>
 
-          {/* Operating Information */}
+          {/* Pharmacy Information */}
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
@@ -271,23 +512,15 @@ function PharmacyDetailsPage() {
               </h2>
 
               <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                Medicine availability and reservation features will be
-                connected to this pharmacy later.
+                Reservation features will be connected here in the
+                next step.
               </p>
 
-              <div className="mt-4 grid gap-2">
+              <div className="mt-4">
                 <button
                   type="button"
                   disabled
-                  className="rounded-xl bg-emerald-700 px-4 py-3 text-xs font-bold text-white opacity-50"
-                >
-                  View available medicines
-                </button>
-
-                <button
-                  type="button"
-                  disabled
-                  className="rounded-xl border border-emerald-200 bg-white px-4 py-3 text-xs font-bold text-emerald-700 opacity-50"
+                  className="w-full rounded-xl bg-emerald-700 px-4 py-3 text-xs font-bold text-white opacity-50"
                 >
                   Reserve medicine
                 </button>
