@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import {
   ArrowLeft,
   CheckCircle2,
-  Clock3,
   MapPin,
   Pill,
   ShoppingBag,
@@ -36,13 +35,18 @@ function MedicineDetailsPage() {
         )
 
         if (!response.success || !response.data) {
-          throw new Error('Medicine information could not be loaded.')
+          throw new Error(
+            'Medicine information could not be loaded.'
+          )
         }
 
         setMedicine(response.data)
       } catch (error) {
         console.error('Load medicine error:', error)
-        setError(error.message || 'Failed to load medicine.')
+
+        setError(
+          error.message || 'Failed to load medicine.'
+        )
       } finally {
         setLoadingMedicine(false)
       }
@@ -73,7 +77,10 @@ function MedicineDetailsPage() {
 
         setPharmacies(response.data || [])
       } catch (error) {
-        console.error('Load pharmacy availability error:', error)
+        console.error(
+          'Load pharmacy availability error:',
+          error
+        )
 
         setError(
           error.message ||
@@ -89,13 +96,53 @@ function MedicineDetailsPage() {
     }
   }, [medicineId])
 
+  /*
+   * Continue to reservation page
+   */
   const handleReserve = () => {
-    if (!selectedPharmacy) return
+    if (!selectedPharmacy || !medicine) {
+      return
+    }
 
-    /*
-     * Reservation flow will be connected next.
-     */
-    navigate('/reservations')
+    const selectedInventory = pharmacies.find(
+      (inventory) =>
+        Number(inventory.pharmacy_id) ===
+        Number(selectedPharmacy)
+    )
+
+    if (!selectedInventory) {
+      return
+    }
+
+    navigate('/reservations', {
+      state: {
+        medicine: {
+          medicine_id: medicine.medicine_id,
+          generic_name: medicine.generic_name,
+          brand_name: medicine.brand_name,
+          dosage: medicine.dosage,
+          dosage_form: medicine.dosage_form,
+          requires_prescription:
+            medicine.requires_prescription,
+        },
+
+        pharmacy: {
+          pharmacy_id: selectedInventory.pharmacy_id,
+          name:
+            selectedInventory.pharmacies?.name ||
+            'Pharmacy',
+          address:
+            selectedInventory.pharmacies?.address ||
+            'Address unavailable',
+        },
+
+        inventory: {
+          inventory_id: selectedInventory.inventory_id,
+          quantity: selectedInventory.quantity,
+          unit_price: selectedInventory.unit_price,
+        },
+      },
+    })
   }
 
   /*
@@ -242,7 +289,8 @@ function MedicineDetailsPage() {
           </h2>
 
           <p className="mt-1 text-xs text-slate-500">
-            Select a pharmacy to reserve this medicine for pickup.
+            Select a pharmacy to reserve this medicine for
+            pickup.
           </p>
         </div>
 
@@ -259,9 +307,11 @@ function MedicineDetailsPage() {
               const pharmacy = inventory.pharmacies
 
               const isSelected =
-                selectedPharmacy === inventory.pharmacy_id
+                Number(selectedPharmacy) ===
+                Number(inventory.pharmacy_id)
 
-              const stock = Number(inventory.quantity) || 0
+              const stock =
+                Number(inventory.quantity) || 0
 
               const isLimited = stock <= 3
 
@@ -270,7 +320,9 @@ function MedicineDetailsPage() {
                   key={inventory.inventory_id}
                   type="button"
                   onClick={() =>
-                    setSelectedPharmacy(inventory.pharmacy_id)
+                    setSelectedPharmacy(
+                      inventory.pharmacy_id
+                    )
                   }
                   className={`w-full rounded-2xl border p-4 text-left transition ${
                     isSelected

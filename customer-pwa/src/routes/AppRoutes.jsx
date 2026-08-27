@@ -10,23 +10,42 @@ import MedicineDetailsPage from '../pages/MedicineDetailsPage'
 import PharmaciesPage from '../pages/PharmaciesPage'
 import PharmacyDetailsPage from '../pages/PharmacyDetailsPage'
 import ProfilePage from '../pages/ProfilePage'
+import ReservationsPage from '../pages/ReservationsPage'
 import PlaceholderPage from '../pages/PlaceholderPage'
 import NotFoundPage from '../pages/NotFoundPage'
 
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public pages */}
-      <Route path="/download" element={<DownloadLandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
+      {/* =========================
+          Public pages
+      ========================== */}
+      <Route
+        path="/download"
+        element={<DownloadLandingPage />}
+      />
 
-      {/* Customer PWA */}
+      <Route
+        path="/login"
+        element={<LoginPage />}
+      />
+
+      {/* =========================
+          Customer PWA
+      ========================== */}
       <Route element={<CustomerLayout />}>
+
         {/* Home */}
-        <Route index element={<HomePage />} />
+        <Route
+          index
+          element={<HomePage />}
+        />
 
         {/* Medicine search */}
-        <Route path="search" element={<SearchPage />} />
+        <Route
+          path="search"
+          element={<SearchPage />}
+        />
 
         {/* Medicine details */}
         <Route
@@ -37,23 +56,30 @@ function AppRoutes() {
         {/* Reservations */}
         <Route
           path="reservations"
-          element={<PlaceholderPage title="My reservations" />}
+          element={<ReservationsPage />}
         />
 
         {/* Upload prescription */}
         <Route
           path="upload-prescription"
-          element={<PlaceholderPage title="Upload prescription" />}
+          element={
+            <PlaceholderPage title="Upload prescription" />
+          }
         />
 
         {/* Request medicine */}
         <Route
           path="request-medicine"
-          element={<PlaceholderPage title="Request medicine" />}
+          element={
+            <PlaceholderPage title="Request medicine" />
+          }
         />
 
         {/* Pharmacies */}
-        <Route path="pharmacies" element={<PharmaciesPage />} />
+        <Route
+          path="pharmacies"
+          element={<PharmaciesPage />}
+        />
 
         {/* Pharmacy details */}
         <Route
@@ -62,10 +88,17 @@ function AppRoutes() {
         />
 
         {/* Profile */}
-        <Route path="profile" element={<ProfilePage />} />
+        <Route
+          path="profile"
+          element={<ProfilePage />}
+        />
 
-        {/* 404 */}
-        <Route path="*" element={<NotFoundPage />} />
+        {/* Customer 404 */}
+        <Route
+          path="*"
+          element={<NotFoundPage />}
+        />
+
       </Route>
     </Routes>
   )
