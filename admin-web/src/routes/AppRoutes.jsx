@@ -6,7 +6,6 @@ import InventoryPage from '../pages/InventoryPage'
 import LoginPage from '../pages/LoginPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import PlaceholderPage from '../pages/PlaceholderPage'
-import ProfilePage from '../pages/ProfilePage'
 
 const placeholderPages = [
   ['medicines', 'Medicines'],
@@ -27,7 +26,6 @@ function AppRoutes() {
         <Route element={<AdminLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="inventory" element={<InventoryPage />} />
-          <Route path="profile" element={<ProfilePage />} />
           {placeholderPages.map(([path, title]) => (
             <Route key={path} path={path} element={<PlaceholderPage title={title} />} />
           ))}

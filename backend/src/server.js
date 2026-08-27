@@ -7,7 +7,6 @@ const pharmacyRoutes = require('./routes/pharmacyRoutes')
 const authRoutes = require('./routes/authRoutes')
 const inventoryRoutes = require('./routes/inventoryRoutes')
 const userRoutes = require('./routes/userRoutes')
-const accountRoutes = require('./routes/accountRoutes')
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -32,7 +31,6 @@ app.use('/api/pharmacies', pharmacyRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/pharmacies', inventoryRoutes)
-app.use('/api/account', accountRoutes)
 
 app.get('/', (req, res) => {
   res.json({

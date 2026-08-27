@@ -12,7 +12,6 @@ const navigation = [
   { label: 'Customers', to: '/customers' },
   { label: 'Sales', to: '/sales' },
   { label: 'Reports', to: '/reports' },
-  { label: 'My Profile', to: '/profile' },
   { label: 'Settings', to: '/settings' },
 ]
 
