@@ -4,6 +4,7 @@ const {
   createReservation,
   getCustomerReservations,
   getReservationById,
+  getPharmacyReservations,
 } = require('../controllers/reservationController')
 
 const authenticateUser = require('../middleware/authMiddleware')
@@ -25,7 +26,19 @@ router.get(
 )
 
 /**
- * Get customer's reservation by ID
+ * Get reservations for the authenticated pharmacy
+ * GET /api/reservations/pharmacy
+ */
+router.get(
+  '/pharmacy',
+  authenticateUser,
+  loadPharmaUser,
+  requireRole('PHARMACY_ADMIN'),
+  getPharmacyReservations
+)
+
+/**
+ * Get a single customer reservation
  * GET /api/reservations/:reservationId
  */
 router.get(

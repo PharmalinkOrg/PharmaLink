@@ -32,6 +32,7 @@ const createReservation = async (req, res) => {
     // --------------------------------------------------
     // Validate pharmacy ID
     // --------------------------------------------------
+
     if (!isValidId(pharmacy_id)) {
       return res.status(400).json({
         success: false,
@@ -42,6 +43,7 @@ const createReservation = async (req, res) => {
     // --------------------------------------------------
     // Validate pickup date
     // --------------------------------------------------
+
     if (!pickup_date || String(pickup_date).trim() === '') {
       return res.status(400).json({
         success: false,
@@ -52,6 +54,7 @@ const createReservation = async (req, res) => {
     // --------------------------------------------------
     // Validate pickup time
     // --------------------------------------------------
+
     if (!pickup_time || String(pickup_time).trim() === '') {
       return res.status(400).json({
         success: false,
@@ -62,6 +65,7 @@ const createReservation = async (req, res) => {
     // --------------------------------------------------
     // Validate reservation items
     // --------------------------------------------------
+
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
         success: false,
@@ -93,6 +97,7 @@ const createReservation = async (req, res) => {
     // --------------------------------------------------
     // Verify pharmacy exists and is active
     // --------------------------------------------------
+
     const {
       data: pharmacy,
       error: pharmacyError,
@@ -103,10 +108,7 @@ const createReservation = async (req, res) => {
       .maybeSingle()
 
     if (pharmacyError) {
-      console.error(
-        'Pharmacy lookup error:',
-        pharmacyError
-      )
+      console.error('Pharmacy lookup error:', pharmacyError)
 
       return res.status(500).json({
         success: false,
@@ -131,6 +133,7 @@ const createReservation = async (req, res) => {
     // --------------------------------------------------
     // Get inventory for requested medicines
     // --------------------------------------------------
+
     const medicineIds = items.map(
       (item) => Number(item.medicine_id)
     )
@@ -160,21 +163,18 @@ const createReservation = async (req, res) => {
       .gt('quantity', 0)
 
     if (inventoryError) {
-      console.error(
-        'Inventory lookup error:',
-        inventoryError
-      )
+      console.error('Inventory lookup error:', inventoryError)
 
       return res.status(500).json({
         success: false,
-        message:
-          'Failed to verify medicine availability',
+        message: 'Failed to verify medicine availability',
       })
     }
 
     // --------------------------------------------------
     // Create quick inventory lookup
     // --------------------------------------------------
+
     const inventoryMap = new Map(
       (inventoryRows || []).map((row) => [
         Number(row.medicine_id),
@@ -185,6 +185,7 @@ const createReservation = async (req, res) => {
     // --------------------------------------------------
     // Verify every requested medicine
     // --------------------------------------------------
+
     for (const item of items) {
       const medicineId = Number(item.medicine_id)
       const requestedQuantity = Number(item.quantity)
@@ -227,6 +228,7 @@ const createReservation = async (req, res) => {
     // --------------------------------------------------
     // Create reservation
     // --------------------------------------------------
+
     const reservationDate = new Date()
       .toISOString()
       .split('T')[0]
@@ -276,20 +278,17 @@ const createReservation = async (req, res) => {
     // --------------------------------------------------
     // Create reservation items
     // --------------------------------------------------
+
     const reservationItems = items.map((item) => {
       const inventory = inventoryMap.get(
         Number(item.medicine_id)
       )
 
       return {
-        reservation_id:
-          reservation.reservation_id,
-        medicine_id:
-          Number(item.medicine_id),
-        quantity:
-          Number(item.quantity),
-        unit_price:
-          Number(inventory.unit_price),
+        reservation_id: reservation.reservation_id,
+        medicine_id: Number(item.medicine_id),
+        quantity: Number(item.quantity),
+        unit_price: Number(inventory.unit_price),
       }
     })
 
@@ -325,8 +324,7 @@ const createReservation = async (req, res) => {
 
       return res.status(400).json({
         success: false,
-        message:
-          'Failed to create reservation items',
+        message: 'Failed to create reservation items',
         error: itemsError.message,
         code: itemsError.code,
       })
@@ -335,10 +333,10 @@ const createReservation = async (req, res) => {
     // --------------------------------------------------
     // Return successful reservation
     // --------------------------------------------------
+
     return res.status(201).json({
       success: true,
-      message:
-        'Reservation created successfully',
+      message: 'Reservation created successfully',
       data: {
         reservation,
         items: createdItems,
@@ -364,15 +362,12 @@ const createReservation = async (req, res) => {
  */
 const getCustomerReservations = async (req, res) => {
   try {
-    // Customer ID comes from the authenticated
-    // PharmaLink user.
     const customerId = req.pharmaUser?.user_id
 
     if (!customerId) {
       return res.status(401).json({
         success: false,
-        message:
-          'Authenticated customer not found',
+        message: 'Authenticated customer not found',
       })
     }
 
@@ -436,15 +431,13 @@ const getCustomerReservations = async (req, res) => {
 
       return res.status(500).json({
         success: false,
-        message:
-          'Failed to load reservations',
+        message: 'Failed to load reservations',
       })
     }
 
     return res.status(200).json({
       success: true,
-      message:
-        'Reservations loaded successfully',
+      message: 'Reservations loaded successfully',
       data: reservations || [],
     })
   } catch (error) {
@@ -461,12 +454,110 @@ const getCustomerReservations = async (req, res) => {
 }
 
 /**
+ * Get reservations for the authenticated pharmacy
+ * GET /api/reservations/pharmacy
+ */
+const getPharmacyReservations = async (req, res) => {
+  try {
+    const pharmacyId = req.pharmaUser?.pharmacy_id
+
+    if (!pharmacyId) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Pharmacy account is not assigned to a pharmacy',
+      })
+    }
+
+    const {
+      data: reservations,
+      error,
+    } = await supabaseAdmin
+      .from('reservations')
+      .select(`
+        reservation_id,
+        customer_id,
+        pharmacy_id,
+        prescription_id,
+        reservation_date,
+        pickup_date,
+        pickup_time,
+        status,
+        notes,
+        confirmed_by,
+        confirmed_at,
+        completed_at,
+        created_at,
+        updated_at,
+
+        users!reservations_customer_id_fkey (
+          user_id,
+          first_name,
+          last_name,
+          email,
+          phone
+        ),
+
+        reservation_items (
+          reservation_item_id,
+          reservation_id,
+          medicine_id,
+          quantity,
+          unit_price,
+          created_at,
+
+          medicines (
+            medicine_id,
+            generic_name,
+            brand_name,
+            dosage,
+            dosage_form,
+            requires_prescription,
+            status
+          )
+        )
+      `)
+      .eq('pharmacy_id', Number(pharmacyId))
+      .order('created_at', {
+        ascending: false,
+      })
+
+    if (error) {
+      console.error(
+        'Get pharmacy reservations error:',
+        error
+      )
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to load pharmacy reservations',
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Pharmacy reservations loaded successfully',
+      data: reservations || [],
+    })
+  } catch (error) {
+    console.error(
+      'Get pharmacy reservations server error:',
+      error
+    )
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+    })
+  }
+}
+
+/**
  * Get a single reservation for the authenticated customer
  * GET /api/reservations/:reservationId
  */
 const getReservationById = async (req, res) => {
   try {
-    // Customer ID comes from the authenticated PharmaLink user.
     const customerId = req.pharmaUser?.user_id
 
     if (!customerId) {
@@ -476,12 +567,18 @@ const getReservationById = async (req, res) => {
       })
     }
 
-    const reservationId = Number(req.params.reservationId)
+    const reservationId = Number(
+      req.params.reservationId
+    )
 
     // --------------------------------------------------
     // Validate reservation ID
     // --------------------------------------------------
-    if (!Number.isInteger(reservationId) || reservationId <= 0) {
+
+    if (
+      !Number.isInteger(reservationId) ||
+      reservationId <= 0
+    ) {
       return res.status(400).json({
         success: false,
         message: 'Valid reservation ID is required',
@@ -491,6 +588,7 @@ const getReservationById = async (req, res) => {
     // --------------------------------------------------
     // Get reservation
     // --------------------------------------------------
+
     const {
       data: reservation,
       error,
@@ -542,9 +640,6 @@ const getReservationById = async (req, res) => {
       .eq('customer_id', customerId)
       .maybeSingle()
 
-    // --------------------------------------------------
-    // Supabase error
-    // --------------------------------------------------
     if (error) {
       console.error(
         'Get reservation by ID error:',
@@ -557,9 +652,6 @@ const getReservationById = async (req, res) => {
       })
     }
 
-    // --------------------------------------------------
-    // Reservation not found
-    // --------------------------------------------------
     if (!reservation) {
       return res.status(404).json({
         success: false,
@@ -567,9 +659,6 @@ const getReservationById = async (req, res) => {
       })
     }
 
-    // --------------------------------------------------
-    // Success
-    // --------------------------------------------------
     return res.status(200).json({
       success: true,
       message: 'Reservation loaded successfully',
@@ -592,4 +681,5 @@ module.exports = {
   createReservation,
   getCustomerReservations,
   getReservationById,
+  getPharmacyReservations,
 }

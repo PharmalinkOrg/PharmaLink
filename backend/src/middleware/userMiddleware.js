@@ -2,12 +2,20 @@ const supabaseAdmin = require('../config/supabaseAdmin')
 
 const loadPharmaUser = async (req, res, next) => {
   try {
+    // --------------------------------------------------
+    // Verify authenticated user
+    // --------------------------------------------------
+
     if (!req.authUser) {
       return res.status(401).json({
         success: false,
         message: 'Authenticated user not found',
       })
     }
+
+    // --------------------------------------------------
+    // Get authenticated user's email
+    // --------------------------------------------------
 
     const email = req.authUser.email
 
@@ -18,7 +26,14 @@ const loadPharmaUser = async (req, res, next) => {
       })
     }
 
-    const { data: pharmaUser, error } = await supabaseAdmin
+    // --------------------------------------------------
+    // Find PharmaLink user account
+    // --------------------------------------------------
+
+    const {
+      data: pharmaUser,
+      error,
+    } = await supabaseAdmin
       .from('users')
       .select(`
         user_id,
@@ -37,14 +52,25 @@ const loadPharmaUser = async (req, res, next) => {
       .eq('email', email)
       .maybeSingle()
 
+    // --------------------------------------------------
+    // Handle database error
+    // --------------------------------------------------
+
     if (error) {
-      console.error('PharmaLink user lookup error:', error)
+      console.error(
+        'PharmaLink user lookup error:',
+        error
+      )
 
       return res.status(500).json({
         success: false,
         message: 'Failed to load PharmaLink user',
       })
     }
+
+    // --------------------------------------------------
+    // Handle missing PharmaLink user
+    // --------------------------------------------------
 
     if (!pharmaUser) {
       return res.status(404).json({
@@ -53,6 +79,10 @@ const loadPharmaUser = async (req, res, next) => {
       })
     }
 
+    // --------------------------------------------------
+    // Verify PharmaLink account status
+    // --------------------------------------------------
+
     if (pharmaUser.status !== 'ACTIVE') {
       return res.status(403).json({
         success: false,
@@ -60,11 +90,18 @@ const loadPharmaUser = async (req, res, next) => {
       })
     }
 
+    // --------------------------------------------------
+    // Attach PharmaLink user to request
+    // --------------------------------------------------
+
     req.pharmaUser = pharmaUser
 
     next()
   } catch (error) {
-    console.error('PharmaLink user middleware error:', error)
+    console.error(
+      'PharmaLink user middleware error:',
+      error
+    )
 
     return res.status(500).json({
       success: false,

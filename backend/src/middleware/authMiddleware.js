@@ -4,6 +4,10 @@ const authenticateUser = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization
 
+    // --------------------------------------------------
+    // Validate authorization header
+    // --------------------------------------------------
+
     if (!authHeader) {
       return res.status(401).json({
         success: false,
@@ -18,6 +22,10 @@ const authenticateUser = async (req, res, next) => {
       })
     }
 
+    // --------------------------------------------------
+    // Extract access token
+    // --------------------------------------------------
+
     const token = authHeader.split(' ')[1]
 
     if (!token) {
@@ -26,6 +34,10 @@ const authenticateUser = async (req, res, next) => {
         message: 'Access token is required',
       })
     }
+
+    // --------------------------------------------------
+    // Verify Supabase access token
+    // --------------------------------------------------
 
     const {
       data: { user },
@@ -39,11 +51,18 @@ const authenticateUser = async (req, res, next) => {
       })
     }
 
+    // --------------------------------------------------
+    // Store authenticated Supabase user
+    // --------------------------------------------------
+
     req.authUser = user
 
     next()
   } catch (error) {
-    console.error('Authentication middleware error:', error)
+    console.error(
+      'Authentication middleware error:',
+      error
+    )
 
     return res.status(500).json({
       success: false,
