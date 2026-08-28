@@ -26,7 +26,7 @@ const authenticateUser = async (req, res, next) => {
     // Extract access token
     // --------------------------------------------------
 
-    const token = authHeader.split(' ')[1]
+    const token = authHeader.substring(7).trim()
 
     if (!token) {
       return res.status(401).json({
@@ -45,6 +45,8 @@ const authenticateUser = async (req, res, next) => {
     } = await supabase.auth.getUser(token)
 
     if (error || !user) {
+      console.error('Supabase authentication error:', error)
+
       return res.status(401).json({
         success: false,
         message: 'Invalid or expired access token',

@@ -1,58 +1,52 @@
-const API_URL = 'http://localhost:5000/api'
+import { apiRequest } from '../lib/api'
 
-const getAuthHeaders = () => {
+/**
+ * Get reservations for the authenticated pharmacy
+ * GET /api/reservations/pharmacy
+ */
+export const getPharmacyReservations = async () => {
   const token = localStorage.getItem('access_token')
 
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  }
-}
-
-// Get reservations for the authenticated pharmacy
-export const getPharmacyReservations = async () => {
-  const response = await fetch(
-    `${API_URL}/reservations/pharmacy`,
-    {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    }
-  )
-
-  const data = await response.json()
-
-  if (!response.ok) {
-    throw new Error(
-      data.message || 'Failed to load reservations'
-    )
+  if (!token) {
+    throw new Error('Authentication token not found')
   }
 
-  return data
+  return apiRequest('/reservations/pharmacy', {
+    method: 'GET',
+    token,
+  })
 }
 
-// Update reservation status
+/**
+ * Update reservation status
+ * PATCH /api/reservations/:reservationId/status
+ */
 export const updateReservationStatus = async (
   reservationId,
   status
 ) => {
-  const response = await fetch(
-    `${API_URL}/reservations/${reservationId}/status`,
-    {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        status,
-      }),
-    }
-  )
+  const token = localStorage.getItem('access_token')
 
-  const data = await response.json()
-
-  if (!response.ok) {
-    throw new Error(
-      data.message || 'Failed to update reservation status'
-    )
+  if (!token) {
+    throw new Error('Authentication token not found')
   }
 
-  return data
+  if (!reservationId) {
+    throw new Error('Reservation ID is required')
+  }
+
+  if (!status) {
+    throw new Error('Reservation status is required')
+  }
+
+  return apiRequest(
+    `/reservations/${reservationId}/status`,
+    {
+      method: 'PATCH',
+      token,
+      body: {
+        status,
+      },
+    }
+  )
 }

@@ -13,11 +13,7 @@ const loadPharmaUser = require('../middleware/userMiddleware')
 const requireRole = require('../middleware/roleMiddleware')
 
 const router = express.Router()
-
-/**
- * Get customer's reservations
- * GET /api/reservations
- */
+// Customer reservations
 router.get(
   '/',
   authenticateUser,
@@ -26,10 +22,7 @@ router.get(
   getCustomerReservations
 )
 
-/**
- * Get reservations for the authenticated pharmacy
- * GET /api/reservations/pharmacy
- */
+// Pharmacy reservations
 router.get(
   '/pharmacy',
   authenticateUser,
@@ -38,6 +31,7 @@ router.get(
   getPharmacyReservations
 )
 
+// Pharmacy reservation status update
 router.patch(
   '/:reservationId/status',
   authenticateUser,
@@ -46,6 +40,7 @@ router.patch(
   updateReservationStatus
 )
 
+// Customer reservation details
 router.get(
   '/:reservationId',
   authenticateUser,
@@ -54,10 +49,7 @@ router.get(
   getReservationById
 )
 
-/**
- * Create customer reservation
- * POST /api/reservations
- */
+// Customer creates reservation
 router.post(
   '/',
   authenticateUser,
