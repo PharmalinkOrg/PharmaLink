@@ -12,6 +12,8 @@ const customerInventoryRoutes = require('./routes/customerInventoryRoutes')
 const medicineRoutes = require('./routes/medicineRoutes')
 const reservationRoutes = require('./routes/reservationRoutes')
 const dashboardRoutes = require('./routes/dashboardRoutes')
+const medicineCategoryRoutes = require('./routes/medicineCategoryRoutes')
+const medicineRequestRoutes = require('./routes/medicineRequestRoutes')
 
 const app = express()
 
@@ -63,6 +65,8 @@ app.use('/api/reservations', reservationRoutes)
 
 app.use('/api/pharmacies', pharmacyRoutes)
 
+app.use('/api/medicine-requests', medicineRequestRoutes)
+
 // --------------------------------------------------
 // Inventory Routes
 // --------------------------------------------------
@@ -73,6 +77,7 @@ app.use('/api/pharmacies', inventoryRoutes)
 // Public customer inventory routes
 app.use('/api/pharmacies', customerInventoryRoutes)
 
+app.use('/api/medicine-categories', medicineCategoryRoutes)
 // --------------------------------------------------
 // Start Server
 // --------------------------------------------------

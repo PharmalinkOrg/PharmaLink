@@ -14,6 +14,7 @@ const emptyForm = {
 function InventoryPage() {
   const { accessToken, user } = useAuth()
   const [inventory, setInventory] = useState([])
+  const [medicines, setMedicines] = useState([])
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
   const [error, setError] = useState('')
@@ -23,6 +24,7 @@ function InventoryPage() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   const inventoryPath = `/pharmacies/${user.pharmacy_id}/inventory`
+  const medicinesPath = `/medicines?pharmacy_id=${user.pharmacy_id}`
 
   useEffect(() => {
     let isCurrent = true
@@ -45,6 +47,22 @@ function InventoryPage() {
       isCurrent = false
     }
   }, [accessToken, inventoryPath, refreshKey])
+
+  useEffect(() => {
+    let isCurrent = true
+
+    apiRequest(medicinesPath, { token: accessToken })
+      .then((response) => {
+        if (isCurrent) setMedicines(response.data)
+      })
+      .catch((requestError) => {
+        if (isCurrent) setError(requestError.message)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [accessToken, medicinesPath])
 
   const updateForm = (event) => {
     setForm((current) => ({ ...current, [event.target.name]: event.target.value }))
@@ -113,6 +131,11 @@ function InventoryPage() {
     }
   }
 
+  const getMedicineName = (medicineId) => {
+    const medicine = medicines.find((m) => m.medicine_id === medicineId)
+    return medicine ? (medicine.brand_name || medicine.generic_name) : `#${medicineId}`
+  }
+
   return (
     <section className="inventory-page">
       <div className="page-heading">
@@ -128,7 +151,17 @@ function InventoryPage() {
       <div className="inventory-grid">
         <form className="inventory-form" onSubmit={handleSubmit}>
           <h3>{editingId ? 'Edit inventory batch' : 'Add inventory batch'}</h3>
-          <label>Medicine ID<input name="medicine_id" type="number" min="1" value={form.medicine_id} onChange={updateForm} required /></label>
+          <label>
+            Medicine
+            <select name="medicine_id" value={form.medicine_id} onChange={updateForm} required>
+              <option value="" disabled>Select a medicine</option>
+              {medicines.map((medicine) => (
+                <option key={medicine.medicine_id} value={medicine.medicine_id}>
+                  {medicine.brand_name || medicine.generic_name} — {medicine.dosage} {medicine.dosage_form}
+                </option>
+              ))}
+            </select>
+          </label>
           <label>Batch number<input name="batch_number" value={form.batch_number} onChange={updateForm} required /></label>
           <div className="form-row">
             <label>Quantity<input name="quantity" type="number" min="0" value={form.quantity} onChange={updateForm} required /></label>
@@ -139,9 +172,14 @@ function InventoryPage() {
             <label>Expiry date<input name="expiration_date" type="date" value={form.expiration_date} onChange={updateForm} /></label>
           </div>
           <div className="form-actions">
-            <button className="primary-button" type="submit" disabled={isSaving}>{isSaving ? 'Saving…' : editingId ? 'Save changes' : 'Add batch'}</button>
+            <button className="primary-button" type="submit" disabled={isSaving || medicines.length === 0}>
+              {isSaving ? 'Saving…' : editingId ? 'Save changes' : 'Add batch'}
+            </button>
             {editingId && <button className="secondary-button" type="button" onClick={resetForm}>Cancel</button>}
           </div>
+          {medicines.length === 0 && (
+            <p className="form-notice">No medicines in your catalog yet — add one on the Medicines page first.</p>
+          )}
         </form>
 
         <div className="inventory-table-wrap">
@@ -151,7 +189,7 @@ function InventoryPage() {
               <tbody>
                 {inventory.length === 0 ? <tr><td colSpan="6">No inventory batches yet.</td></tr> : inventory.map((item) => (
                   <tr key={item.inventory_id}>
-                    <td>#{item.medicine_id}</td><td>{item.batch_number}</td><td>{item.quantity}</td><td>₱{Number(item.unit_price).toFixed(2)}</td>
+                    <td>{getMedicineName(item.medicine_id)}</td><td>{item.batch_number}</td><td>{item.quantity}</td><td>₱{Number(item.unit_price).toFixed(2)}</td>
                     <td><span className={`status-pill ${item.status.toLowerCase()}`}>{item.status.replaceAll('_', ' ')}</span></td>
                     <td className="table-actions"><button type="button" onClick={() => startEdit(item)}>Edit</button><button type="button" onClick={() => deleteItem(item)}>Delete</button></td>
                   </tr>

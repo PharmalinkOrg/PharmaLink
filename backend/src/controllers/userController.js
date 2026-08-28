@@ -131,7 +131,7 @@ const createPharmacyAdmin = async (req, res) => {
     }
 
     // Verify pharmacy exists
-    const { data: pharmacy, error: pharmacyError } = await supabase
+    const { data: pharmacy, error: pharmacyError } = await supabaseAdmin
       .from('pharmacies')
       .select('pharmacy_id, name, status')
       .eq('pharmacy_id', pharmacy_id)
@@ -153,7 +153,7 @@ const createPharmacyAdmin = async (req, res) => {
 
     // Create account in Supabase Auth
     const { data: authData, error: authError } =
-      await supabase.auth.admin.createUser({
+      await supabaseAdmin.auth.admin.createUser({
         email: email.trim().toLowerCase(),
         password,
         email_confirm: true,
@@ -169,7 +169,7 @@ const createPharmacyAdmin = async (req, res) => {
     }
 
     // Create corresponding PharmaLink user
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .insert({
         pharmacy_id,
@@ -190,7 +190,7 @@ const createPharmacyAdmin = async (req, res) => {
       console.error('PharmaLink user creation error:', userError)
 
       // Roll back the Supabase Auth user if public.users fails
-      await supabase.auth.admin.deleteUser(authData.user.id)
+      await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
 
       return res.status(500).json({
         success: false,

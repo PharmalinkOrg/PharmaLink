@@ -15,7 +15,6 @@ const loadPharmaUser = require('../middleware/userMiddleware')
 const requireRole = require('../middleware/roleMiddleware')
 
 router.get('/', getMedicines)
-
 router.get('/:medicineId', getMedicineById)
 
 router.post(
@@ -26,8 +25,20 @@ router.post(
   createMedicine,
 )
 
-router.patch('/:medicineId', updateMedicine)
+router.patch(
+  '/:medicineId',
+  authenticateUser,
+  loadPharmaUser,
+  requireRole('SUPER_ADMIN', 'PHARMACY_ADMIN'),
+  updateMedicine,
+)
 
-router.delete('/:medicineId', deleteMedicine)
+router.delete(
+  '/:medicineId',
+  authenticateUser,
+  loadPharmaUser,
+  requireRole('SUPER_ADMIN', 'PHARMACY_ADMIN'),
+  deleteMedicine,
+)
 
 module.exports = router

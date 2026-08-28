@@ -425,3 +425,98 @@ Content-Type: application/json
     }
   ]
 }
+
+###
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "pharmacy2admin@pharmalink.com",
+  "password": "PharmacyAdmin123!"
+}
+
+###
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@pharmalink.com",
+  "password": "Admin123!"
+}
+
+###
+POST http://localhost:5000/api/pharmacies
+Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImY4ZGI5OTBmLTUwZGItNDJmYy1iZWY2LWI3ZmU3M2QzM2VhOCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2RtY2txbmJtcmtidGZ4cmhmd2J1LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI3NTlkYzVlNi03NDMwLTRlMjAtODQ0MS1mNGI2OTg4YzJlZWYiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzg3OTA3OTMyLCJpYXQiOjE3ODc5MDQzMzIsImVtYWlsIjoiYWRtaW5AcGhhcm1hbGluay5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc4NzkwNDMzMn1dLCJzZXNzaW9uX2lkIjoiYjMyODhiMDctZDBkNS00YjRhLTkxNTUtMGM2ZjRjYjRkM2FkIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.OV9LmkwR5m1dSU3exQXddKu8dVYRkUhigStO42mgrWGajEcItMm_20_a7ia2pqkPtb1Io-rOzXZSwX-MxJN75A
+Content-Type: application/json
+
+{
+  "name": "Test Pharmacy 2",
+  "address": "456 Test Street",
+  "contact_number": "09171112222",
+  "email": "testpharmacy2@pharmalink.com"
+}
+
+###
+POST http://localhost:5000/api/users/pharmacy-admin
+Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImY4ZGI5OTBmLTUwZGItNDJmYy1iZWY2LWI3ZmU3M2QzM2VhOCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2RtY2txbmJtcmtidGZ4cmhmd2J1LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI3NTlkYzVlNi03NDMwLTRlMjAtODQ0MS1mNGI2OTg4YzJlZWYiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzg3OTA3OTMyLCJpYXQiOjE3ODc5MDQzMzIsImVtYWlsIjoiYWRtaW5AcGhhcm1hbGluay5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc4NzkwNDMzMn1dLCJzZXNzaW9uX2lkIjoiYjMyODhiMDctZDBkNS00YjRhLTkxNTUtMGM2ZjRjYjRkM2FkIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.OV9LmkwR5m1dSU3exQXddKu8dVYRkUhigStO42mgrWGajEcItMm_20_a7ia2pqkPtb1Io-rOzXZSwX-MxJN75A
+Content-Type: application/json
+
+{
+  "pharmacy_id": 5,
+  "first_name": "Test",
+  "last_name": "Admin2",
+  "email": "pharmacy2admin2@pharmalink.com",
+  "phone": "09173334444",
+  "password": "Admin123!"
+}
+###
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "pharmacy2admin2@pharmalink.com",
+  "password": "Admin123!"
+}
+
+###
+PATCH http://localhost:5000/api/medicines/<that_medicine_id>
+Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImY4ZGI5OTBmLTUwZGItNDJmYy1iZWY2LWI3ZmU3M2QzM2VhOCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2RtY2txbmJtcmtidGZ4cmhmd2J1LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI2NjY3ZWEzOC04NmY0LTQ0NmQtYWIyNS1jOTVkYzI2NzIxYjEiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzg3OTA4NDMxLCJpYXQiOjE3ODc5MDQ4MzEsImVtYWlsIjoicGhhcm1hY3kyYWRtaW4yQHBoYXJtYWxpbmsuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbF92ZXJpZmllZCI6dHJ1ZX0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3ODc5MDQ4MzF9XSwic2Vzc2lvbl9pZCI6ImMyMzU0NzJjLWExNmItNDkyMi1hMDIwLTNjNGIyMjEyNjY4NCIsImlzX2Fub255bW91cyI6ZmFsc2V9.PYSXAXi05Meo7m7hGYPFdmaUqgl19TGqGHtU9jrikCfL9aJ1J-fBbrGzcSRFykLCXKeoqn1Z1YqqS94il72JYQ
+Content-Type: application/json
+
+{
+  "generic_name": "Attempted Cross-Pharmacy Edit"
+}
+###
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "pharmacy2admin2@pharmalink.com",
+  "password": "Admin123!"
+}
+###
+PATCH http://localhost:5000/api/medicines/1
+Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImY4ZGI5OTBmLTUwZGItNDJmYy1iZWY2LWI3ZmU3M2QzM2VhOCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2RtY2txbmJtcmtidGZ4cmhmd2J1LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI2NjY3ZWEzOC04NmY0LTQ0NmQtYWIyNS1jOTVkYzI2NzIxYjEiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzg3OTA4NTI4LCJpYXQiOjE3ODc5MDQ5MjgsImVtYWlsIjoicGhhcm1hY3kyYWRtaW4yQHBoYXJtYWxpbmsuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbF92ZXJpZmllZCI6dHJ1ZX0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3ODc5MDQ5Mjh9XSwic2Vzc2lvbl9pZCI6IjcxNzlkYWE3LTQ3ZTAtNDg4MS1hYTE0LTJkMzEzY2VhMDk5NCIsImlzX2Fub255bW91cyI6ZmFsc2V9.Fz5Au0kfXyQHp4fbbXp2oJCsFZ43_YnXs2R4vchPLzyPTAElFCu1oklsuowSzMr2vpjjADQTEAcsATPMxdiSQg
+Content-Type: application/json
+
+{
+  "generic_name": "Attempted Cross-Pharmacy Edit"
+}
+
+###
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "pharmacyadmin@pharmalink.com",
+  "password": "PharmacyAdmin123!"
+}
+
+###
+PATCH http://localhost:5000/api/medicines/1
+Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImY4ZGI5OTBmLTUwZGItNDJmYy1iZWY2LWI3ZmU3M2QzM2VhOCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2RtY2txbmJtcmtidGZ4cmhmd2J1LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5YTk2MmQwMC05NGU2LTQyNGYtYWQwNC02ZjcyYjAwZDY2OGYiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzg3OTA4NjYxLCJpYXQiOjE3ODc5MDUwNjEsImVtYWlsIjoicGhhcm1hY3lhZG1pbkBwaGFybWFsaW5rLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWxfdmVyaWZpZWQiOnRydWV9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzg3OTA1MDYxfV0sInNlc3Npb25faWQiOiI1ODVmZGJhZS1kYzcyLTRhZjMtOTg3Zi0wZDViOTRmZGI3MGQiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.eLtFrOXVFT93-B4cVdetV50PNZsuzVJzYU4Vixc2lgw4fMTOBTUdwj5LnBHwepks3o0iqyPWqzab8VAz1cJ74Q
+Content-Type: application/json
+
+{
+  "generic_name": "Paracetamol"
+}
