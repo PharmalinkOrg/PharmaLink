@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 
 import CustomerLayout from '../components/layout/CustomerLayout'
+import ProtectedRoute from '../components/auth/ProtectedRoute'
 
 import DownloadLandingPage from '../pages/DownloadLandingPage'
 import LoginPage from '../pages/LoginPage'
@@ -22,6 +23,7 @@ function AppRoutes() {
       {/* =========================
           Public pages
       ========================== */}
+
       <Route
         path="/download"
         element={<DownloadLandingPage />}
@@ -35,79 +37,80 @@ function AppRoutes() {
       {/* =========================
           Customer PWA
       ========================== */}
+
       <Route element={<CustomerLayout />}>
 
-        {/* Home */}
+        {/* Public browsing */}
+
         <Route
           index
           element={<HomePage />}
         />
 
-        {/* Medicine search */}
         <Route
           path="search"
           element={<SearchPage />}
         />
 
-        {/* Medicine details */}
         <Route
           path="medicine/:medicineId"
           element={<MedicineDetailsPage />}
         />
 
-        {/* Create reservation */}
-        <Route
-          path="reservations"
-          element={<ReservationsPage />}
-        />
-
-        {/* My reservations */}
-        <Route
-          path="my-reservations"
-          element={<MyReservationsPage />}
-        />
-
-        {/* Reservation details */}
-        <Route
-          path="my-reservations/:reservationId"
-          element={<ReservationDetailsPage />}
-        />
-
-        {/* Upload prescription */}
-        <Route
-          path="upload-prescription"
-          element={
-            <PlaceholderPage title="Upload prescription" />
-          }
-        />
-
-        {/* Request medicine */}
-        <Route
-          path="request-medicine"
-          element={
-            <PlaceholderPage title="Request medicine" />
-          }
-        />
-
-        {/* Pharmacies */}
         <Route
           path="pharmacies"
           element={<PharmaciesPage />}
         />
 
-        {/* Pharmacy details */}
         <Route
           path="pharmacy/:pharmacyId"
           element={<PharmacyDetailsPage />}
         />
 
-        {/* Profile */}
-        <Route
-          path="profile"
-          element={<ProfilePage />}
-        />
+        {/* =========================
+            Protected customer pages
+        ========================== */}
+
+        <Route element={<ProtectedRoute />}>
+
+          <Route
+            path="reservations"
+            element={<ReservationsPage />}
+          />
+
+          <Route
+            path="my-reservations"
+            element={<MyReservationsPage />}
+          />
+
+          <Route
+            path="my-reservations/:reservationId"
+            element={<ReservationDetailsPage />}
+          />
+
+          <Route
+            path="upload-prescription"
+            element={
+              <PlaceholderPage title="Upload prescription" />
+            }
+          />
+
+          <Route
+            path="request-medicine"
+            element={
+              <PlaceholderPage title="Request medicine" />
+            }
+          />
+
+          <Route
+            path="profile"
+            element={<ProfilePage />}
+          />
+
+        </Route>
 
         {/* Customer 404 */}
+
         <Route
           path="*"
           element={<NotFoundPage />}

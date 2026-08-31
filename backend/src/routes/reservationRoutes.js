@@ -6,6 +6,7 @@ const {
   getReservationById,
   getPharmacyReservations,
   updateReservationStatus,
+  cancelReservation,
 } = require('../controllers/reservationController')
 
 const authenticateUser = require('../middleware/authMiddleware')
@@ -47,6 +48,15 @@ router.get(
   loadPharmaUser,
   requireRole('CUSTOMER'),
   getReservationById
+)
+
+// Customer cancels reservation
+router.patch(
+  '/:reservationId/cancel',
+  authenticateUser,
+  loadPharmaUser,
+  requireRole('CUSTOMER'),
+  cancelReservation
 )
 
 // Customer creates reservation
