@@ -4,7 +4,7 @@ import '../../App.css'
 const navigation = [
   { label: 'Home', to: '/' },
   { label: 'Search', to: '/search' },
-  { label: 'Reservations', to: '/reservations' },
+  { label: 'Reservations', to: '/my-reservations' },  // ← Change this
   { label: 'Profile', to: '/profile' },
 ]
 

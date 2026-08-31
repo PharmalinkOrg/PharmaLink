@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
   CalendarDays,
@@ -12,6 +12,26 @@ import {
 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
+
+function getLocalDateString() {
+  const date = new Date()
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function isValidDateString(value) {
+  if (!value) {
+    return false
+  }
+
+  const date = new Date(`${value}T00:00:00`)
+
+  return !Number.isNaN(date.getTime())
+}
 
 function ReservationsPage() {
   const navigate = useNavigate()
@@ -36,34 +56,54 @@ function ReservationsPage() {
 
   /*
    * Redirect if the page was opened directly
-   * without selecting a medicine and pharmacy.
+   * without selecting a medicine, pharmacy, and inventory.
    */
   useEffect(() => {
     if (!medicine || !pharmacy || !inventory) {
-      navigate('/medicines', { replace: true })
+      navigate('/search', { replace: true })
     }
   }, [medicine, pharmacy, inventory, navigate])
 
   /*
-   * Maximum quantity is based on current inventory.
+   * The inventory quantity is only used for the UI.
+   *
+   * The backend remains the final authority for stock
+   * availability because inventory can change after this
+   * page was opened.
    */
-  const availableStock = Number(inventory?.quantity) || 0
+  const availableStock = useMemo(() => {
+    const stock = Number(inventory?.quantity)
 
-  const unitPrice = Number(inventory?.unit_price) || 0
+    return Number.isFinite(stock) && stock > 0
+      ? Math.floor(stock)
+      : 0
+  }, [inventory])
+
+  const unitPrice = useMemo(() => {
+    const price = Number(inventory?.unit_price)
+
+    return Number.isFinite(price) && price >= 0
+      ? price
+      : 0
+  }, [inventory])
 
   const totalPrice = unitPrice * quantity
 
   /*
-   * Get today's date for the minimum pickup date.
+   * Use the browser's local date instead of toISOString().
+   *
+   * toISOString() converts the date to UTC, which can cause
+   * the minimum pickup date to become incorrect depending
+   * on the customer's timezone.
    */
-  const today = new Date()
-    .toISOString()
-    .split('T')[0]
+  const today = getLocalDateString()
 
   /*
-   * Increase quantity
+   * Increase quantity.
    */
   const increaseQuantity = () => {
+    setError('')
+
     setQuantity((current) => {
       if (current >= availableStock) {
         return current
@@ -74,9 +114,11 @@ function ReservationsPage() {
   }
 
   /*
-   * Decrease quantity
+   * Decrease quantity.
    */
   const decreaseQuantity = () => {
+    setError('')
+
     setQuantity((current) => {
       if (current <= 1) {
         return 1
@@ -87,42 +129,133 @@ function ReservationsPage() {
   }
 
   /*
-   * Submit reservation
+   * Handle pickup date changes.
+   */
+  const handlePickupDateChange = (event) => {
+    setError('')
+    setPickupDate(event.target.value)
+  }
+
+  /*
+   * Handle pickup time changes.
+   */
+  const handlePickupTimeChange = (event) => {
+    setError('')
+    setPickupTime(event.target.value)
+  }
+
+  /*
+   * Submit reservation.
    */
   const handleSubmit = async (event) => {
     event.preventDefault()
 
+    /*
+     * Prevent duplicate submissions.
+     */
+    if (submitting) {
+      return
+    }
+
     setError('')
 
     /*
-     * Validate required data
+     * Validate reservation source data.
      */
     if (!medicine || !pharmacy || !inventory) {
+      setError('Reservation information is incomplete.')
+      return
+    }
+
+    /*
+     * Validate pharmacy ID.
+     */
+    const pharmacyId = Number(pharmacy.pharmacy_id)
+
+    if (!Number.isInteger(pharmacyId) || pharmacyId <= 0) {
+      setError('The selected pharmacy is invalid.')
+      return
+    }
+
+    /*
+     * Validate medicine ID.
+     */
+    const medicineId = Number(medicine.medicine_id)
+
+    if (!Number.isInteger(medicineId) || medicineId <= 0) {
+      setError('The selected medicine is invalid.')
+      return
+    }
+
+    /*
+     * Validate quantity.
+     */
+    const requestedQuantity = Number(quantity)
+
+    if (
+      !Number.isInteger(requestedQuantity) ||
+      requestedQuantity < 1
+    ) {
+      setError('Quantity must be at least 1.')
+      return
+    }
+
+    /*
+     * This is only a client-side check.
+     * The backend performs the authoritative stock check.
+     */
+    if (requestedQuantity > availableStock) {
       setError(
-        'Reservation information is incomplete.'
+        'The requested quantity is greater than the available stock.',
       )
       return
     }
 
+    /*
+     * Validate pickup date.
+     */
     if (!pickupDate) {
       setError('Please select a pickup date.')
       return
     }
 
+    if (!isValidDateString(pickupDate)) {
+      setError('Please select a valid pickup date.')
+      return
+    }
+
+    if (pickupDate < today) {
+      setError('Pickup date cannot be in the past.')
+      return
+    }
+
+    /*
+     * Validate pickup time.
+     */
     if (!pickupTime) {
       setError('Please select a pickup time.')
       return
     }
 
-    if (quantity < 1) {
-      setError('Quantity must be at least 1.')
+    /*
+     * HTML time input returns HH:mm.
+     * Keep it in this format because the backend accepts
+     * the pickup time separately from the pickup date.
+     */
+    const normalizedPickupTime = pickupTime.trim()
+
+    if (!/^\d{2}:\d{2}$/.test(normalizedPickupTime)) {
+      setError('Please select a valid pickup time.')
       return
     }
 
-    if (quantity > availableStock) {
-      setError(
-        'The requested quantity is greater than the available stock.'
-      )
+    /*
+     * Validate notes length before sending.
+     */
+    const trimmedNotes = notes.trim()
+
+    if (trimmedNotes.length > 500) {
+      setError('Notes cannot exceed 500 characters.')
       return
     }
 
@@ -130,60 +263,82 @@ function ReservationsPage() {
       setSubmitting(true)
 
       /*
-       * Create reservation
+       * IMPORTANT:
        *
-       * customer_id is NOT sent.
-       * The backend gets the authenticated customer
-       * from req.pharmaUser.
+       * Do not send customer_id.
+       *
+       * The backend obtains the authenticated customer
+       * from req.pharmaUser after:
+       *
+       * authenticateUser
+       * -> loadPharmaUser
+       * -> requireRole('CUSTOMER')
+       *
+       * Also do not send inventory_id or batch_number.
+       * The backend is responsible for resolving and
+       * reserving the appropriate inventory stock.
        */
-      const response = await apiRequest(
-        '/reservations',
-        {
-          method: 'POST',
-          body: {
-            pharmacy_id: Number(
-              pharmacy.pharmacy_id
-            ),
-            pickup_date: pickupDate,
-            pickup_time: pickupTime,
-            notes: notes.trim() || null,
+      const response = await apiRequest('/reservations', {
+        method: 'POST',
+        body: {
+          pharmacy_id: pharmacyId,
 
-            /*
-             * Reservation item information
-             */
-            items: [
-              {
-                medicine_id: Number(
-                  medicine.medicine_id
-                ),
-                quantity,
-              },
-            ],
-          },
-        }
-      )
+          pickup_date: pickupDate,
 
-      if (!response.success) {
+          pickup_time: normalizedPickupTime,
+
+          notes: trimmedNotes || null,
+
+          items: [
+            {
+              medicine_id: medicineId,
+              quantity: requestedQuantity,
+            },
+          ],
+        },
+      })
+
+      if (!response?.success) {
         throw new Error(
-          response.message ||
-            'Failed to create reservation.'
+          response?.message ||
+            'Failed to create reservation.',
         )
       }
 
-      setCreatedReservation(
-        response.data?.reservation || null
-      )
+      /*
+       * Backend response:
+       *
+       * {
+       *   success: true,
+       *   message: 'Reservation created successfully',
+       *   data: {
+       *     reservation,
+       *     items,
+       *     pharmacy
+       *   }
+       * }
+       */
+      const reservation =
+        response?.data?.reservation || null
 
+      setCreatedReservation(reservation)
       setSuccess(true)
     } catch (error) {
       console.error(
         'Create reservation error:',
-        error
+        error,
       )
 
+      /*
+       * apiRequest() converts non-2xx responses into
+       * an Error using payload.message.
+       *
+       * Therefore this message can safely be shown to
+       * the customer.
+       */
       setError(
-        error.message ||
-          'Failed to create reservation.'
+        error?.message ||
+          'Failed to create reservation. Please try again.',
       )
     } finally {
       setSubmitting(false)
@@ -191,7 +346,7 @@ function ReservationsPage() {
   }
 
   /*
-   * If reservation was successfully created
+   * Reservation successfully created.
    */
   if (success) {
     return (
@@ -296,6 +451,18 @@ function ReservationsPage() {
                 </div>
               </div>
             </div>
+
+            {createdReservation?.status && (
+              <div className="mt-4 border-t border-slate-100 pt-4">
+                <p className="text-xs font-semibold text-slate-500">
+                  Reservation status
+                </p>
+
+                <p className="mt-1 text-sm font-extrabold text-emerald-700">
+                  {createdReservation.status}
+                </p>
+              </div>
+            )}
           </div>
 
           <button
@@ -311,7 +478,7 @@ function ReservationsPage() {
   }
 
   /*
-   * Safety fallback while redirecting
+   * Safety fallback while redirecting.
    */
   if (!medicine || !pharmacy || !inventory) {
     return null
@@ -323,7 +490,8 @@ function ReservationsPage() {
       <button
         type="button"
         onClick={() => navigate(-1)}
-        className="mb-5 flex items-center gap-2 text-xs font-bold text-slate-500 transition hover:text-emerald-700"
+        disabled={submitting}
+        className="mb-5 flex items-center gap-2 text-xs font-bold text-slate-500 transition hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <ArrowLeft size={16} />
         Back
@@ -453,7 +621,9 @@ function ReservationsPage() {
               <button
                 type="button"
                 onClick={decreaseQuantity}
-                disabled={quantity <= 1}
+                disabled={
+                  quantity <= 1 || submitting
+                }
                 className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-300 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Minus size={16} />
@@ -467,7 +637,8 @@ function ReservationsPage() {
                 type="button"
                 onClick={increaseQuantity}
                 disabled={
-                  quantity >= availableStock
+                  quantity >= availableStock ||
+                  submitting
                 }
                 className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-300 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
@@ -510,10 +681,9 @@ function ReservationsPage() {
             type="date"
             min={today}
             value={pickupDate}
-            onChange={(event) =>
-              setPickupDate(event.target.value)
-            }
-            className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+            onChange={handlePickupDateChange}
+            disabled={submitting}
+            className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-50"
             required
           />
         </div>
@@ -539,10 +709,9 @@ function ReservationsPage() {
             id="pickup-time"
             type="time"
             value={pickupTime}
-            onChange={(event) =>
-              setPickupTime(event.target.value)
-            }
-            className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+            onChange={handlePickupTimeChange}
+            disabled={submitting}
+            className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-50"
             required
           />
         </div>
@@ -567,13 +736,15 @@ function ReservationsPage() {
           <textarea
             id="notes"
             value={notes}
-            onChange={(event) =>
+            onChange={(event) => {
+              setError('')
               setNotes(event.target.value)
-            }
+            }}
             rows={4}
             maxLength={500}
+            disabled={submitting}
             placeholder="Example: I will pick this up after work."
-            className="mt-4 w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+            className="mt-4 w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-50"
           />
 
           <p className="mt-1 text-right text-[10px] text-slate-400">

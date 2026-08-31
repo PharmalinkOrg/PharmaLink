@@ -15,7 +15,10 @@ const pharmacyAccess = require('../middleware/pharmacyAccessMiddleware')
 
 const router = express.Router()
 
-// GET publicly available medicines for a pharmacy
+/**
+ * GET publicly available medicines for a pharmacy
+ * GET /api/pharmacies/:pharmacyId/inventory/public
+ */
 router.get(
   '/:pharmacyId/inventory/public',
   getPublicPharmacyInventory
@@ -92,6 +95,5 @@ router.delete(
   pharmacyAccess,
   deleteInventory
 )
-
 
 module.exports = router

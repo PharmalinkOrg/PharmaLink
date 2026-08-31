@@ -4,6 +4,9 @@ const supabaseAdmin = require('../config/supabaseAdmin')
    HELPERS
 ============================================================ */
 
+/**
+ * Validate positive integer ID.
+ */
 const isValidId = (value) => {
   const number = Number(value)
 
@@ -12,7 +15,11 @@ const isValidId = (value) => {
 
 /**
  * Validate YYYY-MM-DD pickup date.
- * The date cannot be before today.
+ *
+ * The date must:
+ * - Match YYYY-MM-DD
+ * - Be a real calendar date
+ * - Not be before today's local calendar date
  */
 const isValidPickupDate = (dateString) => {
   if (!dateString || typeof dateString !== 'string') {
@@ -37,17 +44,12 @@ const isValidPickupDate = (dateString) => {
     return false
   }
 
-  // Compare using local calendar dates.
   const today = new Date()
 
   today.setHours(0, 0, 0, 0)
   testDate.setHours(0, 0, 0, 0)
 
-  if (testDate < today) {
-    return false
-  }
-
-  return true
+  return testDate >= today
 }
 
 /**
@@ -75,7 +77,7 @@ const isValidPickupTime = (timeString) => {
 }
 
 /**
- * Prevent duplicate medicine IDs in one reservation.
+ * Prevent duplicate medicine IDs inside one reservation.
  */
 const checkDuplicateMedicines = (items) => {
   const medicineIds = new Set()
@@ -93,13 +95,40 @@ const checkDuplicateMedicines = (items) => {
   return null
 }
 
+/**
+ * Normalize PostgreSQL/Supabase RPC errors.
+ *
+ * PostgreSQL functions may return different wording depending
+ * on the implementation. Keeping this logic centralized makes
+ * the controller easier to maintain.
+ */
+const getRpcErrorMessage = (error) => {
+  return (
+    error?.message ||
+    error?.details ||
+    error?.hint ||
+    ''
+  )
+}
+
 /* ============================================================
    CREATE RESERVATION
    POST /api/reservations
+
+   IMPORTANT:
+   Stock reservation, multi-batch allocation, row locking,
+   overbooking protection, reservation creation, and rollback
+   are handled by:
+
+   create_reservation_atomic()
 ============================================================ */
 
 const createReservation = async (req, res) => {
   try {
+    /* --------------------------------------------------------
+       Authentication
+    -------------------------------------------------------- */
+
     const customerId = req.pharmaUser?.user_id
 
     if (!customerId) {
@@ -109,16 +138,27 @@ const createReservation = async (req, res) => {
       })
     }
 
+    if (req.pharmaUser.role !== 'CUSTOMER') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only customers can create reservations',
+      })
+    }
+
+    /* --------------------------------------------------------
+       Request body
+    -------------------------------------------------------- */
+
     const {
       pharmacy_id,
       pickup_date,
       pickup_time,
       notes,
       items,
-    } = req.body
+    } = req.body || {}
 
     /* --------------------------------------------------------
-       Validate pharmacy
+       Pharmacy validation
     -------------------------------------------------------- */
 
     if (!isValidId(pharmacy_id)) {
@@ -128,20 +168,16 @@ const createReservation = async (req, res) => {
       })
     }
 
+    const pharmacyId = Number(pharmacy_id)
+
     /* --------------------------------------------------------
-       Validate pickup date
+       Pickup date validation
     -------------------------------------------------------- */
 
-    if (!pickup_date || String(pickup_date).trim() === '') {
-      return res.status(400).json({
-        success: false,
-        message: 'Pickup date is required',
-      })
-    }
-
-    const pickupDate = String(pickup_date).trim()
-
-    if (!isValidPickupDate(pickupDate)) {
+    if (
+      typeof pickup_date !== 'string' ||
+      !isValidPickupDate(pickup_date.trim())
+    ) {
       return res.status(400).json({
         success: false,
         message:
@@ -149,20 +185,16 @@ const createReservation = async (req, res) => {
       })
     }
 
+    const pickupDate = pickup_date.trim()
+
     /* --------------------------------------------------------
-       Validate pickup time
+       Pickup time validation
     -------------------------------------------------------- */
 
-    if (!pickup_time || String(pickup_time).trim() === '') {
-      return res.status(400).json({
-        success: false,
-        message: 'Pickup time is required',
-      })
-    }
-
-    const pickupTime = String(pickup_time).trim()
-
-    if (!isValidPickupTime(pickupTime)) {
+    if (
+      typeof pickup_time !== 'string' ||
+      !isValidPickupTime(pickup_time.trim())
+    ) {
       return res.status(400).json({
         success: false,
         message:
@@ -170,8 +202,10 @@ const createReservation = async (req, res) => {
       })
     }
 
+    const pickupTime = pickup_time.trim()
+
     /* --------------------------------------------------------
-       Validate items
+       Items validation
     -------------------------------------------------------- */
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -218,213 +252,140 @@ const createReservation = async (req, res) => {
     }
 
     /* --------------------------------------------------------
-       Verify pharmacy
+       Normalize reservation items
+    -------------------------------------------------------- */
+
+    const reservationItems = items.map((item) => ({
+      medicine_id: Number(item.medicine_id),
+      quantity: Number(item.quantity),
+    }))
+
+    /* --------------------------------------------------------
+       Atomic reservation creation
+       
+       The PostgreSQL function MUST:
+       1. Lock relevant inventory rows.
+       2. Consider all applicable inventory batches.
+       3. Calculate available stock.
+       4. Prevent overbooking.
+       5. Reserve stock atomically.
+       6. Create reservation.
+       7. Create reservation_items.
+       8. Roll back everything if any step fails.
     -------------------------------------------------------- */
 
     const {
-      data: pharmacy,
-      error: pharmacyError,
-    } = await supabaseAdmin
-      .from('pharmacies')
-      .select(`
-        pharmacy_id,
-        name,
-        address,
-        status
-      `)
-      .eq('pharmacy_id', Number(pharmacy_id))
-      .maybeSingle()
-
-    if (pharmacyError) {
-      console.error(
-        'Pharmacy lookup error:',
-        pharmacyError
-      )
-
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to verify pharmacy',
-      })
-    }
-
-    if (!pharmacy) {
-      return res.status(404).json({
-        success: false,
-        message: 'Pharmacy not found',
-      })
-    }
-
-    if (pharmacy.status !== 'ACTIVE') {
-      return res.status(400).json({
-        success: false,
-        message: 'Selected pharmacy is not active',
-      })
-    }
-
-    /* --------------------------------------------------------
-       Medicine IDs
-    -------------------------------------------------------- */
-
-    const medicineIds = items.map((item) =>
-      Number(item.medicine_id)
+      data,
+      error,
+    } = await supabaseAdmin.rpc(
+      'create_reservation_atomic',
+      {
+        p_customer_id: Number(customerId),
+        p_pharmacy_id: pharmacyId,
+        p_pickup_date: pickupDate,
+        p_pickup_time: pickupTime,
+        p_notes:
+          typeof notes === 'string' && notes.trim()
+            ? notes.trim()
+            : null,
+        p_items: reservationItems,
+      }
     )
 
+    if (error) {
+      console.error(
+        'Atomic reservation creation error:',
+        error
+      )
+
+      const message = getRpcErrorMessage(error)
+      const normalizedMessage = message.toLowerCase()
+
+      /* ------------------------------------------------------
+         Stock / overbooking errors
+      ------------------------------------------------------ */
+
+      if (
+        normalizedMessage.includes('insufficient stock') ||
+        normalizedMessage.includes('not enough stock') ||
+        normalizedMessage.includes('insufficient inventory') ||
+        normalizedMessage.includes('overbook')
+      ) {
+        return res.status(409).json({
+          success: false,
+          message:
+            message || 'Insufficient stock for one or more medicines',
+        })
+      }
+
+      /* ------------------------------------------------------
+         Pharmacy / medicine availability errors
+      ------------------------------------------------------ */
+
+      if (
+        normalizedMessage.includes('not active') ||
+        normalizedMessage.includes('inactive') ||
+        normalizedMessage.includes('not found') ||
+        normalizedMessage.includes('unavailable')
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            message || 'One or more requested items are unavailable',
+        })
+      }
+
+      /* ------------------------------------------------------
+         Database constraint / validation errors
+      ------------------------------------------------------ */
+
+      if (
+        error.code === '23505' ||
+        error.code === '23514' ||
+        error.code === '23503'
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            message || 'Reservation data violates a database constraint',
+        })
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to create reservation',
+      })
+    }
+
     /* --------------------------------------------------------
-       Get inventory
+       Extract reservation ID
     -------------------------------------------------------- */
 
-    const {
-      data: inventoryRows,
-      error: inventoryError,
-    } = await supabaseAdmin
-      .from('inventory')
-      .select(`
-        inventory_id,
-        pharmacy_id,
-        medicine_id,
-        batch_number,
-        quantity,
-        unit_price,
-        expiration_date,
-        status,
+    const reservationId =
+      data?.reservation_id
 
-        medicines (
-          medicine_id,
-          pharmacy_id,
-          generic_name,
-          brand_name,
-          dosage,
-          dosage_form,
-          requires_prescription,
-          status
-        )
-      `)
-      .eq('pharmacy_id', Number(pharmacy_id))
-      .in('medicine_id', medicineIds)
-      .eq('status', 'AVAILABLE')
-      .gt('quantity', 0)
-
-    if (inventoryError) {
+    if (!reservationId) {
       console.error(
-        'Inventory lookup error:',
-        inventoryError
+        'Atomic reservation returned no reservation ID:',
+        data
       )
 
       return res.status(500).json({
         success: false,
-        message: 'Failed to verify medicine availability',
+        message:
+          'Reservation creation failed because no reservation ID was returned',
       })
     }
 
     /* --------------------------------------------------------
-       Build inventory lookup
+       Load complete reservation
     -------------------------------------------------------- */
-
-    const inventoryMap = new Map()
-
-    for (const row of inventoryRows || []) {
-      const medicineId = Number(row.medicine_id)
-
-      /*
-       * Extra protection:
-       * The medicine itself must belong to the same pharmacy.
-       */
-      if (
-        !row.medicines ||
-        Number(row.medicines.pharmacy_id) !==
-          Number(pharmacy_id)
-      ) {
-        continue
-      }
-
-      if (!inventoryMap.has(medicineId)) {
-        inventoryMap.set(medicineId, {
-          medicine_id: medicineId,
-          total_quantity: 0,
-          unit_price: Number(row.unit_price),
-          batches: [],
-          medicine: row.medicines,
-        })
-      }
-
-      const inventory = inventoryMap.get(medicineId)
-
-      inventory.total_quantity += Number(row.quantity)
-
-      inventory.batches.push({
-        inventory_id: row.inventory_id,
-        batch_number: row.batch_number,
-        quantity: Number(row.quantity),
-        unit_price: Number(row.unit_price),
-        expiration_date: row.expiration_date,
-        status: row.status,
-      })
-    }
-
-    /* --------------------------------------------------------
-       Verify every requested medicine
-    -------------------------------------------------------- */
-
-    for (const item of items) {
-      const medicineId = Number(item.medicine_id)
-      const requestedQuantity = Number(item.quantity)
-
-      const inventory = inventoryMap.get(medicineId)
-
-      if (!inventory) {
-        return res.status(400).json({
-          success: false,
-          message:
-            `Medicine ${medicineId} is not available at the selected pharmacy`,
-        })
-      }
-
-      if (
-        !inventory.medicine ||
-        inventory.medicine.status !== 'ACTIVE'
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            `Medicine ${medicineId} is not currently active`,
-        })
-      }
-
-      if (requestedQuantity > inventory.total_quantity) {
-        return res.status(400).json({
-          success: false,
-          message:
-            `Insufficient stock for medicine ${medicineId}. ` +
-            `Available quantity: ${inventory.total_quantity}`,
-        })
-      }
-    }
-
-    /* --------------------------------------------------------
-       Create reservation
-    -------------------------------------------------------- */
-
-    const reservationDate = new Date()
-      .toISOString()
-      .split('T')[0]
 
     const {
       data: reservation,
       error: reservationError,
     } = await supabaseAdmin
       .from('reservations')
-      .insert({
-        customer_id: customerId,
-        pharmacy_id: Number(pharmacy_id),
-        reservation_date: reservationDate,
-        pickup_date: pickupDate,
-        pickup_time: pickupTime,
-        status: 'PENDING',
-        notes:
-          typeof notes === 'string' && notes.trim()
-            ? notes.trim()
-            : null,
-      })
       .select(`
         reservation_id,
         customer_id,
@@ -439,90 +400,64 @@ const createReservation = async (req, res) => {
         confirmed_at,
         completed_at,
         created_at,
-        updated_at
+        updated_at,
+
+        pharmacies (
+          pharmacy_id,
+          name,
+          address,
+          status
+        ),
+
+        reservation_items (
+          reservation_item_id,
+          reservation_id,
+          inventory_id,
+          medicine_id,
+          quantity,
+          unit_price,
+          created_at,
+
+          medicines (
+            medicine_id,
+            generic_name,
+            brand_name,
+            dosage,
+            dosage_form,
+            requires_prescription,
+            status
+          )
+        )
       `)
+      .eq('reservation_id', reservationId)
+      .eq('customer_id', Number(customerId))
       .single()
 
     if (reservationError) {
       console.error(
-        'Create reservation error:',
+        'Load created reservation error:',
         reservationError
       )
 
-      return res.status(400).json({
-        success: false,
-        message: 'Failed to create reservation',
-        error: reservationError.message,
-        code: reservationError.code,
+      /*
+       * The transaction itself succeeded.
+       * Do NOT report that the reservation failed.
+       *
+       * Return the ID so the client can retrieve it.
+       */
+      return res.status(201).json({
+        success: true,
+        message: 'Reservation created successfully',
+        data: {
+          reservation_id: reservationId,
+        },
       })
     }
-
-    /* --------------------------------------------------------
-       Create reservation items
-    -------------------------------------------------------- */
-
-    const reservationItems = items.map((item) => {
-      const medicineId = Number(item.medicine_id)
-
-      const inventory = inventoryMap.get(medicineId)
-
-      return {
-        reservation_id: reservation.reservation_id,
-        medicine_id: medicineId,
-        quantity: Number(item.quantity),
-        unit_price: Number(inventory.unit_price),
-      }
-    })
-
-    const {
-      data: createdItems,
-      error: itemsError,
-    } = await supabaseAdmin
-      .from('reservation_items')
-      .insert(reservationItems)
-      .select(`
-        reservation_item_id,
-        reservation_id,
-        medicine_id,
-        quantity,
-        unit_price,
-        created_at
-      `)
-
-    if (itemsError) {
-      console.error(
-        'Create reservation items error:',
-        itemsError
-      )
-
-      await supabaseAdmin
-        .from('reservations')
-        .delete()
-        .eq(
-          'reservation_id',
-          reservation.reservation_id
-        )
-
-      return res.status(400).json({
-        success: false,
-        message: 'Failed to create reservation items',
-        error: itemsError.message,
-        code: itemsError.code,
-      })
-    }
-
-    /* --------------------------------------------------------
-       Success
-    -------------------------------------------------------- */
 
     return res.status(201).json({
       success: true,
       message: 'Reservation created successfully',
-      data: {
-        reservation,
-        items: createdItems,
-        pharmacy,
-      },
+      data: reservation,
     })
   } catch (error) {
     console.error(
@@ -584,6 +519,7 @@ const getCustomerReservations = async (req, res) => {
         reservation_items (
           reservation_item_id,
           reservation_id,
+          inventory_id,
           medicine_id,
           quantity,
           unit_price,
@@ -600,7 +536,7 @@ const getCustomerReservations = async (req, res) => {
           )
         )
       `)
-      .eq('customer_id', customerId)
+      .eq('customer_id', Number(customerId))
       .order('created_at', {
         ascending: false,
       })
@@ -693,6 +629,7 @@ const getReservationById = async (req, res) => {
         reservation_items (
           reservation_item_id,
           reservation_id,
+          inventory_id,
           medicine_id,
           quantity,
           unit_price,
@@ -710,7 +647,7 @@ const getReservationById = async (req, res) => {
         )
       `)
       .eq('reservation_id', reservationId)
-      .eq('customer_id', customerId)
+      .eq('customer_id', Number(customerId))
       .maybeSingle()
 
     if (error) {
@@ -799,6 +736,7 @@ const getPharmacyReservations = async (req, res) => {
         reservation_items (
           reservation_item_id,
           reservation_id,
+          inventory_id,
           medicine_id,
           quantity,
           unit_price,
@@ -854,6 +792,14 @@ const getPharmacyReservations = async (req, res) => {
 /* ============================================================
    UPDATE RESERVATION STATUS — PHARMACY
    PATCH /api/reservations/:reservationId/status
+
+   NOTE:
+   Cancellation through this endpoint does NOT directly modify
+   inventory.
+
+   If pharmacy cancellation must restore reserved stock, the
+   database should perform the status change + stock restoration
+   atomically through a dedicated RPC.
 ============================================================ */
 
 const updateReservationStatus = async (req, res) => {
@@ -908,7 +854,7 @@ const updateReservationStatus = async (req, res) => {
     }
 
     /* --------------------------------------------------------
-       Find reservation belonging to this pharmacy
+       Load reservation
     -------------------------------------------------------- */
 
     const {
@@ -949,18 +895,7 @@ const updateReservationStatus = async (req, res) => {
     }
 
     /* --------------------------------------------------------
-       Valid pharmacy status transitions
-       
-       PENDING
-          ├── CONFIRMED
-          └── CANCELLED
-
-       CONFIRMED
-          ├── COMPLETED
-          └── CANCELLED
-
-       COMPLETED → no changes
-       CANCELLED → no changes
+       Valid status transitions
     -------------------------------------------------------- */
 
     const validTransitions = {
@@ -989,7 +924,73 @@ const updateReservationStatus = async (req, res) => {
     }
 
     /* --------------------------------------------------------
-       Build update
+       Pharmacy cancellation
+       
+       IMPORTANT:
+       Stock must be restored atomically with the cancellation.
+       Do not perform a normal UPDATE for CANCELLED.
+    -------------------------------------------------------- */
+
+    if (status === 'CANCELLED') {
+      const {
+        data,
+        error,
+      } = await supabaseAdmin.rpc(
+        'cancel_pharmacy_reservation_atomic',
+        {
+          p_pharmacy_id: Number(pharmacyId),
+          p_reservation_id: reservationId,
+          p_cancelled_by: Number(staffUserId),
+        }
+      )
+
+      if (error) {
+        console.error(
+          'Atomic pharmacy cancellation error:',
+          error
+        )
+
+        const message = getRpcErrorMessage(error)
+        const normalizedMessage =
+          message.toLowerCase()
+
+        if (
+          normalizedMessage.includes('not found')
+        ) {
+          return res.status(404).json({
+            success: false,
+            message: 'Reservation not found',
+          })
+        }
+
+        if (
+          normalizedMessage.includes('cannot be cancelled') ||
+          normalizedMessage.includes('already cancelled')
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              message || 'Reservation cannot be cancelled',
+          })
+        }
+
+        return res.status(500).json({
+          success: false,
+          message:
+            'Failed to cancel reservation',
+        })
+      }
+
+      return res.status(200).json({
+        success: true,
+        message:
+          'Reservation cancelled successfully',
+        data,
+      })
+    }
+
+    /* --------------------------------------------------------
+       Confirm / complete reservation
     -------------------------------------------------------- */
 
     const updateData = {
@@ -997,7 +998,7 @@ const updateReservationStatus = async (req, res) => {
     }
 
     if (status === 'CONFIRMED') {
-      updateData.confirmed_by = staffUserId
+      updateData.confirmed_by = Number(staffUserId)
       updateData.confirmed_at =
         new Date().toISOString()
     }
@@ -1006,19 +1007,6 @@ const updateReservationStatus = async (req, res) => {
       updateData.completed_at =
         new Date().toISOString()
     }
-
-    if (status === 'CANCELLED') {
-      /*
-       * Keep the confirmation history if the reservation
-       * was previously confirmed.
-       *
-       * Do NOT erase confirmed_by / confirmed_at.
-       */
-    }
-
-    /* --------------------------------------------------------
-       Update
-    -------------------------------------------------------- */
 
     const {
       data: updatedReservation,
@@ -1081,6 +1069,8 @@ const updateReservationStatus = async (req, res) => {
 /* ============================================================
    CANCEL RESERVATION — CUSTOMER
    PATCH /api/reservations/:reservationId/cancel
+
+   Atomic cancellation restores reserved stock.
 ============================================================ */
 
 const cancelReservation = async (req, res) => {
@@ -1091,6 +1081,14 @@ const cancelReservation = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: 'Authenticated customer not found',
+      })
+    }
+
+    if (req.pharmaUser.role !== 'CUSTOMER') {
+      return res.status(403).json({
+        success: false,
+        message:
+          'Only customers can cancel their reservations',
       })
     }
 
@@ -1106,112 +1104,72 @@ const cancelReservation = async (req, res) => {
     }
 
     /* --------------------------------------------------------
-       Find customer's reservation
+       Atomic cancellation
+       
+       The database function MUST:
+       1. Lock the reservation.
+       2. Verify ownership.
+       3. Verify cancellable status.
+       4. Restore reserved stock.
+       5. Mark reservation CANCELLED.
+       6. Commit everything atomically.
     -------------------------------------------------------- */
 
     const {
-      data: reservation,
-      error: reservationError,
-    } = await supabaseAdmin
-      .from('reservations')
-      .select(`
-        reservation_id,
-        customer_id,
-        pharmacy_id,
-        status
-      `)
-      .eq('reservation_id', reservationId)
-      .eq('customer_id', customerId)
-      .maybeSingle()
+      data,
+      error,
+    } = await supabaseAdmin.rpc(
+      'cancel_customer_reservation_atomic',
+      {
+        p_customer_id: Number(customerId),
+        p_reservation_id: reservationId,
+      }
+    )
 
-    if (reservationError) {
+    if (error) {
       console.error(
-        'Get reservation for cancellation error:',
-        reservationError
+        'Atomic customer cancellation error:',
+        error
       )
+
+      const message = getRpcErrorMessage(error)
+      const normalizedMessage =
+        message.toLowerCase()
+
+      if (
+        normalizedMessage.includes('not found') ||
+        normalizedMessage.includes('does not exist')
+      ) {
+        return res.status(404).json({
+          success: false,
+          message: 'Reservation not found',
+        })
+      }
+
+      if (
+        normalizedMessage.includes('cannot be cancelled') ||
+        normalizedMessage.includes('already cancelled') ||
+        normalizedMessage.includes('completed')
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            message || 'Reservation cannot be cancelled',
+        })
+      }
 
       return res.status(500).json({
         success: false,
-        message: 'Failed to load reservation',
-      })
-    }
-
-    if (!reservation) {
-      return res.status(404).json({
-        success: false,
-        message: 'Reservation not found',
-      })
-    }
-
-    /* --------------------------------------------------------
-       Customer can ONLY cancel PENDING reservations.
-    -------------------------------------------------------- */
-
-    if (reservation.status !== 'PENDING') {
-      return res.status(400).json({
-        success: false,
         message:
-          `Reservation cannot be cancelled because its current status is ${reservation.status}`,
-      })
-    }
-
-    /* --------------------------------------------------------
-       Cancel reservation
-    -------------------------------------------------------- */
-
-    const {
-      data: cancelledReservation,
-      error: updateError,
-    } = await supabaseAdmin
-      .from('reservations')
-      .update({
-        status: 'CANCELLED',
-      })
-      .eq('reservation_id', reservationId)
-      .eq('customer_id', customerId)
-      .eq('status', 'PENDING')
-      .select(`
-        reservation_id,
-        customer_id,
-        pharmacy_id,
-        prescription_id,
-        reservation_date,
-        pickup_date,
-        pickup_time,
-        status,
-        notes,
-        confirmed_by,
-        confirmed_at,
-        completed_at,
-        created_at,
-        updated_at
-      `)
-      .maybeSingle()
-
-    if (updateError) {
-      console.error(
-        'Cancel reservation error:',
-        updateError
-      )
-
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to cancel reservation',
-      })
-    }
-
-    if (!cancelledReservation) {
-      return res.status(409).json({
-        success: false,
-        message:
-          'Reservation could not be cancelled because its status has already changed',
+          'Failed to cancel reservation',
       })
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Reservation cancelled successfully',
-      data: cancelledReservation,
+      message:
+        'Reservation cancelled successfully',
+      data,
     })
   } catch (error) {
     console.error(
