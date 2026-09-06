@@ -1,5 +1,5 @@
 const CACHE_NAME = 'pharmalink-v1'
-const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/pharmalink-icon.svg']
+const APP_SHELL = ['/app/', '/app/index.html', '/app/manifest.webmanifest', '/app/pharmalink-icon.svg']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)))
@@ -19,7 +19,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
   if (event.request.mode === 'navigate') {
-    event.respondWith(fetch(event.request).catch(() => caches.match('/index.html')))
+    event.respondWith(fetch(event.request).catch(() => caches.match('/app/index.html')))
     return
   }
 

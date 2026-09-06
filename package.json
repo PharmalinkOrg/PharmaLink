@@ -1,5 +1,13 @@
 {
-  "dependencies": {
-    "cookie-parser": "^1.4.7"
+  "name": "pharmalink-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install --prefix landing-page && npm install --prefix customer-pwa",
+    "build": "npm run build --prefix landing-page && npm run build --prefix customer-pwa",
+    "dev": "concurrently \"npm run dev --prefix landing-page\" \"npm run dev --prefix customer-pwa\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }

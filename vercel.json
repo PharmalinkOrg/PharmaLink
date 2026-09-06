@@ -1,0 +1,19 @@
+{
+  "buildCommand": "npm run build",
+  "installCommand": "npm run install:all",
+  "outputDirectory": ".",
+  "rewrites": [
+    {
+      "source": "/app/:path*",
+      "destination": "/customer-pwa/dist/:path*"
+    },
+    {
+      "source": "/app",
+      "destination": "/customer-pwa/dist/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/landing-page/dist/$1"
+    }
+  ]
+}

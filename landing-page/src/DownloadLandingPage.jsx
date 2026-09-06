@@ -15,7 +15,7 @@ function DownloadLandingPage() {
 
   const downloadUrl = useMemo(() => {
     // UPDATED: Point directly to PWA production URL
-    return 'https://customer-pwa-iota.vercel.app'
+    return new URL('/app', window.location.origin).toString()
   }, [])
 
   useEffect(() => {
