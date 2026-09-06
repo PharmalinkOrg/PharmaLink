@@ -278,69 +278,120 @@
   margin-bottom: 24px;
 }
 
-.dashboard-grid {
+/* ----- Summary Cards (grid) ----- */
+.dashboard-summary-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 16px;
+  margin-bottom: 28px;
 }
 
-.dashboard-card {
-  display: grid;
-  gap: 10px;
-  min-height: 130px;
-  padding: 22px;
+.dashboard-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
   background: #ffffff;
   border: 1px solid #dce8e3;
   border-radius: 14px;
   box-shadow: 0 10px 28px rgba(22, 61, 51, 0.07);
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    border-color 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.dashboard-card:hover {
+.dashboard-summary-card:hover {
   transform: translateY(-2px);
-  border-color: #c7dcd5;
   box-shadow: 0 14px 32px rgba(22, 61, 51, 0.1);
 }
 
-.dashboard-card span {
+.dashboard-summary-card span {
   color: #5f6c68;
   font-size: 0.82rem;
   font-weight: 600;
   line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
-.dashboard-card strong {
+.dashboard-summary-card strong {
   color: #18332d;
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
   line-height: 1;
 }
 
-/* Inventory-related dashboard cards */
-
-.dashboard-card:nth-child(3) strong {
-  color: #9a3412;
+/* Specific colour overrides (optional) */
+.dashboard-summary-card:nth-child(3) strong {
+  color: #9a3412; /* Low stock */
+}
+.dashboard-summary-card:nth-child(4) strong {
+  color: #9f1239; /* Out of stock */
+}
+.dashboard-summary-card:nth-child(5) strong {
+  color: #9a3412; /* Pending */
+}
+.dashboard-summary-card:nth-child(6) strong {
+  color: #166534; /* Confirmed */
+}
+.dashboard-summary-card:nth-child(7) strong {
+  color: #17634f; /* Completed */
 }
 
-.dashboard-card:nth-child(4) strong {
-  color: #9f1239;
+/* ----- Charts Grid (two columns) ----- */
+.dashboard-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 8px;
 }
 
-/* Reservation-related dashboard cards */
-
-.dashboard-card:nth-child(5) strong {
-  color: #9a3412;
+.dashboard-chart-card {
+  background: #ffffff;
+  border: 1px solid #dce8e3;
+  border-radius: 14px;
+  padding: 20px 20px 24px;
+  box-shadow: 0 10px 28px rgba(22, 61, 51, 0.07);
+  transition: box-shadow 0.15s ease;
 }
 
-.dashboard-card:nth-child(6) strong {
-  color: #166534;
+.dashboard-chart-card:hover {
+  box-shadow: 0 14px 32px rgba(22, 61, 51, 0.1);
 }
 
-.dashboard-card:nth-child(7) strong {
-  color: #17634f;
+.dashboard-chart-card h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #18332d;
+  margin: 0 0 16px 0;
+  letter-spacing: 0.01em;
+}
+
+.dashboard-chart-card canvas {
+  max-height: 220px;
+  width: 100% !important;
+}
+
+.dashboard-chart-placeholder {
+  color: #8a9a95;
+  font-size: 0.95rem;
+  text-align: center;
+  padding: 30px 0;
+}
+
+/* Responsive: stack charts on small screens */
+@media (max-width: 700px) {
+  .dashboard-charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-summary-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ============================================================
@@ -875,5 +926,1283 @@ body.modal-open {
 
   .reservation-table-header {
     padding: 18px;
+  }
+}
+
+/* =========================================================
+   PHARMALINK - INVENTORY / BATCH MANAGEMENT
+   ========================================================= */
+
+.inventory-page {
+  width: 100%;
+  min-height: 100%;
+  padding: 28px 32px;
+  box-sizing: border-box;
+  background: #f5f8f7;
+}
+
+/* ---------------------------------------------------------
+   PAGE HEADER
+   --------------------------------------------------------- */
+
+.page-heading {
+  margin-bottom: 24px;
+}
+
+.page-heading h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #163c35;
+  letter-spacing: -0.4px;
+}
+
+.page-heading p {
+  margin: 7px 0 0;
+  font-size: 15px;
+  color: #667a76;
+  line-height: 1.5;
+}
+
+
+/* ---------------------------------------------------------
+   MAIN GRID
+   --------------------------------------------------------- */
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+
+/* ---------------------------------------------------------
+   ADD INVENTORY CARD
+   --------------------------------------------------------- */
+
+.inventory-form {
+  width: 100%;
+  padding: 28px;
+  background: #ffffff;
+  border: 1px solid #dce8e5;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(22, 60, 53, 0.06);
+  box-sizing: border-box;
+}
+
+.inventory-form h3 {
+  margin: 0 0 22px;
+  color: #173f37;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+
+/* ---------------------------------------------------------
+   FORM ROWS
+   --------------------------------------------------------- */
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.inventory-form > label,
+.form-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.inventory-form label {
+  color: #38534d;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+/* ---------------------------------------------------------
+   INPUTS / SELECT / TEXTAREA
+   --------------------------------------------------------- */
+
+.inventory-form input,
+.inventory-form select,
+.inventory-form textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+
+  border: 1px solid #bfd2ce;
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #203d38;
+
+  font-family: inherit;
+  font-size: 15px;
+
+  outline: none;
+  box-sizing: border-box;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.inventory-form textarea {
+  min-height: 100px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+
+/* Placeholder */
+
+.inventory-form input::placeholder,
+.inventory-form textarea::placeholder {
+  color: #94a6a2;
+}
+
+
+/* Select */
+
+.inventory-form select {
+  cursor: pointer;
+  appearance: auto;
+}
+
+
+/* Focus */
+
+.inventory-form input:focus,
+.inventory-form select:focus,
+.inventory-form textarea:focus {
+  border-color: #16745f;
+  box-shadow: 0 0 0 3px rgba(22, 116, 95, 0.12);
+  background: #fbfefd;
+}
+
+
+/* Hover */
+
+.inventory-form input:hover,
+.inventory-form select:hover,
+.inventory-form textarea:hover {
+  border-color: #8eada7;
+}
+
+
+/* ---------------------------------------------------------
+   DATE INPUT
+   --------------------------------------------------------- */
+
+.inventory-form input[type="date"] {
+  cursor: pointer;
+  color: #304c47;
+}
+
+.inventory-form input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+
+/* ---------------------------------------------------------
+   ADD BATCH BUTTON
+   --------------------------------------------------------- */
+
+.inventory-form button {
+  min-height: 48px;
+  margin-top: 4px;
+  padding: 0 22px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #146b58;
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 4px 10px rgba(20, 107, 88, 0.18);
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+.inventory-form button:hover {
+  background: #0f5b4b;
+  box-shadow: 0 6px 14px rgba(20, 107, 88, 0.24);
+}
+
+.inventory-form button:active {
+  transform: translateY(1px);
+}
+
+.inventory-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+
+/* ---------------------------------------------------------
+   INVENTORY TABLE / LIST CARD
+   --------------------------------------------------------- */
+
+.inventory-grid > :not(.inventory-form) {
+  min-width: 0;
+}
+
+
+/*
+   If your inventory list is inside a card/container,
+   this gives it the same visual treatment as the form.
+*/
+
+.inventory-grid table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  background: #ffffff;
+  border: 1px solid #dce8e5;
+  border-radius: 18px;
+
+  overflow: hidden;
+
+  box-shadow: 0 8px 24px rgba(22, 60, 53, 0.06);
+}
+
+
+/* ---------------------------------------------------------
+   TABLE HEADER
+   --------------------------------------------------------- */
+
+.inventory-grid table thead {
+  background: #f0f6f4;
+}
+
+.inventory-grid table th {
+  padding: 16px 18px;
+
+  border-bottom: 1px solid #dce8e5;
+
+  color: #3c5b54;
+
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+
+  white-space: nowrap;
+}
+
+
+/* ---------------------------------------------------------
+   TABLE BODY
+   --------------------------------------------------------- */
+
+.inventory-grid table td {
+  padding: 16px 18px;
+
+  border-bottom: 1px solid #edf2f0;
+
+  color: #314b46;
+
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.inventory-grid table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.inventory-grid table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.inventory-grid table tbody tr:hover {
+  background: #f8fbfa;
+}
+
+
+/* ---------------------------------------------------------
+   BATCH NUMBER
+   --------------------------------------------------------- */
+
+.inventory-grid table td:nth-child(2) {
+  font-weight: 600;
+  color: #315b51;
+}
+
+
+/* ---------------------------------------------------------
+   RESPONSIVE
+   --------------------------------------------------------- */
+
+@media (max-width: 1000px) {
+  .inventory-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-form {
+    max-width: none;
+  }
+}
+
+
+@media (max-width: 650px) {
+  .inventory-page {
+    padding: 20px 16px;
+  }
+
+  .page-heading h1 {
+    font-size: 24px;
+  }
+
+  .inventory-form {
+    padding: 22px;
+    border-radius: 14px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .inventory-grid table {
+    min-width: 700px;
+  }
+
+  .inventory-grid {
+    overflow-x: auto;
+  }
+}
+
+
+@media (max-width: 450px) {
+  .inventory-page {
+    padding: 16px 12px;
+  }
+
+  .inventory-form {
+    padding: 18px;
+  }
+
+  .inventory-form h3 {
+    font-size: 19px;
+  }
+
+  .inventory-form input,
+  .inventory-form select,
+  .inventory-form textarea {
+    min-height: 46px;
+  }
+
+  .inventory-form button {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   PHARMALINK MEDICINE DROPDOWN
+   ========================================================= */
+
+.medicine-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+
+/* =========================================================
+   DROPDOWN CONTAINER
+   ========================================================= */
+
+.medicine-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+
+/* =========================================================
+   DROPDOWN TRIGGER
+   ========================================================= */
+
+.inventory-form .medicine-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+  min-height: 54px;
+
+  margin: 0;
+  padding: 7px 14px;
+
+  border: 1px solid #bfd2ce;
+  border-radius: 11px;
+
+  background: #ffffff;
+  color: #173f37;
+
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-shadow: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.inventory-form .medicine-dropdown-trigger:hover {
+  background: #fbfdfc;
+  border-color: #76a99d;
+
+  box-shadow: none;
+}
+
+.inventory-form .medicine-dropdown-trigger.is-open {
+  border-color: #16745f;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 0 0 3px rgba(22, 116, 95, 0.10);
+}
+
+
+/* =========================================================
+   PLACEHOLDER
+   ========================================================= */
+
+.medicine-placeholder {
+  color: #879b96;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   SELECTED MEDICINE
+   ========================================================= */
+
+.medicine-selected {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  min-width: 0;
+}
+
+.medicine-selected-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  min-width: 0;
+}
+
+.medicine-selected-name {
+  display: block;
+
+  color: #173f37;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.medicine-selected-meta {
+  color: #71847f;
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+
+/* =========================================================
+   MEDICINE ICON
+   ========================================================= */
+
+.medicine-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  width: 35px;
+  height: 35px;
+
+  border-radius: 9px;
+
+  background: #e8f4f0;
+  color: #16745f;
+
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.medicine-icon span {
+  line-height: 1;
+}
+
+
+/* =========================================================
+   CHEVRON
+   ========================================================= */
+
+.medicine-chevron {
+  flex: 0 0 auto;
+
+  margin-left: 10px;
+
+  color: #52716a;
+
+  font-size: 20px;
+  font-weight: 600;
+
+  line-height: 1;
+}
+
+
+/* =========================================================
+   DROPDOWN MENU
+   ========================================================= */
+
+.medicine-dropdown-menu {
+  position: absolute;
+
+  top: calc(100% + 7px);
+  left: 0;
+  right: 0;
+
+  z-index: 9999;
+
+  overflow: hidden;
+
+  border: 1px solid #d5e4e0;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 16px 35px rgba(24, 61, 54, 0.14),
+    0 3px 10px rgba(24, 61, 54, 0.06);
+}
+
+
+/* =========================================================
+   SEARCH AREA
+   ========================================================= */
+
+.medicine-dropdown-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  padding: 11px 12px;
+
+  border-bottom: 1px solid #e4eeeb;
+
+  background: #f7faf9;
+}
+
+.medicine-search-icon {
+  flex: 0 0 auto;
+
+  color: #66827a;
+
+  font-size: 20px;
+}
+
+.medicine-search-input {
+  width: 100%;
+  height: 40px;
+
+  margin: 0;
+  padding: 0 11px;
+
+  border: 1px solid #c9dcd7;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #203f38;
+
+  font-family: inherit;
+  font-size: 14px;
+
+  outline: none;
+
+  box-sizing: border-box;
+}
+
+.medicine-search-input:hover {
+  border-color: #9bbab2;
+}
+
+.medicine-search-input:focus {
+  border-color: #16745f;
+
+  box-shadow:
+    0 0 0 2px rgba(22, 116, 95, 0.09);
+}
+
+.medicine-search-input::placeholder {
+  color: #93a6a1;
+}
+
+
+/* =========================================================
+   OPTIONS CONTAINER
+   ========================================================= */
+
+.medicine-dropdown-options {
+  max-height: 300px;
+
+  padding: 6px;
+
+  overflow-y: auto;
+}
+
+
+/* =========================================================
+   MEDICINE OPTION
+   ========================================================= */
+
+/*
+   IMPORTANT:
+   These rules intentionally override
+   .inventory-form button.
+*/
+
+.inventory-form .medicine-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+
+  width: 100%;
+  min-height: 0;
+
+  margin: 0;
+  padding: 11px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: transparent;
+  color: #203f38;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-shadow: none;
+
+  transform: none;
+
+  transition:
+    background-color 0.15s ease;
+}
+
+.inventory-form .medicine-option:hover {
+  background: #f0f7f4;
+
+  box-shadow: none;
+  transform: none;
+}
+
+.inventory-form .medicine-option.is-selected {
+  background: #eaf5f1;
+}
+
+
+/* =========================================================
+   OPTION ICON
+   ========================================================= */
+
+.medicine-option-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  width: 34px;
+  height: 34px;
+
+  margin-top: 1px;
+
+  border-radius: 9px;
+
+  background: #e8f4f0;
+  color: #16745f;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   OPTION CONTENT
+   ========================================================= */
+
+.medicine-option-content {
+  flex: 1;
+
+  min-width: 0;
+}
+
+
+/* =========================================================
+   OPTION TITLE
+   ========================================================= */
+
+.medicine-option-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+}
+
+.medicine-option-top strong {
+  color: #173f37;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  line-height: 1.3;
+}
+
+
+/* =========================================================
+   CHECK MARK
+   ========================================================= */
+
+.medicine-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  width: 20px;
+  height: 20px;
+
+  border-radius: 50%;
+
+  background: #16745f;
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   MEDICINE DETAILS
+   ========================================================= */
+
+.medicine-option-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+
+  margin-top: 4px;
+
+  color: #71857f;
+
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.medicine-option-details span:not(:last-child)::after {
+  content: " · ";
+
+  color: #a5b5b1;
+
+  margin: 0 4px;
+}
+
+
+/* =========================================================
+   PRESCRIPTION BADGE
+   ========================================================= */
+
+.medicine-prescription-badge {
+  display: inline-flex;
+
+  margin-top: 7px;
+  padding: 3px 8px;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.3;
+}
+
+.medicine-prescription-badge.non-prescription {
+  background: #e9f5f1;
+  color: #16745f;
+}
+
+.medicine-prescription-badge.prescription {
+  background: #fff0e8;
+  color: #ad5b2d;
+}
+
+
+/* =========================================================
+   NO RESULTS
+   ========================================================= */
+
+.medicine-no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 28px 20px;
+
+  text-align: center;
+}
+
+.medicine-no-results strong {
+  color: #35534c;
+
+  font-size: 14px;
+}
+
+.medicine-no-results span {
+  margin-top: 4px;
+
+  color: #82938f;
+
+  font-size: 12px;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+.medicine-dropdown-options::-webkit-scrollbar {
+  width: 7px;
+}
+
+.medicine-dropdown-options::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.medicine-dropdown-options::-webkit-scrollbar-thumb {
+  background: #c4d7d2;
+  border-radius: 10px;
+}
+
+.medicine-dropdown-options::-webkit-scrollbar-thumb:hover {
+  background: #a9c2bb;
+}
+
+
+
+.customers-page {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.customers-header {
+  margin-bottom: 28px;
+}
+
+.customers-header h1 {
+  margin: 0;
+  font-size: 38px;
+  font-weight: 700;
+  color: #123f39;
+}
+
+.customers-header p {
+  margin: 10px 0 0;
+  color: #60756f;
+  font-size: 16px;
+}
+
+/* =========================
+   STAT CARDS
+========================= */
+
+.customer-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.customer-stat-card {
+  background: #ffffff;
+  border: 1px solid #dce7e4;
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: 0 3px 12px rgba(19, 63, 57, 0.05);
+}
+
+.customer-stat-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #71817d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.customer-stat-card strong {
+  color: #145c51;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+/* =========================
+   MAIN CARD
+========================= */
+
+.customers-card {
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #dce7e4;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(19, 63, 57, 0.05);
+}
+
+/* =========================
+   TOOLBAR
+========================= */
+
+.customers-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  border-bottom: 1px solid #e5ecea;
+}
+
+.customer-search {
+  position: relative;
+  flex: 1;
+  max-width: 460px;
+}
+
+.customer-search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  opacity: 0.55;
+}
+
+.customer-search input {
+  width: 100%;
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 16px 0 43px;
+  border: 1px solid #c9d9d5;
+  border-radius: 10px;
+  outline: none;
+  background: #fbfdfc;
+  color: #193f3a;
+  font-size: 14px;
+}
+
+.customer-search input:focus {
+  border-color: #267566;
+  box-shadow: 0 0 0 3px rgba(38, 117, 102, 0.1);
+}
+
+.customers-toolbar select {
+  height: 44px;
+  min-width: 190px;
+  padding: 0 36px 0 14px;
+  border: 1px solid #c9d9d5;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #294d47;
+  font-size: 14px;
+  outline: none;
+}
+
+.customers-toolbar select:focus {
+  border-color: #267566;
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.customers-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.customers-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.customers-table th {
+  padding: 15px 20px;
+  background: #f7faf9;
+  border-bottom: 1px solid #dfe9e6;
+  color: #61736e;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.customers-table td {
+  padding: 17px 20px;
+  border-bottom: 1px solid #edf2f0;
+  color: #294d47;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.customers-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.customers-table tbody tr:hover {
+  background: #f8fbfa;
+}
+
+.customers-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =========================
+   CUSTOMER
+========================= */
+
+.customer-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+}
+
+.customer-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #dcefe9;
+  color: #176556;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.customer-info strong {
+  display: block;
+  color: #173f39;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.customer-info span {
+  display: block;
+  margin-top: 3px;
+  color: #84928f;
+  font-size: 12px;
+}
+
+.customer-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
+}
+
+.customer-contact span:first-child {
+  color: #31544e;
+}
+
+.customer-contact span:last-child {
+  color: #84928f;
+  font-size: 12px;
+}
+
+/* =========================
+   RESERVATIONS
+========================= */
+
+.reservation-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: #eef6f3;
+  color: #176556;
+  font-weight: 700;
+}
+
+/* =========================
+   STATUS
+========================= */
+
+.customer-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.customer-status-pending {
+  background: #fff5d8;
+  color: #8b6811;
+}
+
+.customer-status-confirmed {
+  background: #e2f5ec;
+  color: #16734e;
+}
+
+.customer-status-completed {
+  background: #e7eef9;
+  color: #315d91;
+}
+
+.customer-status-cancelled {
+  background: #fce9e9;
+  color: #a33e3e;
+}
+
+/* =========================
+   STATES
+========================= */
+
+.customers-state {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 40px;
+  text-align: center;
+}
+
+.customers-state-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  background: #edf5f2;
+  color: #176556;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.customers-state h3 {
+  margin: 0;
+  color: #234943;
+  font-size: 17px;
+}
+
+.customers-state p {
+  max-width: 450px;
+  margin: 8px 0 0;
+  color: #84928f;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.customers-error .customers-state-icon {
+  background: #fceaea;
+  color: #a63d3d;
+}
+
+.customers-spinner {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 14px;
+  border: 3px solid #dce9e5;
+  border-top-color: #176556;
+  border-radius: 50%;
+  animation: customers-spin 0.7s linear infinite;
+}
+
+@keyframes customers-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+  .customer-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .customers-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .customer-search {
+    max-width: none;
+  }
+
+  .customers-toolbar select {
+    width: 100%;
   }
 }

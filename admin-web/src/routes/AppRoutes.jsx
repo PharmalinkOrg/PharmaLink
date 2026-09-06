@@ -9,12 +9,10 @@ import PlaceholderPage from '../pages/PlaceholderPage'
 import ReservationsPage from '../pages/ReservationsPage'
 import MedicinesPage from '../pages/MedicinesPage'
 import MedicineRequestsPage from '../pages/MedicineRequestsPage'
+import CustomersPage from '../pages/CustomersPage'
 
 const placeholderPages = [
-  ['medicines', 'Medicines'],
   ['prescriptions', 'Prescriptions'],
-  ['medicine-requests', 'Medicine Requests'],
-  ['customers', 'Customers'],
   ['sales', 'Sales'],
   ['reports', 'Reports'],
   ['settings', 'Settings'],
@@ -29,11 +27,18 @@ function AppRoutes() {
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="reservations" element={<ReservationsPage />} />
           <Route path="medicines" element={<MedicinesPage />} />
+          <Route
+              path="customers"
+              element={<CustomersPage />}
+            />
           <Route path="medicine-requests" element={<MedicineRequestsPage />} />
           {placeholderPages.map(([path, title]) => (
             <Route key={path} path={path} element={<PlaceholderPage title={title} />} />
+            
           ))}
           <Route path="*" element={<NotFoundPage />} />
+
+
         </Route>
       </Route>
     </Routes>

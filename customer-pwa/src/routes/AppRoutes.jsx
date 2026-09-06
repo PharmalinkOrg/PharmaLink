@@ -3,7 +3,6 @@ import { Route, Routes } from 'react-router-dom'
 import CustomerLayout from '../components/layout/CustomerLayout'
 import ProtectedRoute from '../components/auth/ProtectedRoute'
 
-import DownloadLandingPage from '../pages/DownloadLandingPage'
 import LoginPage from '../pages/LoginPage'
 import HomePage from '../pages/HomePage'
 import SearchPage from '../pages/SearchPage'
@@ -23,11 +22,6 @@ function AppRoutes() {
       {/* =========================
           Public pages
       ========================== */}
-
-      <Route
-        path="/download"
-        element={<DownloadLandingPage />}
-      />
 
       <Route
         path="/login"

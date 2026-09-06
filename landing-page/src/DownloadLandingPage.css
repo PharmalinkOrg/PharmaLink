@@ -1,0 +1,996 @@
+
+.download-page {
+  min-height: 100vh;
+  background: #ffffff;
+  color: #102a43;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  overflow-x: hidden;
+}
+
+/* --------------------------------
+   HEADER
+-------------------------------- */
+
+.site-header {
+  position: relative;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid #e8eef5;
+  backdrop-filter: blur(12px);
+}
+
+.site-header-inner {
+  width: min(1180px, calc(100% - 40px));
+  min-height: 76px;
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  color: #102a43;
+  text-decoration: none;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 10px;
+  background: #087fbd;
+  color: white;
+
+  font-size: 23px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.site-nav a {
+  color: #526777;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.site-nav a:hover {
+  color: #087fbd;
+}
+
+.site-nav button {
+  border: 0;
+  border-radius: 9px;
+
+  padding: 11px 18px;
+
+  background: #087fbd;
+  color: white;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.site-nav button:hover {
+  background: #066b9f;
+}
+
+/* --------------------------------
+   HERO
+-------------------------------- */
+
+.hero-section {
+  position: relative;
+  min-height: 650px;
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f4fbff 0%,
+      #ffffff 52%,
+      #eef8fc 100%
+    );
+}
+
+.hero-background-shape {
+  position: absolute;
+  width: 650px;
+  height: 650px;
+
+  right: -230px;
+  top: -160px;
+
+  border-radius: 50%;
+  background: #dff4fb;
+  opacity: 0.7;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+
+  width: min(1180px, calc(100% - 40px));
+  min-height: 650px;
+
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: center;
+  gap: 70px;
+}
+
+.hero-copy {
+  max-width: 650px;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 18px;
+
+  color: #087fbd;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+
+.hero-copy h1 {
+  max-width: 680px;
+  margin: 0;
+
+  color: #102a43;
+
+  font-size: clamp(45px, 6vw, 74px);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+
+.hero-copy h1 span,
+.section-heading h2 span,
+.download-copy h2 span {
+  color: #087fbd;
+}
+
+.hero-description {
+  max-width: 590px;
+  margin: 28px 0 0;
+
+  color: #526777;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+
+  margin-top: 34px;
+}
+
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+
+  border: 0;
+  border-radius: 10px;
+
+  padding: 15px 22px;
+
+  background: #087fbd;
+  color: white;
+
+  font-size: 15px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow: 0 10px 25px rgba(8, 127, 189, 0.2);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.primary-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(8, 127, 189, 0.25);
+}
+
+.primary-button span {
+  font-size: 20px;
+}
+
+.secondary-link {
+  color: #31566e;
+  text-decoration: none;
+
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.secondary-link:hover {
+  color: #087fbd;
+}
+
+.hero-trust {
+  display: flex;
+  gap: 25px;
+
+  margin-top: 32px;
+}
+
+.trust-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: #65798a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.trust-icon {
+  width: 19px;
+  height: 19px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #dff4fb;
+  color: #087fbd;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* --------------------------------
+   PHONE VISUAL
+-------------------------------- */
+
+.hero-app-card {
+  position: relative;
+
+  min-height: 500px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phone-glow {
+  position: absolute;
+
+  width: 350px;
+  height: 350px;
+
+  border-radius: 50%;
+
+  background: #cceff8;
+  filter: blur(5px);
+}
+
+.phone-card {
+  position: relative;
+  z-index: 2;
+
+  width: 280px;
+  min-height: 530px;
+
+  padding: 10px;
+
+  border: 7px solid #102a43;
+  border-radius: 42px;
+
+  background: white;
+
+  box-shadow:
+    0 35px 70px rgba(16, 42, 67, 0.18),
+    0 8px 20px rgba(16, 42, 67, 0.1);
+
+  transform: rotate(3deg);
+}
+
+.phone-top {
+  width: 105px;
+  height: 22px;
+
+  margin: 0 auto;
+
+  border-radius: 0 0 15px 15px;
+
+  background: #102a43;
+}
+
+.phone-camera {
+  display: block;
+
+  width: 7px;
+  height: 7px;
+
+  margin-left: auto;
+  margin-right: 15px;
+  transform: translateY(5px);
+
+  border-radius: 50%;
+  background: #65798a;
+}
+
+.phone-screen {
+  padding: 32px 18px;
+}
+
+.phone-logo {
+  width: 46px;
+  height: 46px;
+
+  display: grid;
+  place-items: center;
+
+  margin-bottom: 15px;
+
+  border-radius: 13px;
+
+  background: #087fbd;
+  color: white;
+
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.phone-screen > strong {
+  display: block;
+
+  color: #102a43;
+  font-size: 22px;
+}
+
+.phone-screen > p {
+  margin: 8px 0 25px;
+
+  color: #718596;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.phone-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 12px;
+
+  border: 1px solid #dce8ef;
+  border-radius: 9px;
+
+  color: #8193a1;
+  font-size: 11px;
+}
+
+.phone-search span {
+  color: #087fbd;
+  font-size: 18px;
+}
+
+.phone-medicine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: 16px;
+  padding: 15px;
+
+  border: 1px solid #e1ebf0;
+  border-radius: 10px;
+}
+
+.phone-medicine strong {
+  display: block;
+  color: #102a43;
+  font-size: 12px;
+}
+
+.phone-medicine small {
+  display: block;
+  margin-top: 4px;
+  color: #8293a0;
+  font-size: 9px;
+}
+
+.available-dot {
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+
+  background: #24a148;
+}
+
+/* --------------------------------
+   FEATURES
+-------------------------------- */
+
+.features-section {
+  padding: 110px 20px;
+}
+
+.section-heading {
+  max-width: 720px;
+  margin: 0 auto 55px;
+  text-align: center;
+}
+
+.section-heading h2 {
+  margin: 0;
+
+  color: #102a43;
+
+  font-size: clamp(35px, 4vw, 52px);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+}
+
+.section-heading p {
+  max-width: 600px;
+
+  margin: 22px auto 0;
+
+  color: #687d8d;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.feature-grid {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.feature-card {
+  padding: 32px;
+
+  border: 1px solid #e5edf2;
+  border-radius: 18px;
+
+  background: white;
+
+  box-shadow: 0 10px 35px rgba(16, 42, 67, 0.04);
+}
+
+.feature-icon {
+  width: 48px;
+  height: 48px;
+
+  display: grid;
+  place-items: center;
+
+  margin-bottom: 24px;
+
+  border-radius: 13px;
+
+  background: #e5f7fc;
+  color: #087fbd;
+
+  font-size: 23px;
+  font-weight: 800;
+}
+
+.feature-card h3 {
+  margin: 0 0 10px;
+
+  color: #102a43;
+  font-size: 18px;
+}
+
+.feature-card p {
+  margin: 0;
+
+  color: #718596;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* --------------------------------
+   HOW IT WORKS
+-------------------------------- */
+
+.steps-section {
+  padding: 110px 20px;
+
+  background: #f6fafc;
+}
+
+.steps-container {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
+.steps-container .section-heading {
+  margin-bottom: 65px;
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.step {
+  position: relative;
+}
+
+.step-number {
+  margin-bottom: 22px;
+
+  color: #087fbd;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.step h3 {
+  margin: 0 0 10px;
+
+  color: #102a43;
+  font-size: 18px;
+}
+
+.step p {
+  margin: 0;
+
+  color: #718596;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* --------------------------------
+   DOWNLOAD
+-------------------------------- */
+
+.download-section {
+  padding: 110px 20px;
+
+  background: #087fbd;
+}
+
+.download-container {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  align-items: center;
+  gap: 80px;
+}
+
+.download-copy .eyebrow {
+  color: #bdeaf6;
+}
+
+.download-copy h2 {
+  margin: 0;
+
+  color: white;
+
+  font-size: clamp(38px, 5vw, 58px);
+  line-height: 1.03;
+  letter-spacing: -0.05em;
+}
+
+.download-copy h2 span {
+  color: #bdeaf6;
+}
+
+.download-copy > p {
+  max-width: 550px;
+  margin: 24px 0;
+
+  color: #e0f5fa;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.download-copy .primary-button {
+  background: white;
+  color: #087fbd;
+  box-shadow: none;
+}
+
+.download-copy .primary-button:hover {
+  background: #f2fbfd;
+}
+
+.browser-install-note {
+  font-size: 13px !important;
+  opacity: 0.9;
+}
+
+.installed-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 13px 16px;
+
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+
+  color: white;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.installed-message span {
+  display: grid;
+  place-items: center;
+
+  width: 22px;
+  height: 22px;
+
+  border-radius: 50%;
+
+  background: white;
+  color: #087fbd;
+}
+
+/* QR */
+
+.qr-panel {
+  padding: 25px;
+
+  border-radius: 22px;
+
+  background: white;
+
+  box-shadow: 0 25px 60px rgba(4, 53, 79, 0.25);
+}
+
+.qr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 20px;
+}
+
+.qr-label {
+  color: #526777;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.qr-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  color: #5e7180;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.qr-live span {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #24a148;
+}
+
+.qr-code-wrapper {
+  display: flex;
+  justify-content: center;
+
+  padding: 18px;
+
+  border: 1px solid #e2ebf0;
+  border-radius: 15px;
+}
+
+.qr-instructions {
+  padding: 20px 5px 5px;
+  text-align: center;
+}
+
+.qr-instructions strong {
+  display: block;
+
+  color: #102a43;
+  font-size: 15px;
+}
+
+.qr-instructions p {
+  margin: 7px 0 0;
+
+  color: #7b8e9b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* --------------------------------
+   INSTALL HELP
+-------------------------------- */
+
+.install-help-section {
+  padding: 100px 20px;
+}
+
+.install-help-inner {
+  width: min(1050px, 100%);
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 100px;
+}
+
+.install-help-inner h2 {
+  margin: 0;
+
+  color: #102a43;
+  font-size: 42px;
+  letter-spacing: -0.04em;
+}
+
+.install-help-inner > div > p {
+  max-width: 430px;
+
+  margin-top: 18px;
+
+  color: #718596;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.install-list {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.install-item {
+  display: flex;
+  gap: 20px;
+
+  padding-bottom: 25px;
+
+  border-bottom: 1px solid #e7eef2;
+}
+
+.install-item > span {
+  color: #087fbd;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.install-item strong {
+  color: #102a43;
+  font-size: 15px;
+}
+
+.install-item p {
+  margin: 6px 0 0;
+
+  color: #718596;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* --------------------------------
+   FOOTER
+-------------------------------- */
+
+.site-footer {
+  border-top: 1px solid #e5edf2;
+  background: white;
+}
+
+.footer-inner {
+  width: min(1180px, calc(100% - 40px));
+  min-height: 90px;
+
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.footer-inner p,
+.footer-copy {
+  color: #81919e;
+  font-size: 12px;
+}
+
+.footer-inner p {
+  margin: 0;
+}
+
+/* --------------------------------
+   RESPONSIVE
+-------------------------------- */
+
+@media (max-width: 900px) {
+  .site-nav {
+    gap: 15px;
+  }
+
+  .site-nav a {
+    display: none;
+  }
+
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 30px;
+
+    padding-top: 80px;
+    padding-bottom: 80px;
+
+    text-align: center;
+  }
+
+  .hero-copy {
+    margin: 0 auto;
+  }
+
+  .hero-description {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero-actions,
+  .hero-trust {
+    justify-content: center;
+  }
+
+  .hero-app-card {
+    min-height: 480px;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .steps-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 45px;
+  }
+
+  .download-container {
+    grid-template-columns: 1fr;
+    gap: 50px;
+  }
+
+  .download-copy {
+    text-align: center;
+  }
+
+  .download-copy > p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .install-help-inner {
+    grid-template-columns: 1fr;
+    gap: 50px;
+  }
+}
+
+@media (max-width: 600px) {
+  .site-header-inner {
+    min-height: 68px;
+  }
+
+  .site-nav button {
+    padding: 9px 13px;
+    font-size: 12px;
+  }
+
+  .hero-section,
+  .hero-content {
+    min-height: auto;
+  }
+
+  .hero-content {
+    padding-top: 65px;
+    padding-bottom: 65px;
+  }
+
+  .hero-copy h1 {
+    font-size: 45px;
+  }
+
+  .hero-description {
+    font-size: 15px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .hero-trust {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .phone-card {
+    width: 245px;
+    min-height: 470px;
+  }
+
+  .features-section,
+  .steps-section,
+  .download-section,
+  .install-help-section {
+    padding-top: 75px;
+    padding-bottom: 75px;
+  }
+
+  .section-heading h2 {
+    font-size: 36px;
+  }
+
+  .steps-grid {
+    grid-template-columns: 1fr;
+    gap: 35px;
+  }
+
+  .download-copy h2 {
+    font-size: 40px;
+  }
+
+  .qr-panel {
+    padding: 18px;
+  }
+
+  .qr-code-wrapper svg {
+    width: 190px;
+    height: 190px;
+  }
+
+  .footer-inner {
+    padding: 25px 0;
+
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
