@@ -20,7 +20,7 @@ function AppRoutes() {
   return (
     <Routes>
       {/* =========================
-          Public pages
+          Public pages (NOT protected)
       ========================== */}
 
       <Route
@@ -29,43 +29,41 @@ function AppRoutes() {
       />
 
       {/* =========================
-          Customer PWA
+          PROTECTED: Customer PWA
+          All routes here require authentication
       ========================== */}
 
-      <Route element={<CustomerLayout />}>
+      <Route element={<ProtectedRoute />}>
+        <Route element={<CustomerLayout />}>
 
-        {/* Public browsing */}
+          {/* Public browsing (but requires login) */}
 
-        <Route
-          index
-          element={<HomePage />}
-        />
+          <Route
+            index
+            element={<HomePage />}
+          />
 
-        <Route
-          path="search"
-          element={<SearchPage />}
-        />
+          <Route
+            path="search"
+            element={<SearchPage />}
+          />
 
-        <Route
-          path="medicine/:medicineId"
-          element={<MedicineDetailsPage />}
-        />
+          <Route
+            path="medicine/:medicineId"
+            element={<MedicineDetailsPage />}
+          />
 
-        <Route
-          path="pharmacies"
-          element={<PharmaciesPage />}
-        />
+          <Route
+            path="pharmacies"
+            element={<PharmaciesPage />}
+          />
 
-        <Route
-          path="pharmacy/:pharmacyId"
-          element={<PharmacyDetailsPage />}
-        />
+          <Route
+            path="pharmacy/:pharmacyId"
+            element={<PharmacyDetailsPage />}
+          />
 
-        {/* =========================
-            Protected customer pages
-        ========================== */}
-
-        <Route element={<ProtectedRoute />}>
+          {/* Protected customer pages */}
 
           <Route
             path="reservations"
@@ -101,15 +99,14 @@ function AppRoutes() {
             element={<ProfilePage />}
           />
 
+          {/* Customer 404 */}
+
+          <Route
+            path="*"
+            element={<NotFoundPage />}
+          />
+
         </Route>
-
-        {/* Customer 404 */}
-
-        <Route
-          path="*"
-          element={<NotFoundPage />}
-        />
-
       </Route>
     </Routes>
   )
