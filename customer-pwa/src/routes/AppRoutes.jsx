@@ -10,10 +10,11 @@ import MedicineDetailsPage from '../pages/MedicineDetailsPage'
 import PharmaciesPage from '../pages/PharmaciesPage'
 import PharmacyDetailsPage from '../pages/PharmacyDetailsPage'
 import ProfilePage from '../pages/ProfilePage'
+import UploadPrescriptionPage from '../pages/UploadPrescriptionPage'
+import RequestMedicinePage from '../pages/RequestMedicinePage'
 import ReservationsPage from '../pages/ReservationsPage'
 import MyReservationsPage from '../pages/MyReservationsPage'
 import ReservationDetailsPage from '../pages/ReservationDetailsPage'
-import PlaceholderPage from '../pages/PlaceholderPage'
 import NotFoundPage from '../pages/NotFoundPage'
 
 function AppRoutes() {
@@ -82,16 +83,12 @@ function AppRoutes() {
 
           <Route
             path="upload-prescription"
-            element={
-              <PlaceholderPage title="Upload prescription" />
-            }
+            element={<UploadPrescriptionPage />}
           />
 
           <Route
             path="request-medicine"
-            element={
-              <PlaceholderPage title="Request medicine" />
-            }
+            element={<RequestMedicinePage />}
           />
 
           <Route
