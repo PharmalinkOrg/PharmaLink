@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "install:all": "npm install --prefix landing-page && npm install --prefix customer-pwa",
-    "build": "npm run build --prefix landing-page && npm run build --prefix customer-pwa",
-    "dev": "concurrently \"npm run dev --prefix landing-page\" \"npm run dev --prefix customer-pwa\""
-  },
+  "install:all": "npm install --prefix backend && npm install --prefix admin-web && npm install --prefix customer-pwa && npm install --prefix landing-page && npm install --prefix superadmin-web",
+  "build:all": "npm run build --prefix backend && npm run build --prefix admin-web && npm run build --prefix customer-pwa && npm run build --prefix landing-page && npm run build --prefix superadmin-web"
+},
   "devDependencies": {
     "concurrently": "^8.2.2"
   }
