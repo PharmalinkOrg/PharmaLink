@@ -2,11 +2,22 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../components/auth/useAuth'
 
+// Password requirements validation
+const validatePassword = (password) => {
+  if (password.length < 6) return "Password must be at least 6 characters long.";
+  if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter.";
+  if (!/[0-9]/.test(password)) return "Password must contain at least one number.";
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return "Password must contain at least one special character.";
+  return null;
+}
+
 function LoginPage() {
   const navigate = useNavigate()
-  const { signIn, register } = useAuth()
+  const { signIn, register, resetPassword } = useAuth() // Added resetPassword hook
 
   const [isRegistering, setIsRegistering] = useState(false)
+  const [isForgotPassword, setIsForgotPassword] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
@@ -15,6 +26,7 @@ function LoginPage() {
     password: '',
   })
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleChange = (event) => {
@@ -24,29 +36,65 @@ function LoginPage() {
     }))
 
     setError('')
+    setSuccessMessage('')
+  }
+
+  const handleForgotEmailChange = (event) => {
+    setForgotEmail(event.target.value)
+    setError('')
+    setSuccessMessage('')
+  }
+
+  const handleForgotPassword = async (event) => {
+    event.preventDefault()
+    setIsSubmitting(true)
+    setError('')
+    setSuccessMessage('')
+
+    try {
+      // Ensure you have a resetPassword method in your useAuth hook
+      await resetPassword(forgotEmail)
+      setSuccessMessage('Password reset link sent to your email.')
+      setIsForgotPassword(false) // Optional: return to login after success
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
     setIsSubmitting(true)
     setError('')
+    setSuccessMessage('')
+
+    // Validate password during registration
+    if (isRegistering) {
+      const passwordError = validatePassword(form.password)
+      if (passwordError) {
+        setError(passwordError)
+        setIsSubmitting(false)
+        return
+      }
+    }
 
     try {
       if (isRegistering) {
-  const response = await register(form)
+        const response = await register(form)
 
-  if (!response.data.session) {
-    setError('Account created. Please sign in.')
-    setIsRegistering(false)
-    return
-  }
+        if (!response.data.session) {
+          setError('Account created. Please sign in.')
+          setIsRegistering(false)
+          return
+        }
 
-  navigate('/')
-  return
-}
+        navigate('/')
+        return
+      }
 
-await signIn(form.email, form.password)
-navigate('/')
+      await signIn(form.email, form.password)
+      navigate('/')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -56,7 +104,9 @@ navigate('/')
 
   const toggleMode = () => {
     setIsRegistering((current) => !current)
+    setIsForgotPassword(false)
     setError('')
+    setSuccessMessage('')
 
     setForm({
       first_name: '',
@@ -67,6 +117,77 @@ navigate('/')
     })
   }
 
+  const goToForgotPassword = () => {
+    setIsForgotPassword(true)
+    setError('')
+    setSuccessMessage('')
+    setForm({
+      first_name: '',
+      last_name: '',
+      phone: '',
+      email: '',
+      password: '',
+    })
+  }
+
+  // RENDER FORGOT PASSWORD VIEW
+  if (isForgotPassword) {
+    return (
+      <main className="auth-page">
+        <div className="auth-panel">
+          <p className="eyebrow">PharmaLink</p>
+          <h1>Reset password</h1>
+          <p className="page-copy">
+            Enter your email address and we'll send you a link to reset your password.
+          </p>
+
+          <form className="auth-form" onSubmit={handleForgotPassword}>
+            <label className="profile-field">
+              <span>Email address</span>
+              <input
+                name="email"
+                type="email"
+                value={forgotEmail}
+                onChange={handleForgotEmailChange}
+                autoComplete="email"
+                required
+              />
+            </label>
+
+            <button
+              className="profile-save-button"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Sending...' : 'Send reset link'}
+            </button>
+          </form>
+
+          {successMessage && (
+            <p className="profile-status success" role="status">
+              {successMessage}
+            </p>
+          )}
+          
+          {error && (
+            <p className="profile-status error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <button
+            className="auth-switch"
+            type="button"
+            onClick={() => setIsForgotPassword(false)}
+          >
+            Back to sign in
+          </button>
+        </div>
+      </main>
+    )
+  }
+
+  // RENDER LOGIN / REGISTER VIEW
   return (
     <main className="auth-page">
       <div className="auth-panel">
@@ -141,12 +262,17 @@ navigate('/')
             <input
               name="password"
               type="password"
-              minLength="8"
+              minLength="6"
               value={form.password}
               onChange={handleChange}
               autoComplete={isRegistering ? 'new-password' : 'current-password'}
               required
             />
+            {isRegistering && (
+              <span className="password-hint">
+                * Min 6 characters, 1 Uppercase, 1 Number, 1 Special character
+              </span>
+            )}
           </label>
 
           <button
@@ -160,11 +286,27 @@ navigate('/')
                 ? 'Create account'
                 : 'Sign in'}
           </button>
+
+          {!isRegistering && (
+            <button
+              type="button"
+              className="forgot-password-link"
+              onClick={goToForgotPassword}
+            >
+              Forgot password?
+            </button>
+          )}
         </form>
 
         {error && (
           <p className="profile-status error" role="alert">
             {error}
+          </p>
+        )}
+
+        {successMessage && (
+          <p className="profile-status success" role="status">
+            {successMessage}
           </p>
         )}
 
