@@ -1,4 +1,7 @@
-import { NavLink, Outlet } from 'react-router-dom'
+// File: superadmin-web/src/components/layout/SuperAdminLayout.jsx
+
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { LogOut } from 'lucide-react'
 import '../../App.css'
 
 const navigation = [
@@ -14,6 +17,16 @@ const navigation = [
 ]
 
 function SuperAdminLayout() {
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    // Remove Super Admin authentication token
+    sessionStorage.removeItem('pharmalink_access_token')
+
+    // Return to Super Admin login page
+    navigate('/login', { replace: true })
+  }
+
   return (
     <div className="superadmin-layout">
       <aside className="sidebar">
@@ -21,14 +34,30 @@ function SuperAdminLayout() {
           PharmaLink
           <span>Super Admin</span>
         </h1>
+
         <nav aria-label="Main navigation">
           {navigation.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.to === '/'}>
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
+            >
               {item.label}
             </NavLink>
           ))}
         </nav>
+
+        {/* Logout */}
+        <button
+          type="button"
+          className="logout-button"
+          onClick={handleLogout}
+        >
+          <LogOut size={18} />
+          <span>Log Out</span>
+        </button>
       </aside>
+
       <main className="main-content">
         <Outlet />
       </main>

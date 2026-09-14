@@ -57,6 +57,44 @@
   color: #617086;
 }
 
+/* logout styling */
+
+.logout-button {
+  width: calc(100% - 2rem);
+  margin: auto 1rem 1rem;
+  padding: 0.75rem 1rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  border: none;
+  border-radius: 6px;
+
+  background: #548f9a;
+  color: white;
+
+  font-size: 0.95rem;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.logout-button:hover {
+  background: #467b85;
+}
+
+.logout-button:active {
+  transform: translateY(1px);
+}
+
+.logout-button:focus-visible {
+  outline: 2px solid #88cab6;
+  outline-offset: 2px;
+}
+
 @media (max-width: 760px) {
   .superadmin-layout {
     grid-template-columns: 1fr;

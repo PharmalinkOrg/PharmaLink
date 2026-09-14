@@ -1,6 +1,8 @@
+// File: superadmin-web/src/pages/NotFoundPage.jsx
+
 import { Link } from 'react-router-dom'
 
-function NotFoundPage() {
+export function NotFoundPage() {
   return (
     <section>
       <h2 className="page-title">Page not found</h2>
@@ -10,5 +12,3 @@ function NotFoundPage() {
     </section>
   )
 }
-
-export default NotFoundPage

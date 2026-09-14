@@ -1,13 +1,14 @@
+// File: superadmin-web/src/routes/AppRoutes.jsx
 import { Route, Routes } from 'react-router-dom'
 import SuperAdminLayout from '../components/layout/SuperAdminLayout'
 import DashboardPage from '../pages/DashboardPage'
-import LoginPage from '../pages/LoginPage'
-import NotFoundPage from '../pages/NotFoundPage'
-import PlaceholderPage from '../pages/PlaceholderPage'
-import UsersPage from '../pages/UsersPage'
+import { PharmaciesPage } from '../pages/PharmaciesPage'
+import { LoginPage } from '../pages/LoginPage'
+import { NotFoundPage } from '../pages/NotFoundPage'
+import { PlaceholderPage } from '../pages/PlaceholderPage'
+import { UsersPage } from '../pages/UsersPage'
 
 const placeholderPages = [
-  ['pharmacies', 'Pharmacies'],
   ['pharmacy-admins', 'Pharmacy Admins'],
   ['customers', 'Customers'],
   ['reports', 'Reports'],
@@ -23,6 +24,7 @@ function AppRoutes() {
 
       <Route element={<SuperAdminLayout />}>
         <Route index element={<DashboardPage />} />
+        <Route path="pharmacies" element={<PharmaciesPage />} />
 
         {placeholderPages.map(([path, title]) => (
           <Route

@@ -1,8 +1,10 @@
+// File: superadmin-web/src/pages/LoginPage.jsx
+
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { loginSuperAdmin } from '../services/authService'
 
-function LoginPage() {
+export function LoginPage() {   // ✅ added 'export', removed nothing else
   const navigate = useNavigate()
 
   const [email, setEmail] = useState('')
@@ -84,5 +86,3 @@ function LoginPage() {
     </main>
   )
 }
-
-export default LoginPage

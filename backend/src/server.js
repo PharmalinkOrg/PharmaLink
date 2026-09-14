@@ -12,6 +12,7 @@ const customerInventoryRoutes = require('./routes/customerInventoryRoutes')
 const medicineRoutes = require('./routes/medicineRoutes')
 const reservationRoutes = require('./routes/reservationRoutes')
 const dashboardRoutes = require('./routes/dashboardRoutes')
+const superadminRoutes = require('./routes/superadminRoutes')
 const medicineCategoryRoutes = require('./routes/medicineCategoryRoutes')
 const medicineRequestRoutes = require('./routes/medicineRequestRoutes')
 
@@ -60,6 +61,7 @@ app.use('/api/users', userRoutes)
 app.use('/api/medicines', medicineRoutes)
 
 app.use('/api/dashboard', dashboardRoutes)
+app.use('/api/superadmin', superadminRoutes)
 
 app.use('/api/reservations', reservationRoutes)
 

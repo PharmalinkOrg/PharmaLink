@@ -1,4 +1,6 @@
-function PlaceholderPage({ title }) {
+// File: superadmin-web/src/pages/PlaceholderPage.jsx
+
+export function PlaceholderPage({ title }) {
   return (
     <section>
       <h2 className="page-title">{title}</h2>
@@ -6,5 +8,3 @@ function PlaceholderPage({ title }) {
     </section>
   )
 }
-
-export default PlaceholderPage

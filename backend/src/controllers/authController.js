@@ -112,8 +112,11 @@ const login = async (req, res) => {
       })
     }
 
+    const normalizedEmail = email.trim().toLowerCase()
+
+    // Step 1: Verify the email/password through Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: normalizedEmail,
       password,
     })
 
@@ -126,16 +129,60 @@ const login = async (req, res) => {
       })
     }
 
+    // Step 2: Find the corresponding PharmaLink user
+    const { data: pharmaUser, error: userError } = await supabaseAdmin
+      .from('users')
+      .select(
+        'user_id, role, email, first_name, last_name, phone, status, pharmacy_id'
+      )
+      .eq('email', normalizedEmail)
+      .maybeSingle()
+
+    if (userError) {
+      console.error('Super Admin database lookup error:', userError)
+
+      return res.status(500).json({
+        success: false,
+        message: 'Could not verify the user account',
+      })
+    }
+
+    // Step 3: Make sure a PharmaLink profile exists
+    if (!pharmaUser) {
+      return res.status(403).json({
+        success: false,
+        message: 'This account is not authorized to access Super Admin',
+      })
+    }
+
+    // Step 4: Make sure the account is actually a Super Admin
+    if (pharmaUser.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'This account is not authorized to access Super Admin',
+      })
+    }
+
+    // Step 5: Make sure the account is active
+    if (pharmaUser.status !== 'ACTIVE') {
+      return res.status(403).json({
+        success: false,
+        message: 'This Super Admin account is inactive',
+      })
+    }
+
+    // Step 6: Everything is valid
     return res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: 'Super Admin login successful',
       data: {
         user: data.user,
+        pharmaUser,
         session: data.session,
       },
     })
   } catch (error) {
-    console.error('Login server error:', error)
+    console.error('Super Admin login server error:', error)
 
     return res.status(500).json({
       success: false,
