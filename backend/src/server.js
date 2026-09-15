@@ -15,6 +15,7 @@ const dashboardRoutes = require('./routes/dashboardRoutes')
 const superadminRoutes = require('./routes/superadminRoutes')
 const medicineCategoryRoutes = require('./routes/medicineCategoryRoutes')
 const medicineRequestRoutes = require('./routes/medicineRequestRoutes')
+const prescriptionRoutes = require('./routes/prescriptionRoutes')
 
 const app = express()
 
@@ -64,6 +65,8 @@ app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/superadmin', superadminRoutes)
 
 app.use('/api/reservations', reservationRoutes)
+
+app.use('/api/prescriptions', prescriptionRoutes)
 
 app.use('/api/pharmacies', pharmacyRoutes)
 

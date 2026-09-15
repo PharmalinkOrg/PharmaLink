@@ -1,22 +1,33 @@
 // src/lib/api.js
-import { supabase } from './supabaseClient';
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '');
-const SESSION_KEY = 'pharmalink-customer-session';
+import { supabase } from './supabaseClient'
 
-// Keep your existing apiRequest for other endpoints
-export async function apiRequest(path, { token, method = 'GET', body } = {}) {
-  // ... (Keep your existing apiRequest code exactly as it is)
-  let accessToken = token;
+const API_URL = (
+  import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+).replace(/\/$/, '')
+
+const SESSION_KEY = 'pharmalink-customer-session'
+
+// --------------------------------------------------
+// Shared backend API request helper
+// --------------------------------------------------
+
+export async function apiRequest(
+  path,
+  { token, method = 'GET', body } = {}
+) {
+  let accessToken = token
+
   if (!accessToken) {
     try {
-      const storedSession = localStorage.getItem(SESSION_KEY);
+      const storedSession = localStorage.getItem(SESSION_KEY)
+
       if (storedSession) {
-        const session = JSON.parse(storedSession);
-        accessToken = session?.accessToken;
+        const session = JSON.parse(storedSession)
+        accessToken = session?.accessToken
       }
     } catch (error) {
-      console.error('Unable to read customer session:', error);
+      console.error('Unable to read customer session:', error)
     }
   }
 
@@ -24,50 +35,71 @@ export async function apiRequest(path, { token, method = 'GET', body } = {}) {
     method,
     headers: {
       ...(body ? { 'Content-Type': 'application/json' } : {}),
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      ...(accessToken
+        ? { Authorization: `Bearer ${accessToken}` }
+        : {}),
     },
     ...(body ? { body: JSON.stringify(body) } : {}),
-  });
+  })
 
-  const payload = await response.json().catch(() => ({}));
+  const payload = await response.json().catch(() => ({}))
+
   if (!response.ok) {
-    throw new Error(payload.message || 'The request could not be completed');
+    throw new Error(
+      payload.message || 'The request could not be completed'
+    )
   }
-  return payload;
+
+  return payload
 }
 
-// Override getPharmacies, createPrescription, and AUTH methods to use Supabase directly
+// --------------------------------------------------
+// API methods
+// --------------------------------------------------
+
 export const api = {
-  // Existing methods
+  // --------------------------------------------------
+  // PHARMACIES
+  // Uses the PharmaLink backend
+  // GET /api/pharmacies
+  // --------------------------------------------------
+
   getPharmacies: async () => {
-    const { data, error } = await supabase
-      .from('pharmacies')
-      .select('id, name, address');
-    if (error) {
-      console.error('Supabase getPharmacies error:', error);
-      throw new Error(error.message);
-    }
-    return data || [];
+    const response = await apiRequest('/pharmacies')
+
+    return response?.data || []
   },
+
+  // --------------------------------------------------
+  // PRESCRIPTIONS
+  // Uses the PharmaLink backend
+  // POST /api/prescriptions
+  // --------------------------------------------------
 
   createPrescription: async (prescriptionData) => {
-    const { data, error } = await supabase
-      .from('prescriptions')
-      .insert([prescriptionData])
-      .select()
-      .single();
-    if (error) {
-      console.error('Supabase createPrescription error:', error);
-      throw new Error(error.message);
-    }
-    return data;
+    const response = await apiRequest('/prescriptions', {
+      method: 'POST',
+      body: prescriptionData,
+    })
+
+    return response?.data || null
   },
 
-  // NEW: AUTH METHODS
+  // --------------------------------------------------
+  // AUTH
+  // These still use Supabase Auth directly
+  // --------------------------------------------------
+
   signIn: async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    return data;
+    const { data, error } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+    if (error) throw error
+
+    return data
   },
 
   register: async (form) => {
@@ -79,18 +111,23 @@ export const api = {
           first_name: form.first_name,
           last_name: form.last_name,
           phone: form.phone,
-        }
-      }
-    });
-    if (error) throw error;
-    return data;
+        },
+      },
+    })
+
+    if (error) throw error
+
+    return data
   },
 
   resetPassword: async (email) => {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin, // User will be redirected here after clicking the email link
-    });
-    if (error) throw error;
-    return data;
+    const { data, error } =
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
+      })
+
+    if (error) throw error
+
+    return data
   },
-};
+}

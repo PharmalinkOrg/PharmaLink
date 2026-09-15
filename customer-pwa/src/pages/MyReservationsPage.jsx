@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
   ArrowLeft,
+  ArrowRight,
   CalendarDays,
-  Clock3,
   MapPin,
   Pill,
   RefreshCw,
@@ -34,10 +34,7 @@ function MyReservationsPage() {
 
       setReservations(response.data || [])
     } catch (error) {
-      console.error(
-        'Load reservations error:',
-        error
-      )
+      console.error('Load reservations error:', error)
 
       setError(
         error.message ||
@@ -79,7 +76,7 @@ function MyReservationsPage() {
 
     return status
       .toLowerCase()
-      .replace(/_/g, ' ')
+      .replace(/\_/g, ' ')
       .replace(/\b\w/g, (letter) =>
         letter.toUpperCase()
       )
@@ -88,51 +85,39 @@ function MyReservationsPage() {
   const formatDate = (date) => {
     if (!date) return 'Not available'
 
-    return new Date(`${date}T00:00:00`).toLocaleDateString(
-      'en-PH',
-      {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }
-    )
-  }
-
-  const formatTime = (time) => {
-    if (!time) return 'Not available'
-
-    const [hours, minutes] = time.split(':')
-
-    const date = new Date()
-
-    date.setHours(
-      Number(hours),
-      Number(minutes),
-      0,
-      0
-    )
-
-    return date.toLocaleTimeString('en-PH', {
-      hour: 'numeric',
-      minute: '2-digit',
+    return new Date(
+      `${date}T00:00:00`
+    ).toLocaleDateString('en-PH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     })
   }
 
+  const getMedicineCount = (reservation) => {
+    if (!reservation.reservation_items?.length) {
+      return 0
+    }
+
+    return reservation.reservation_items.reduce(
+      (total, item) =>
+        total + Number(item.quantity || 0),
+      0
+    )
+  }
+
+  const handleReservationClick = (reservationId) => {
+    navigate(
+      `/my-reservations/${reservationId}`
+    )
+  }
+
   return (
-    <section className="mx-auto w-full max-w-3xl px-4 pb-28 pt-5">
-
+    <section className="mx-auto w-full max-w-5xl px-4 pb-28 pt-5">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="mb-4 flex items-center gap-2 text-xs font-bold text-slate-500 transition hover:text-emerald-700"
-          >
-            <ArrowLeft size={16} />
-            Back
-          </button>
-
+        
           <p className="text-xs font-semibold text-emerald-700">
             Reservations
           </p>
@@ -151,7 +136,7 @@ function MyReservationsPage() {
           type="button"
           onClick={loadReservations}
           disabled={loading}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-emerald-300 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-emerald-300 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Refresh reservations"
         >
           <RefreshCw
@@ -165,21 +150,24 @@ function MyReservationsPage() {
 
       {/* Loading */}
       {loading && (
-        <div className="space-y-4">
-          {[1, 2].map((item) => (
-            <div
-              key={item}
-              className="animate-pulse rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
-              <div className="h-4 w-32 rounded bg-slate-200" />
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="h-3 w-32 animate-pulse rounded bg-slate-200" />
+          </div>
 
-              <div className="mt-4 h-5 w-48 rounded bg-slate-200" />
-
-              <div className="mt-3 h-4 w-full rounded bg-slate-100" />
-
-              <div className="mt-2 h-4 w-2/3 rounded bg-slate-100" />
-            </div>
-          ))}
+          <div className="divide-y divide-slate-100">
+            {[1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className="flex items-center gap-4 px-4 py-4"
+              >
+                <div className="h-4 w-20 animate-pulse rounded bg-slate-200" />
+                <div className="h-4 w-40 animate-pulse rounded bg-slate-200" />
+                <div className="h-4 w-24 animate-pulse rounded bg-slate-100" />
+                <div className="ml-auto h-6 w-20 animate-pulse rounded-full bg-slate-100" />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -232,207 +220,156 @@ function MyReservationsPage() {
           </div>
         )}
 
-      {/* Reservation list */}
+      {/* Reservation Table */}
       {!loading &&
         !error &&
         reservations.length > 0 && (
-          <div className="space-y-4">
-            {reservations.map((reservation) => (
-              <article
-                    key={reservation.reservation_id}
-                    onClick={() =>
-                        navigate(
-                        `/my-reservations/${reservation.reservation_id}`
+          <div className="reservation-table-wrapper">
+            <div className="reservation-table-scroll">
+              <table className="reservation-table">
+                <thead>
+                  <tr>
+                    <th>Reservation</th>
+                    <th>Pickup Pharmacy</th>
+                    <th>Pickup Date</th>
+                    <th>Items</th>
+                    <th>Status</th>
+                    <th className="reservation-table-action">
+                      <span className="sr-only">
+                        View
+                      </span>
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {reservations.map((reservation) => (
+                    <tr
+                      key={reservation.reservation_id}
+                      onClick={() =>
+                        handleReservationClick(
+                          reservation.reservation_id
                         )
-                    }
-                    className="cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-300 hover:shadow-md"
+                      }
+                      onKeyDown={(event) => {
+                        if (
+                          event.key === 'Enter' ||
+                          event.key === ' '
+                        ) {
+                          event.preventDefault()
+
+                          handleReservationClick(
+                            reservation.reservation_id
+                          )
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`View reservation ${reservation.reservation_id}`}
                     >
+                      {/* Reservation ID */}
+                      <td>
+                        <div className="reservation-number">
+                          #{reservation.reservation_id}
+                        </div>
 
-                {/* Reservation header */}
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                      Reservation
-                    </p>
+                        <div className="reservation-mobile-hint">
+                          Tap to view details
+                        </div>
+                      </td>
 
-                    <h2 className="mt-1 text-sm font-extrabold text-slate-800">
-                      #{reservation.reservation_id}
-                    </h2>
-                  </div>
-
-                  <span
-                    className={`rounded-full border px-2.5 py-1 text-[10px] font-extrabold ${getStatusClasses(
-                      reservation.status
-                    )}`}
-                  >
-                    {formatStatus(
-                      reservation.status
-                    )}
-                  </span>
-                </div>
-
-                {/* Pharmacy */}
-                <div className="mt-5 flex items-start gap-3 border-t border-slate-100 pt-4">
-                  <MapPin
-                    size={18}
-                    className="mt-0.5 shrink-0 text-emerald-700"
-                  />
-
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-slate-400">
-                      Pickup pharmacy
-                    </p>
-
-                    <p className="mt-1 text-sm font-extrabold text-slate-800">
-                      {reservation.pharmacies?.name ||
-                        'Pharmacy unavailable'}
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      {reservation.pharmacies?.address ||
-                        'Address unavailable'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Medicines */}
-                <div className="mt-5 border-t border-slate-100 pt-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <Pill
-                      size={17}
-                      className="text-emerald-700"
-                    />
-
-                    <p className="text-xs font-extrabold text-slate-800">
-                      Reserved medicine
-                    </p>
-                  </div>
-
-                  {reservation.reservation_items
-                    ?.length > 0 ? (
-                    <div className="space-y-3">
-                      {reservation.reservation_items.map(
-                        (item) => (
-                          <div
-                            key={
-                              item.reservation_item_id
-                            }
-                            className="rounded-xl bg-slate-50 p-3"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="text-sm font-bold text-slate-800">
-                                  {item.medicines
-                                    ?.generic_name ||
-                                    'Medicine unavailable'}
-                                </p>
-
-                                {item.medicines
-                                  ?.brand_name && (
-                                  <p className="mt-1 text-xs text-slate-500">
-                                    {
-                                      item.medicines
-                                        .brand_name
-                                    }
-                                  </p>
-                                )}
-
-                                <p className="mt-1 text-[11px] text-slate-500">
-                                  {item.medicines
-                                    ?.dosage || ''}
-                                  {' • '}
-                                  {item.medicines
-                                    ?.dosage_form || ''}
-                                </p>
-                              </div>
-
-                              <div className="shrink-0 text-right">
-                                <p className="text-xs font-bold text-slate-500">
-                                  Qty
-                                </p>
-
-                                <p className="mt-1 text-sm font-extrabold text-slate-800">
-                                  {item.quantity}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="mt-3 border-t border-slate-200 pt-2">
-                              <p className="text-right text-xs font-bold text-slate-600">
-                                ₱
-                                {Number(
-                                  item.unit_price || 0
-                                ).toFixed(2)}{' '}
-                                / unit
-                              </p>
-                            </div>
+                      {/* Pharmacy */}
+                      <td>
+                        <div className="reservation-pharmacy">
+                          <div className="reservation-pharmacy-icon">
+                            <MapPin size={16} />
                           </div>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-slate-500">
-                      No medicine items recorded.
-                    </p>
-                  )}
-                </div>
 
-                {/* Pickup */}
-                <div className="mt-5 grid gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2">
-                  <div className="flex items-start gap-3">
-                    <CalendarDays
-                      size={17}
-                      className="mt-0.5 shrink-0 text-emerald-700"
-                    />
+                          <div className="reservation-pharmacy-info">
+                            <span className="reservation-pharmacy-name">
+                              {reservation.pharmacies
+                                ?.name ||
+                                'Pharmacy unavailable'}
+                            </span>
 
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                        Pickup date
-                      </p>
+                            <span className="reservation-pharmacy-address">
+                              {reservation.pharmacies
+                                ?.address ||
+                                'Address unavailable'}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
 
-                      <p className="mt-1 text-xs font-bold text-slate-800">
-                        {formatDate(
-                          reservation.pickup_date
-                        )}
-                      </p>
-                    </div>
-                  </div>
+                      {/* Pickup Date */}
+                      <td>
+                        <div className="reservation-date">
+                          <CalendarDays size={16} />
 
-                  <div className="flex items-start gap-3">
-                    <Clock3
-                      size={17}
-                      className="mt-0.5 shrink-0 text-emerald-700"
-                    />
+                          <span>
+                            {formatDate(
+                              reservation.pickup_date
+                            )}
+                          </span>
+                        </div>
+                      </td>
 
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                        Pickup time
-                      </p>
+                      {/* Items */}
+                      <td>
+                        <div className="reservation-items">
+                          <Pill size={16} />
 
-                      <p className="mt-1 text-xs font-bold text-slate-800">
-                        {formatTime(
-                          reservation.pickup_time
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                          <span>
+                            {getMedicineCount(
+                              reservation
+                            )}{' '}
+                            {getMedicineCount(
+                              reservation
+                            ) === 1
+                              ? 'item'
+                              : 'items'}
+                          </span>
+                        </div>
+                      </td>
 
-                {/* Notes */}
-                {reservation.notes && (
-                  <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2.5">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                      Notes
-                    </p>
+                      {/* Status */}
+                      <td>
+                        <span
+                          className={`reservation-status ${getStatusClasses(
+                            reservation.status
+                          )}`}
+                        >
+                          {formatStatus(
+                            reservation.status
+                          )}
+                        </span>
+                      </td>
 
-                    <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                      {reservation.notes}
-                    </p>
-                  </div>
-                )}
+                      {/* View */}
+                      <td className="reservation-table-action">
+                        <ArrowRight
+                          size={17}
+                          className="reservation-view-icon"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-              </article>
-            ))}
+            <div className="reservation-table-footer">
+              <span>
+                {reservations.length}{' '}
+                {reservations.length === 1
+                  ? 'reservation'
+                  : 'reservations'}
+              </span>
+
+              <span>
+                Select a reservation to view details
+              </span>
+            </div>
           </div>
         )}
     </section>

@@ -9,6 +9,7 @@ export const loginSuperAdmin = async (email, password) => {
     body: JSON.stringify({
       email,
       password,
+      login_scope: 'SUPER_ADMIN',
     }),
   })
 
