@@ -538,6 +538,16 @@
   background: #ffe4e6;
 }
 
+.reservation-status.expired {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.reservation-status.ready-for-pickup {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
 .reservation-status.unknown {
   color: #52615c;
   background: #edf1ef;

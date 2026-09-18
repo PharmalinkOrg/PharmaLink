@@ -149,19 +149,83 @@ function ReservationsPage() {
     )
   }
 
-  const handleComplete = (reservationId) => {
-    const confirmed = window.confirm(
-      'Mark this reservation as completed?',
+  const handleComplete = async (reservationId) => {
+    const paymentMethod = window.prompt(
+      'Payment method? (CASH, CARD, GCASH, MAYA, BANK_TRANSFER, OTHER)',
+      'CASH',
     )
 
-    if (!confirmed) {
-      return
+    if (!paymentMethod) return
+
+    try {
+      setUpdatingReservationId(reservationId)
+      setError('')
+      setSuccessMessage('')
+
+      const response = await apiRequest(
+        `/reservations/${reservationId}/complete`,
+        {
+          method: 'POST',
+          token: accessToken,
+          body: {
+            payment_method: paymentMethod.trim().toUpperCase(),
+          },
+        },
+      )
+
+      const refreshed = await apiRequest('/reservations/pharmacy', {
+        token: accessToken,
+      })
+      setReservations(refreshed.data || [])
+
+      setSuccessMessage(
+        `Sale #${response.data.sale_id} recorded — ₱${Number(
+          response.data.total_amount,
+        ).toFixed(2)}`,
+      )
+    } catch (requestError) {
+      setError(
+        requestError.message ||
+          'Failed to complete reservation',
+      )
+    } finally {
+      setUpdatingReservationId(null)
     }
+  }
 
-    updateReservationStatus(
-      reservationId,
-      'COMPLETED',
+  const handleExpire = async (reservationId) => {
+    const confirmed = window.confirm(
+      'Mark this reservation as EXPIRED (no-show)? Stock will be restored to inventory.',
     )
+
+    if (!confirmed) return
+
+    try {
+      setUpdatingReservationId(reservationId)
+      setError('')
+      setSuccessMessage('')
+
+      await apiRequest(`/reservations/${reservationId}/no-show`, {
+        method: 'POST',
+        token: accessToken,
+      })
+
+      const refreshed = await apiRequest('/reservations/pharmacy', {
+        token: accessToken,
+      })
+      setReservations(refreshed.data || [])
+
+      setSuccessMessage(
+        'Reservation expired. Stock restored to inventory.',
+      )
+    } catch (requestError) {
+      setError(
+        requestError.message ||
+          'Failed to mark reservation as expired',
+      )
+    } finally {
+      setUpdatingReservationId(null)
+    }
   }
 
   // --------------------------------------------------
@@ -605,6 +669,20 @@ function ReservationsPage() {
                               >
                                 Cancel
                               </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleExpire(
+                                    reservation.reservation_id,
+                                  )
+                                }
+                                disabled={isUpdating}
+                              >
+                                {isUpdating
+                                  ? 'Updating…'
+                                  : 'No-Show'}
+                              </button>
                             </>
                           )}
 
@@ -635,6 +713,20 @@ function ReservationsPage() {
                                 disabled={isUpdating}
                               >
                                 Cancel
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleExpire(
+                                    reservation.reservation_id,
+                                  )
+                                }
+                                disabled={isUpdating}
+                              >
+                                {isUpdating
+                                  ? 'Updating…'
+                                  : 'No-Show'}
                               </button>
                             </>
                           )}
@@ -1029,6 +1121,24 @@ function ReservationsPage() {
                   >
                     Cancel Reservation
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleExpire(
+                        selectedReservation.reservation_id,
+                      )
+                    }
+                    disabled={
+                      updatingReservationId ===
+                      selectedReservation.reservation_id
+                    }
+                  >
+                    {updatingReservationId ===
+                    selectedReservation.reservation_id
+                      ? 'Updating…'
+                      : 'No-Show'}
+                  </button>
                 </>
               )}
 
@@ -1066,6 +1176,24 @@ function ReservationsPage() {
                     }
                   >
                     Cancel Reservation
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleExpire(
+                        selectedReservation.reservation_id,
+                      )
+                    }
+                    disabled={
+                      updatingReservationId ===
+                      selectedReservation.reservation_id
+                    }
+                  >
+                    {updatingReservationId ===
+                    selectedReservation.reservation_id
+                      ? 'Updating…'
+                      : 'No-Show'}
                   </button>
                 </>
               )}

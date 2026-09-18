@@ -1067,6 +1067,97 @@ const updateReservationStatus = async (req, res) => {
 }
 
 /* ============================================================
+   COMPLETE RESERVATION -> RECORD SALE
+   POST /api/reservations/:reservationId/complete
+============================================================ */
+
+const completeReservationWithSale = async (req, res) => {
+  try {
+    const pharmacyId = req.pharmaUser?.pharmacy_id
+    const staffUserId = req.pharmaUser?.user_id
+
+    if (!pharmacyId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pharmacy account is not assigned to a pharmacy',
+      })
+    }
+
+    if (!staffUserId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authenticated staff member not found',
+      })
+    }
+
+    const reservationId = Number(req.params.reservationId)
+
+    if (!Number.isInteger(reservationId) || reservationId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid reservation ID is required',
+      })
+    }
+
+    const paymentMethod = String(
+      req.body?.payment_method || 'CASH',
+    ).toUpperCase()
+
+    const { data, error } = await supabaseAdmin.rpc(
+      'create_sale_from_reservation_atomic',
+      {
+        p_pharmacy_id: Number(pharmacyId),
+        p_reservation_id: reservationId,
+        p_processed_by: Number(staffUserId),
+        p_payment_method: paymentMethod,
+        p_notes: null,
+      },
+    )
+
+    if (error) {
+      console.error('Complete reservation w/ sale error:', error)
+
+      const message = error?.message || error?.details || ''
+      const normalized = message.toLowerCase()
+
+      if (normalized.includes('not found')) {
+        return res.status(404).json({
+          success: false,
+          message: 'Reservation not found',
+        })
+      }
+
+      if (
+        normalized.includes('must be confirmed') ||
+        normalized.includes('invalid payment')
+      ) {
+        return res.status(400).json({
+          success: false,
+          message,
+        })
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to complete reservation and record sale',
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Reservation completed and sale recorded',
+      data,
+    })
+  } catch (error) {
+    console.error('Complete reservation w/ sale server error:', error)
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+    })
+  }
+}
+
+/* ============================================================
    CANCEL RESERVATION — CUSTOMER
    PATCH /api/reservations/:reservationId/cancel
 
@@ -1194,5 +1285,6 @@ module.exports = {
   getReservationById,
   getPharmacyReservations,
   updateReservationStatus,
+  completeReservationWithSale,
   cancelReservation,
 }

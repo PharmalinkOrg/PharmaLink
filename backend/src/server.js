@@ -16,11 +16,12 @@ const superadminRoutes = require('./routes/superadminRoutes')
 const medicineCategoryRoutes = require('./routes/medicineCategoryRoutes')
 const medicineRequestRoutes = require('./routes/medicineRequestRoutes')
 const prescriptionRoutes = require('./routes/prescriptionRoutes')
+const salesRoutes = require('./routes/salesRoutes')
 
 const app = express()
 
 const PORT = process.env.PORT || 5000
-  
+
 // --------------------------------------------------
 // Allowed frontend origins
 // --------------------------------------------------
@@ -56,21 +57,15 @@ app.use(cookieParser())
 // --------------------------------------------------
 
 app.use('/api/auth', authRoutes)
-
 app.use('/api/users', userRoutes)
-
 app.use('/api/medicines', medicineRoutes)
-
 app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/superadmin', superadminRoutes)
-
 app.use('/api/reservations', reservationRoutes)
-
 app.use('/api/prescriptions', prescriptionRoutes)
-
 app.use('/api/pharmacies', pharmacyRoutes)
-
 app.use('/api/medicine-requests', medicineRequestRoutes)
+app.use('/api/sales', salesRoutes)
 
 // --------------------------------------------------
 // Inventory Routes
@@ -83,6 +78,7 @@ app.use('/api/pharmacies', inventoryRoutes)
 app.use('/api/pharmacies', customerInventoryRoutes)
 
 app.use('/api/medicine-categories', medicineCategoryRoutes)
+
 // --------------------------------------------------
 // Start Server
 // --------------------------------------------------

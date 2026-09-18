@@ -6,6 +6,7 @@ const {
   getReservationById,
   getPharmacyReservations,
   updateReservationStatus,
+  completeReservationWithSale,
   cancelReservation,
 } = require('../controllers/reservationController')
 
@@ -30,6 +31,15 @@ router.get(
   loadPharmaUser,
   requireRole('PHARMACY_ADMIN'),
   getPharmacyReservations
+)
+
+// Complete a confirmed reservation and record its sale atomically
+router.post(
+  '/:reservationId/complete',
+  authenticateUser,
+  loadPharmaUser,
+  requireRole('PHARMACY_ADMIN'),
+  completeReservationWithSale
 )
 
 // Pharmacy reservation status update

@@ -11,7 +11,7 @@ import MedicinesPage from '../pages/MedicinesPage'
 import MedicineRequestsPage from '../pages/MedicineRequestsPage'
 import CustomersPage from '../pages/CustomersPage'
 import PrescriptionsPage from '../pages/PrescriptionsPage' 
-
+import SalesPage from '../pages/SalesPage'
 // 2. Removed 'prescriptions' from the placeholder array
 const placeholderPages = [
   ['sales', 'Sales'],
@@ -29,7 +29,7 @@ function AppRoutes() {
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="reservations" element={<ReservationsPage />} />
           <Route path="medicines" element={<MedicinesPage />} />
-          
+          <Route path="sales" element={<SalesPage />} />
           {/* 3. Added the specific route for Prescriptions */}
           <Route path="prescriptions" element={<PrescriptionsPage />} />
           
