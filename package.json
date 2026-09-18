@@ -1,12 +1,20 @@
 {
-  "name": "pharmalink-monorepo",
-  "version": "1.0.0",
+  "name": "pharmalink-root",
   "private": true,
+  "version": "1.0.0",
+  "packageManager": "npm@10.0.0",
   "scripts": {
-  "install:all": "npm install --prefix backend && npm install --prefix admin-web && npm install --prefix customer-pwa && npm install --prefix landing-page && npm install --prefix superadmin-web",
-  "build:all": "npm run build --prefix backend && npm run build --prefix admin-web && npm run build --prefix customer-pwa && npm run build --prefix landing-page && npm run build --prefix superadmin-web"
-},
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint"
+  },
+  "workspaces": [
+    "backend",
+    "customer-pwa",
+    "admin-web",
+    "superadmin-web"
+  ],
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "turbo": "^2.0.0"
   }
 }
