@@ -2098,67 +2098,6 @@ a:focus-visible {
   cursor: not-allowed;
 }
 
-/* --- Activity History --- */
-.activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.activity-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.activity-icon-wrapper {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.bg-light-blue { background: #E0F2FE; }
-.bg-light-green { background: #DCFCE7; }
-
-.activity-details {
-  flex: 1;
-}
-
-.activity-title {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #1F2937;
-  margin: 0 0 2px 0;
-}
-
-.activity-desc {
-  font-size: 0.75rem;
-  color: #6B7280;
-  margin: 0;
-}
-
-.card-link-btn {
-  width: 100%;
-  padding: 10px;
-  background: transparent;
-  border: 1px solid #E5E7EB;
-  border-radius: 8px;
-  color: #374151;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.card-link-btn:hover {
-  background: #F9FAFB;
-}
-
 /* --- Settings Lists (Notifications & App Settings) --- */
 .settings-list {
   display: flex;
