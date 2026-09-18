@@ -234,6 +234,274 @@ const createPrescription = async (req, res) => {
   }
 }
 
+/* ============================================================
+   GET PHARMACY PRESCRIPTIONS
+   GET /api/prescriptions/pharmacy
+============================================================ */
+
+const getPharmacyPrescriptions = async (req, res) => {
+  try {
+    const pharmacyId = req.pharmaUser?.pharmacy_id
+
+    if (!pharmacyId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pharmacy account is not assigned to a pharmacy',
+      })
+    }
+
+    const { data: prescriptions, error } = await supabaseAdmin
+      .from('prescriptions')
+      .select(`
+        prescription_id,
+        customer_id,
+        pharmacy_id,
+        image_url,
+        prescription_date,
+        status,
+        verified_by,
+        verified_at,
+        notes,
+        created_at,
+        updated_at,
+
+        users!fk_prescriptions_customer (
+          user_id,
+          first_name,
+          last_name,
+          email,
+          phone
+        )
+      `)
+      .eq('pharmacy_id', Number(pharmacyId))
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Get pharmacy prescriptions error:', error)
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to load prescriptions',
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Prescriptions loaded successfully',
+      data: prescriptions || [],
+    })
+  } catch (error) {
+    console.error('Get pharmacy prescriptions server error:', error)
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+    })
+  }
+}
+
+/* ============================================================
+   UPDATE PRESCRIPTION STATUS
+   PATCH /api/prescriptions/:prescriptionId/status
+============================================================ */
+
+const updatePrescriptionStatus = async (req, res) => {
+  try {
+    const pharmacyId = req.pharmaUser?.pharmacy_id
+    const staffUserId = req.pharmaUser?.user_id
+
+    if (!pharmacyId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pharmacy account is not assigned to a pharmacy',
+      })
+    }
+
+    if (!staffUserId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authenticated staff member not found',
+      })
+    }
+
+    const prescriptionId = Number(req.params.prescriptionId)
+
+    if (!Number.isInteger(prescriptionId) || prescriptionId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid prescription ID is required',
+      })
+    }
+
+    const status =
+      typeof req.body?.status === 'string'
+        ? req.body.status.trim().toUpperCase()
+        : null
+
+    const allowedStatuses = ['VERIFIED', 'REJECTED']
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Invalid status. Allowed values: VERIFIED, REJECTED',
+      })
+    }
+
+    const { data: prescription, error: lookupError } =
+      await supabaseAdmin
+        .from('prescriptions')
+        .select('prescription_id, pharmacy_id, status')
+        .eq('prescription_id', prescriptionId)
+        .eq('pharmacy_id', Number(pharmacyId))
+        .maybeSingle()
+
+    if (lookupError) {
+      console.error('Prescription lookup error:', lookupError)
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to load prescription',
+      })
+    }
+
+    if (!prescription) {
+      return res.status(404).json({
+        success: false,
+        message: 'Prescription not found',
+      })
+    }
+
+    if (prescription.status !== 'PENDING') {
+      return res.status(400).json({
+        success: false,
+        message: `Prescription is already ${prescription.status.toLowerCase()}`,
+      })
+    }
+
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from('prescriptions')
+      .update({
+        status,
+        verified_by: Number(staffUserId),
+        verified_at: new Date().toISOString(),
+      })
+      .eq('prescription_id', prescriptionId)
+      .eq('pharmacy_id', Number(pharmacyId))
+      .select(`
+        prescription_id,
+        customer_id,
+        pharmacy_id,
+        image_url,
+        prescription_date,
+        status,
+        verified_by,
+        verified_at,
+        notes,
+        created_at,
+        updated_at
+      `)
+      .single()
+
+    if (updateError) {
+      console.error('Update prescription status error:', updateError)
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update prescription status',
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Prescription ${status.toLowerCase()} successfully`,
+      data: updated,
+    })
+  } catch (error) {
+    console.error('Update prescription status server error:', error)
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+    })
+  }
+}
+
+/* ============================================================
+   GET PRESCRIPTION SIGNED URL
+   GET /api/prescriptions/:prescriptionId/url
+   Returns a temporary signed URL to the private storage object.
+============================================================ */
+
+const getPrescriptionUrl = async (req, res) => {
+  try {
+    const pharmacyId = req.pharmaUser?.pharmacy_id
+
+    if (!pharmacyId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pharmacy account is not assigned to a pharmacy',
+      })
+    }
+
+    const prescriptionId = Number(req.params.prescriptionId)
+
+    if (!Number.isInteger(prescriptionId) || prescriptionId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid prescription ID is required',
+      })
+    }
+
+    const { data: prescription, error } = await supabaseAdmin
+      .from('prescriptions')
+      .select('prescription_id, pharmacy_id, image_url')
+      .eq('prescription_id', prescriptionId)
+      .eq('pharmacy_id', Number(pharmacyId))
+      .maybeSingle()
+
+    if (error) {
+      console.error('Prescription URL lookup error:', error)
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to load prescription',
+      })
+    }
+
+    if (!prescription) {
+      return res.status(404).json({
+        success: false,
+        message: 'Prescription not found',
+      })
+    }
+
+    const { data: signed, error: signedError } =
+      await supabaseAdmin.storage
+        .from('prescriptions')
+        .createSignedUrl(prescription.image_url, 60 * 10) // 10 minutes
+
+    if (signedError) {
+      console.error('Signed URL error:', signedError)
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to generate prescription URL',
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Signed URL generated',
+      data: { signed_url: signed.signedUrl },
+    })
+  } catch (error) {
+    console.error('Get prescription URL server error:', error)
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+    })
+  }
+}
+
 module.exports = {
   createPrescription,
+  getPharmacyPrescriptions,
+  updatePrescriptionStatus,
+  getPrescriptionUrl,
 }

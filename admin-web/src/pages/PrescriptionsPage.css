@@ -1,0 +1,300 @@
+.prescriptions-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.prescription-tabs {
+  display: flex;
+  gap: 0.5rem;
+  background: #f1f5f9;
+  padding: 6px;
+  border-radius: 8px;
+  width: fit-content;
+}
+
+.prescription-tab {
+  background: transparent;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.prescription-tab:hover {
+  color: #0f172a;
+}
+
+.prescription-tab.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.prescription-table-wrap {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+}
+
+.prescription-table-scroll {
+  overflow-x: auto;
+}
+
+.prescription-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.prescription-table thead th {
+  background: #e0f2fe;
+  color: #1e293b;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 1rem;
+  border-bottom: 1px solid #bae6fd;
+  white-space: nowrap;
+}
+
+.prescription-table tbody td {
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.prescription-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.prescription-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.prescription-id {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.prescription-filetype {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  background: #f1f5f9;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.badge-verified {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.badge-rejected {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.btn-review {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  padding: 0.375rem 1rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-review:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.prescription-state {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #64748b;
+}
+
+/* Modal */
+
+.prescription-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.prescription-modal {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 720px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.prescription-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.prescription-modal-header h3 {
+  margin: 0.25rem 0 0;
+  font-size: 1.125rem;
+  color: #0f172a;
+}
+
+.prescription-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0 0.25rem;
+}
+
+.prescription-modal-close:hover {
+  color: #0f172a;
+}
+
+.prescription-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.prescription-detail-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.prescription-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.prescription-detail-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.prescription-detail-section h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+}
+
+.prescription-notes {
+  margin: 0;
+  color: #475569;
+  font-size: 0.875rem;
+}
+
+.prescription-image-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.prescription-image {
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  object-fit: contain;
+  background: #f8fafc;
+}
+
+.prescription-pdf {
+  width: 100%;
+  height: 400px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.prescription-download {
+  font-size: 0.8125rem;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.prescription-download:hover {
+  text-decoration: underline;
+}
+
+.prescription-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.prescription-modal-footer button {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.prescription-modal-footer button:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.prescription-modal-footer button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
