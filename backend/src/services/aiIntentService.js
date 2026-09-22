@@ -239,18 +239,27 @@ const detectCustomerIntent = (rawMessage) => {
     'does any pharmacy have',
     'which pharmacy has',
     'what pharmacy has',
+
+    'check if',
+    'check whether',
+
     'available',
     'availability',
     'in stock',
     'stock',
+
     'have this medicine',
     'have the medicine',
+
     'which pharmacy',
     'what pharmacy',
+
     'where can i find',
     'where can i get',
+
     'price',
     'how much',
+    'cost',
   ])
 
   if (asksAvailability) {

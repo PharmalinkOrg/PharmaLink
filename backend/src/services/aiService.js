@@ -113,6 +113,18 @@ Rules for using this data:
 
 10. Medical safety rules still apply. Live medicine data does not authorize diagnosis, treatment recommendations, prescribing, dosage changes, or individualized medicine selection.
 
+11. Check metadata.resultState before interpreting the result.
+
+12. RESULT_FOUND or RESULTS_FOUND means the controlled query returned matching PharmaLink data.
+
+13. NOT_FOUND means the requested customer-owned record was not returned. Do not claim why it was not returned.
+
+14. NO_RESULTS means the controlled search returned no matching rows. It does not prove that the medicine or pharmacy does not exist outside the searched PharmaLink data.
+
+15. NOT_APPLICABLE means no live-data result was required for this message.
+
+16. If a customer asks about a specific private record and the backend returns NOT_FOUND, say that PharmaLink could not find that record for their authenticated account. Do not reveal whether a record with that ID belongs to another customer.
+
 LIVE DATA:
 ${JSON.stringify(liveDataPayload, null, 2)}
         `.trim(),

@@ -41,45 +41,94 @@ const extractMedicineSearchTerm = (value) => {
     .trim()
     .replace(/\s+/g, ' ')
 
-  const removablePhrases = [
-    /\bdo you have\b/gi,
-    /\bdoes any pharmacy have\b/gi,
-    /\bwhich pharmacy has\b/gi,
-    /\bwhat pharmacy has\b/gi,
-    /\bwhere can i find\b/gi,
-    /\bwhere can i get\b/gi,
-    /\bis there\b/gi,
+  /*
+   * Remove common conversational prefixes.
+   */
+  const prefixPatterns = [
+    /^\s*can you check\s+(?:if|whether)\s+/i,
+    /^\s*could you check\s+(?:if|whether)\s+/i,
+    /^\s*check\s+(?:if|whether)\s+/i,
 
-    /\bis available\b/gi,
-    /\bavailable\b/gi,
-    /\bavailability\b/gi,
-    /\bin stock\b/gi,
-    /\bstock\b/gi,
+    /^\s*please\s+/i,
+    /^\s*can you\s+/i,
+    /^\s*could you\s+/i,
+    /^\s*would you\s+/i,
 
-    /\bhow much is\b/gi,
-    /\bhow much does\b/gi,
-    /\bhow much\b/gi,
-    /\bwhat is the price of\b/gi,
-    /\bwhat's the price of\b/gi,
-    /\bprice of\b/gi,
-    /\bprice\b/gi,
+    /^\s*do you have\s+/i,
+    /^\s*does any pharmacy have\s+/i,
+    /^\s*which pharmacy has\s+/i,
+    /^\s*what pharmacy has\s+/i,
 
-    /\bmedicine\b/gi,
-    /\bmedication\b/gi,
+    /^\s*where can i find\s+/i,
+    /^\s*where can i get\s+/i,
 
-    /\bplease\b/gi,
-    /\bfor me\b/gi,
+    /^\s*how much is\s+/i,
+    /^\s*how much does\s+/i,
+    /^\s*what is the price of\s+/i,
+    /^\s*what's the price of\s+/i,
+
+    /^\s*is there\s+/i,
+    /^\s*is\s+/i,
   ]
 
-  for (const pattern of removablePhrases) {
-    term = term.replace(pattern, ' ')
+  for (const pattern of prefixPatterns) {
+    term = term.replace(pattern, '')
   }
 
-  return term
+  /*
+   * Remove common availability/price suffixes.
+   */
+  const suffixPatterns = [
+    /\s+available\s+at\s+any\s+pharmacy\s*$/i,
+    /\s+available\s+in\s+any\s+pharmacy\s*$/i,
+    /\s+available\s+near\s+me\s*$/i,
+    /\s+available\s*$/i,
+
+    /\s+in\s+stock\s*$/i,
+    /\s+in\s+stock\s+near\s+me\s*$/i,
+
+    /\s+at\s+any\s+pharmacy\s*$/i,
+    /\s+in\s+any\s+pharmacy\s*$/i,
+
+    /\s+near\s+me\s*$/i,
+
+    /\s+cost\s*$/i,
+    /\s+price\s*$/i,
+
+    /\s+for\s+me\s*$/i,
+  ]
+
+  for (const pattern of suffixPatterns) {
+    term = term.replace(pattern, '')
+  }
+
+  /*
+   * Remove remaining helper words that commonly surround a
+   * medicine name.
+   *
+   * Do not aggressively remove ordinary words because medicine
+   * brand names can contain multiple words.
+   */
+  term = term
+    .replace(/\bplease\b/gi, ' ')
+    .replace(/\bavailability\b/gi, ' ')
+    .replace(/\bavailable\b/gi, ' ')
+    .replace(/\bin stock\b/gi, ' ')
+    .replace(/\bmedicine\b/gi, ' ')
+    .replace(/\bmedication\b/gi, ' ')
     .replace(/[?!.,]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, 100)
+
+  /*
+   * Avoid sending an obviously empty or excessively long search
+   * expression to the database.
+   */
+  if (!term) {
+    return ''
+  }
+
+  return term.slice(0, 100)
 }
 
 /**
@@ -91,13 +140,31 @@ const createContextResult = ({
   dataType = null,
   data = null,
   metadata = {},
-}) => ({
-  intent,
-  entityId,
-  dataType,
-  data,
-  metadata,
-})
+}) => {
+  let resultState = 'NOT_APPLICABLE'
+
+  if (Array.isArray(data)) {
+    resultState =
+      data.length > 0
+        ? 'RESULTS_FOUND'
+        : 'NO_RESULTS'
+  } else if (data !== null && data !== undefined) {
+    resultState = 'RESULT_FOUND'
+  } else if (dataType) {
+    resultState = 'NOT_FOUND'
+  }
+
+  return {
+    intent,
+    entityId,
+    dataType,
+    data,
+    metadata: {
+      ...metadata,
+      resultState,
+    },
+  }
+}
 
 /* ============================================================
    MEDICINE CONTEXT
@@ -207,6 +274,17 @@ const resolveMedicineAvailability = async (
     })
   }
 
+  const pharmaciesFound = availabilityResults.reduce(
+    (total, item) => {
+      return total + (
+        Array.isArray(item.pharmacies)
+          ? item.pharmacies.length
+          : 0
+      )
+    },
+    0
+  )
+
   return createContextResult({
     intent,
     dataType: 'MEDICINE_AVAILABILITY',
@@ -215,6 +293,8 @@ const resolveMedicineAvailability = async (
       searchTerm,
       medicineMatches: medicines.length,
       medicinesChecked: availabilityResults.length,
+      pharmaciesFound,
+      availabilityFound: pharmaciesFound > 0,
     },
   })
 }
