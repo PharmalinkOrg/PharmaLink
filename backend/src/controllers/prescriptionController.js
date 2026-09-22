@@ -235,6 +235,166 @@ const createPrescription = async (req, res) => {
 }
 
 /* ============================================================
+   GET CUSTOMER PRESCRIPTIONS
+   GET /api/prescriptions
+============================================================ */
+
+const getCustomerPrescriptions = async (req, res) => {
+  try {
+    const customerId = req.pharmaUser?.user_id
+
+    if (!customerId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authenticated customer not found',
+      })
+    }
+
+    const { data: prescriptions, error } = await supabaseAdmin
+      .from('prescriptions')
+      .select(`
+        prescription_id,
+        customer_id,
+        pharmacy_id,
+        prescription_date,
+        status,
+        notes,
+        verified_at,
+        created_at,
+        updated_at,
+
+        pharmacies (
+          pharmacy_id,
+          name,
+          address,
+          status
+        )
+      `)
+      .eq('customer_id', Number(customerId))
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error(
+        'Get customer prescriptions error:',
+        error
+      )
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to load prescriptions',
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Prescriptions loaded successfully',
+      data: prescriptions || [],
+    })
+  } catch (error) {
+    console.error(
+      'Get customer prescriptions server error:',
+      error
+    )
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+    })
+  }
+}
+
+/* ============================================================
+   GET CUSTOMER PRESCRIPTION BY ID
+   GET /api/prescriptions/:prescriptionId
+============================================================ */
+
+const getCustomerPrescriptionById = async (req, res) => {
+  try {
+    const customerId = req.pharmaUser?.user_id
+    const prescriptionId = Number(
+      req.params.prescriptionId
+    )
+
+    if (!customerId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authenticated customer not found',
+      })
+    }
+
+    if (
+      !Number.isInteger(prescriptionId) ||
+      prescriptionId <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid prescription ID is required',
+      })
+    }
+
+    const { data: prescription, error } =
+      await supabaseAdmin
+        .from('prescriptions')
+        .select(`
+          prescription_id,
+          customer_id,
+          pharmacy_id,
+          prescription_date,
+          status,
+          notes,
+          verified_at,
+          created_at,
+          updated_at,
+
+          pharmacies (
+            pharmacy_id,
+            name,
+            address,
+            status
+          )
+        `)
+        .eq('prescription_id', prescriptionId)
+        .eq('customer_id', Number(customerId))
+        .maybeSingle()
+
+    if (error) {
+      console.error(
+        'Get customer prescription by ID error:',
+        error
+      )
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to load prescription',
+      })
+    }
+
+    if (!prescription) {
+      return res.status(404).json({
+        success: false,
+        message: 'Prescription not found',
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Prescription loaded successfully',
+      data: prescription,
+    })
+  } catch (error) {
+    console.error(
+      'Get customer prescription by ID server error:',
+      error
+    )
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+    })
+  }
+}
+
+/* ============================================================
    GET PHARMACY PRESCRIPTIONS
    GET /api/prescriptions/pharmacy
 ============================================================ */
@@ -500,7 +660,12 @@ const getPrescriptionUrl = async (req, res) => {
 }
 
 module.exports = {
+  // Customer
   createPrescription,
+  getCustomerPrescriptions,
+  getCustomerPrescriptionById,
+
+  // Pharmacy Admin
   getPharmacyPrescriptions,
   updatePrescriptionStatus,
   getPrescriptionUrl,

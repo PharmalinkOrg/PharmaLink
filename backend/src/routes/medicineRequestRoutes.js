@@ -1,6 +1,9 @@
 const express = require('express')
 
 const {
+  createMedicineRequest,
+  getCustomerMedicineRequests,
+  getCustomerMedicineRequestById,
   getPharmacyMedicineRequests,
   getMedicineRequestById,
   updateMedicineRequestStatus,
@@ -12,28 +15,68 @@ const requireRole = require('../middleware/roleMiddleware')
 
 const router = express.Router()
 
-router.get(
-  '/pharmacy',
+const customerOnly = [
   authenticateUser,
   loadPharmaUser,
-  requireRole('SUPER_ADMIN', 'PHARMACY_ADMIN', 'PHARMACY_STAFF'),
-  getPharmacyMedicineRequests,
+  requireRole('CUSTOMER'),
+]
+
+const pharmacyAdminOnly = [
+  authenticateUser,
+  loadPharmaUser,
+  requireRole('SUPER_ADMIN', 'PHARMACY_ADMIN'),
+]
+
+/* ============================================================
+   CUSTOMER ROUTES
+============================================================ */
+
+router.post(
+  '/',
+  ...customerOnly,
+  createMedicineRequest
 )
 
 router.get(
-  '/:requestId',
-  authenticateUser,
-  loadPharmaUser,
-  requireRole('SUPER_ADMIN', 'PHARMACY_ADMIN', 'PHARMACY_STAFF'),
-  getMedicineRequestById,
+  '/',
+  ...customerOnly,
+  getCustomerMedicineRequests
+)
+
+/* ============================================================
+   PHARMACY / SUPER ADMIN ROUTES
+============================================================ */
+
+router.get(
+  '/pharmacy',
+  ...pharmacyAdminOnly,
+  getPharmacyMedicineRequests
 )
 
 router.patch(
   '/:requestId/status',
-  authenticateUser,
-  loadPharmaUser,
-  requireRole('SUPER_ADMIN', 'PHARMACY_ADMIN', 'PHARMACY_STAFF'),
-  updateMedicineRequestStatus,
+  ...pharmacyAdminOnly,
+  updateMedicineRequestStatus
+)
+
+/*
+ * Keep this pharmacy detail route separate from the customer
+ * detail route because they use different ownership rules.
+ */
+router.get(
+  '/pharmacy/:requestId',
+  ...pharmacyAdminOnly,
+  getMedicineRequestById
+)
+
+/* ============================================================
+   CUSTOMER DETAIL
+============================================================ */
+
+router.get(
+  '/:requestId',
+  ...customerOnly,
+  getCustomerMedicineRequestById
 )
 
 module.exports = router
