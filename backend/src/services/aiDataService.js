@@ -408,6 +408,109 @@ const getCustomerReservation = async (
 }
 
 /* ============================================================
+   CUSTOMER PRESCRIPTIONS
+============================================================ */
+
+const getCustomerPrescriptions = async (
+  customerId,
+  limit = 10
+) => {
+  if (!isValidId(customerId)) {
+    return []
+  }
+
+  const safeLimit = getSafeLimit(limit, 10)
+
+  const { data, error } = await supabaseAdmin
+    .from('prescriptions')
+    .select(`
+      prescription_id,
+      pharmacy_id,
+      prescription_date,
+      status,
+      notes,
+      verified_at,
+      created_at,
+
+      pharmacies (
+        pharmacy_id,
+        name,
+        address
+      )
+    `)
+    .eq('customer_id', Number(customerId))
+    .order('created_at', { ascending: false })
+    .limit(safeLimit)
+
+  if (error) {
+    console.error(
+      'AI customer prescriptions error:',
+      error
+    )
+
+    const serviceError = new Error(
+      'Failed to retrieve customer prescriptions'
+    )
+
+    serviceError.code = 'AI_PRESCRIPTIONS_FETCH_ERROR'
+
+    throw serviceError
+  }
+
+  return data || []
+}
+
+const getCustomerPrescription = async (
+  customerId,
+  prescriptionId
+) => {
+  if (
+    !isValidId(customerId) ||
+    !isValidId(prescriptionId)
+  ) {
+    return null
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('prescriptions')
+    .select(`
+      prescription_id,
+      pharmacy_id,
+      prescription_date,
+      status,
+      notes,
+      verified_at,
+      created_at,
+
+      pharmacies (
+        pharmacy_id,
+        name,
+        address
+      )
+    `)
+    .eq('prescription_id', Number(prescriptionId))
+    .eq('customer_id', Number(customerId))
+    .maybeSingle()
+
+  if (error) {
+    console.error(
+      'AI customer prescription error:',
+      error
+    )
+
+    const serviceError = new Error(
+      'Failed to retrieve customer prescription'
+    )
+
+    serviceError.code = 'AI_PRESCRIPTION_FETCH_ERROR'
+
+    throw serviceError
+  }
+
+  return data || null
+}
+
+/* ============================================================
    CUSTOMER MEDICINE REQUESTS
 ============================================================ */
 
