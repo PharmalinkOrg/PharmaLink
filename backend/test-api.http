@@ -645,3 +645,33 @@ Content-Type: application/json
 {
   "message": "Which pharmacy currently has 50 tablets of Paracetamol available and how much does it cost?"
 }
+
+
+###
+POST http://localhost:5000/api/auth/customer-login
+Content-Type: application/json
+
+{
+  "email": "desamparado@gmail.com",
+  "password": "Desamparado123!"
+}
+
+
+###
+POST http://localhost:5000/api/ai/chat
+Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImY4ZGI5OTBmLTUwZGItNDJmYy1iZWY2LWI3ZmU3M2QzM2VhOCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2RtY2txbmJtcmtidGZ4cmhmd2J1LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIyZjRjMjk2Ni00NWMyLTRkYTItYTFmNC0yYTdkYWNiZTM3MzgiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzkwMTEyNjM5LCJpYXQiOjE3OTAxMDkwMzksImVtYWlsIjoiZGVzYW1wYXJhZG9AZ21haWwuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbF92ZXJpZmllZCI6dHJ1ZX0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3OTAxMDkwMzl9XSwic2Vzc2lvbl9pZCI6ImU1YTI5ZTIxLTY3MDktNDhmZS05N2ViLTc4YjQ5YWJkMDBhMyIsImlzX2Fub255bW91cyI6ZmFsc2V9.-ItXpkJ2fOQRddc6tBci9sPIDNIbZ1kkDkDZLqNDyJQszaFRMYUSE5AFwfGoEJEgjTkakLQ4EGxcU7pAI1WN-w
+Content-Type: application/json
+
+{
+  "message": "How do I reserve a medicine?"
+}
+
+###
+POST http://localhost:5000/api/ai/chat
+Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImY4ZGI5OTBmLTUwZGItNDJmYy1iZWY2LWI3ZmU3M2QzM2VhOCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2RtY2txbmJtcmtidGZ4cmhmd2J1LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIyZjRjMjk2Ni00NWMyLTRkYTItYTFmNC0yYTdkYWNiZTM3MzgiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzkwMTEyNjM5LCJpYXQiOjE3OTAxMDkwMzksImVtYWlsIjoiZGVzYW1wYXJhZG9AZ21haWwuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbF92ZXJpZmllZCI6dHJ1ZX0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3OTAxMDkwMzl9XSwic2Vzc2lvbl9pZCI6ImU1YTI5ZTIxLTY3MDktNDhmZS05N2ViLTc4YjQ5YWJkMDBhMyIsImlzX2Fub255bW91cyI6ZmFsc2V9.-ItXpkJ2fOQRddc6tBci9sPIDNIbZ1kkDkDZLqNDyJQszaFRMYUSE5AFwfGoEJEgjTkakLQ4EGxcU7pAI1WN-w
+Content-Type: application/json
+
+{
+  "conversationId": 2,
+  "message": "What if it requires a prescription?"
+}
