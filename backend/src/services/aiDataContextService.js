@@ -45,15 +45,29 @@ const extractMedicineSearchTerm = (value) => {
    * Remove common conversational prefixes.
    */
   const prefixPatterns = [
+    // Search-style requests
+    /^\s*help me find\s+/i,
+    /^\s*help me search for\s+/i,
+    /^\s*help me search\s+/i,
+    /^\s*find me\s+/i,
+    /^\s*find\s+/i,
+    /^\s*search for\s+/i,
+    /^\s*search\s+/i,
+    /^\s*look for\s+/i,
+    /^\s*show me\s+/i,
+
+    // Availability checks
     /^\s*can you check\s+(?:if|whether)\s+/i,
     /^\s*could you check\s+(?:if|whether)\s+/i,
     /^\s*check\s+(?:if|whether)\s+/i,
 
+    // Polite/helper prefixes
     /^\s*please\s+/i,
     /^\s*can you\s+/i,
     /^\s*could you\s+/i,
     /^\s*would you\s+/i,
 
+    // Pharmacy availability
     /^\s*do you have\s+/i,
     /^\s*does any pharmacy have\s+/i,
     /^\s*which pharmacy has\s+/i,
@@ -62,6 +76,7 @@ const extractMedicineSearchTerm = (value) => {
     /^\s*where can i find\s+/i,
     /^\s*where can i get\s+/i,
 
+    // Price
     /^\s*how much is\s+/i,
     /^\s*how much does\s+/i,
     /^\s*what is the price of\s+/i,

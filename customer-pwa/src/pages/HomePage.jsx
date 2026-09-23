@@ -114,7 +114,9 @@ function HomePage() {
 
           <button
             type="button"
-            onClick={() => navigate('/upload-prescription')}
+            onClick={() =>
+              navigate('/upload-prescription')
+            }
             className="group flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500"
           >
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-50 text-cyan-700 transition group-hover:bg-cyan-100">
@@ -128,7 +130,9 @@ function HomePage() {
 
           <button
             type="button"
-            onClick={() => navigate('/request-medicine')}
+            onClick={() =>
+              navigate('/request-medicine')
+            }
             className="group flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500"
           >
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-50 text-cyan-700 transition group-hover:bg-cyan-100">
@@ -142,7 +146,9 @@ function HomePage() {
 
           <button
             type="button"
-            onClick={() => navigate('/pharmacies')}
+            onClick={() =>
+              navigate('/pharmacies')
+            }
             className="group flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500"
           >
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-50 text-cyan-700 transition group-hover:bg-cyan-100">
@@ -177,7 +183,9 @@ function HomePage() {
             <button
               key={category}
               type="button"
-              onClick={() => navigate('/search')}
+              onClick={() =>
+                navigate('/search')
+              }
               className={`shrink-0 rounded-full border px-4 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-teal-500 ${
                 index === 0
                   ? 'border-teal-700 bg-teal-700 text-white'
@@ -199,7 +207,9 @@ function HomePage() {
 
           <button
             type="button"
-            onClick={() => navigate('/pharmacies')}
+            onClick={() =>
+              navigate('/pharmacies')
+            }
             className="text-xs font-bold text-slate-500 transition hover:text-teal-700"
           >
             View all
@@ -211,7 +221,9 @@ function HomePage() {
             <button
               key={pharmacy.name}
               type="button"
-              onClick={() => navigate('/pharmacies')}
+              onClick={() =>
+                navigate('/pharmacies')
+              }
               className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-teal-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-700">
@@ -224,7 +236,8 @@ function HomePage() {
                 </span>
 
                 <span className="mt-0.5 block text-xs text-slate-500">
-                  {pharmacy.distance} · {pharmacy.status}
+                  {pharmacy.distance} ·{' '}
+                  {pharmacy.status}
                 </span>
 
                 <span className="mt-0.5 block text-[11px] font-medium text-teal-700">
@@ -254,15 +267,18 @@ function HomePage() {
             </h2>
 
             <p className="mt-1 text-xs leading-relaxed text-slate-300">
-              Ask PharmaLink AI about medicines, reservations,
-              prescriptions, or how to use the app.
+              Ask PharmaLink AI about medicines,
+              reservations, prescriptions, or how to
+              use the app.
             </p>
           </div>
         </div>
 
         <button
           type="button"
-          onClick={() => navigate('/search')}
+          onClick={() =>
+            navigate('/assistant')
+          }
           className="mt-4 flex min-h-9 w-full items-center justify-center rounded-lg bg-teal-100 px-4 text-xs font-extrabold text-teal-900 transition hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-slate-800"
         >
           Ask PharmaLink AI

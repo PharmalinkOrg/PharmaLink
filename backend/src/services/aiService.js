@@ -2,6 +2,29 @@ const gemini = require('../config/gemini')
 const customerAssistantPrompt = require('../prompts/customerAssistantPrompt')
 
 const MODEL_NAME = 'gemini-3.6-flash'
+const MAX_GENERATION_ATTEMPTS = 2
+const RETRY_DELAY_MS = 1200
+
+const wait = (milliseconds) =>
+  new Promise((resolve) =>
+    setTimeout(resolve, milliseconds)
+  )
+
+const isRetryableGeminiError = (error) => {
+  const status = Number(
+    error?.status ||
+    error?.code ||
+    error?.response?.status
+  )
+
+  return (
+    status === 429 ||
+    status === 500 ||
+    status === 502 ||
+    status === 503 ||
+    status === 504
+  )
+}
 
 const buildConversationContents = (
   history = [],
@@ -203,15 +226,51 @@ const generateCustomerReply = async (
       liveDataContext
     )
 
-    const response = await gemini.models.generateContent({
-      model: MODEL_NAME,
-      contents,
-      config: {
-        systemInstruction: customerAssistantPrompt,
-      },
-    })
+    let response = null
+    let lastError = null
 
-    const reply = response.text
+    for (
+      let attempt = 1;
+      attempt <= MAX_GENERATION_ATTEMPTS;
+      attempt += 1
+    ) {
+      try {
+        response =
+          await gemini.models.generateContent({
+            model: MODEL_NAME,
+            contents,
+            config: {
+              systemInstruction:
+                customerAssistantPrompt,
+            },
+          })
+
+        lastError = null
+        break
+      } catch (error) {
+        lastError = error
+
+        const shouldRetry =
+          isRetryableGeminiError(error) &&
+          attempt < MAX_GENERATION_ATTEMPTS
+
+        if (!shouldRetry) {
+          throw error
+        }
+
+        console.warn(
+          `Gemini request temporarily unavailable. Retrying (${attempt + 1}/${MAX_GENERATION_ATTEMPTS})...`
+        )
+
+        await wait(RETRY_DELAY_MS)
+      }
+    }
+
+    if (!response && lastError) {
+      throw lastError
+    }
+
+    const reply = response?.text
 
     if (
       !reply ||
@@ -233,6 +292,21 @@ const generateCustomerReply = async (
       error.code === 'AI_EMPTY_RESPONSE'
     ) {
       throw error
+    }
+
+    if (Number(error?.status) === 503) {
+      console.error(
+        'Gemini temporarily unavailable:',
+        error
+      )
+
+      const serviceError = new Error(
+        'PharmaLink AI is temporarily unavailable'
+      )
+
+      serviceError.code = 'AI_SERVICE_UNAVAILABLE'
+
+      throw serviceError
     }
 
     console.error('Gemini API error:', error)

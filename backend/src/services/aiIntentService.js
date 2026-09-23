@@ -273,15 +273,23 @@ const detectCustomerIntent = (rawMessage) => {
      MEDICINE SEARCH / INFORMATION
   ---------------------------------------------------------- */
 
-  const mentionsMedicine = containsAny(message, [
+  const asksMedicineSearch = containsAny(message, [
     'medicine',
     'medication',
     'drug',
     'generic name',
     'brand name',
+
+    // Search-style phrases
+    'help me find',
+    'find me',
+    'search for',
+    'search medicine',
+    'search medication',
+    'look for',
   ])
 
-  if (mentionsMedicine) {
+  if (asksMedicineSearch) {
     return {
       intent: AI_INTENTS.MEDICINE_SEARCH,
       entityId: null,

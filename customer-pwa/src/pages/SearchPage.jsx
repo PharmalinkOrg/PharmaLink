@@ -66,6 +66,23 @@ function SearchPage() {
     })
   }, [medicines, searchTerm, selectedCategory])
 
+  const handleAskAssistant = () => {
+    const trimmedSearch = searchTerm.trim()
+
+    if (trimmedSearch) {
+      navigate('/assistant', {
+        state: {
+          suggestedMessage:
+            `Help me find ${trimmedSearch}.`,
+        },
+      })
+
+      return
+    }
+
+    navigate('/assistant')
+  }
+
   return (
     <section className="mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
       {/* Header */}
@@ -104,9 +121,7 @@ function SearchPage() {
       {/* AI assistance */}
       <button
         type="button"
-        onClick={() => {
-          // AI assistant will be connected here later.
-        }}
+        onClick={handleAskAssistant}
         className="mt-3 flex w-full items-center gap-3 rounded-2xl bg-slate-800 px-4 py-3 text-left shadow-sm transition hover:bg-slate-700"
       >
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-700 text-emerald-200">

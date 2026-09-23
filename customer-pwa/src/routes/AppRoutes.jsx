@@ -12,6 +12,7 @@ import PharmacyDetailsPage from '../pages/PharmacyDetailsPage'
 import ProfilePage from '../pages/ProfilePage'
 import UploadPrescriptionPage from '../pages/UploadPrescriptionPage'
 import RequestMedicinePage from '../pages/RequestMedicinePage'
+import AIAssistantPage from '../pages/AIAssistantPage'
 import ReservationsPage from '../pages/ReservationsPage'
 import MyReservationsPage from '../pages/MyReservationsPage'
 import ReservationDetailsPage from '../pages/ReservationDetailsPage'
@@ -89,6 +90,11 @@ function AppRoutes() {
           <Route
             path="request-medicine"
             element={<RequestMedicinePage />}
+          />
+
+          <Route
+            path="assistant"
+            element={<AIAssistantPage />}
           />
 
           <Route

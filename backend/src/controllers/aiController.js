@@ -217,6 +217,24 @@ const chat = async (req, res) => {
       })
     }
 
+    if (
+      error.code === 'AI_SERVICE_UNAVAILABLE'
+    ) {
+      return res.status(503).json({
+        success: false,
+        message:
+          'PharmaLink Assistant is temporarily busy. Please try again in a moment.',
+      })
+    }
+
+    if (error.code === 'AI_QUOTA_EXHAUSTED') {
+      return res.status(429).json({
+        success: false,
+        message:
+          'PharmaLink Assistant usage is temporarily limited. Please try again later.',
+      })
+    }
+
     if (error.code === 'AI_SERVICE_ERROR') {
       return res.status(503).json({
         success: false,
