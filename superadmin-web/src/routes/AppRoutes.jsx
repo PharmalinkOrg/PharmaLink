@@ -1,4 +1,5 @@
 // File: superadmin-web/src/routes/AppRoutes.jsx
+
 import { Route, Routes } from 'react-router-dom'
 import SuperAdminLayout from '../components/layout/SuperAdminLayout'
 import DashboardPage from '../pages/DashboardPage'
@@ -7,14 +8,12 @@ import { LoginPage } from '../pages/LoginPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { PlaceholderPage } from '../pages/PlaceholderPage'
 import { UsersPage } from '../pages/UsersPage'
+import { AuditLogsPage } from '../pages/AuditLogsPage'
+import { SettingsPage } from '../pages/SettingsPage'
+import { ReportsPage } from '../pages/ReportsPage'
 
 const placeholderPages = [
   ['pharmacy-admins', 'Pharmacy Admins'],
-  ['customers', 'Customers'],
-  ['reports', 'Reports'],
-  ['audit-logs', 'Audit Logs'],
-  ['notifications', 'Notifications'],
-  ['settings', 'Settings'],
 ]
 
 function AppRoutes() {
@@ -24,7 +23,11 @@ function AppRoutes() {
 
       <Route element={<SuperAdminLayout />}>
         <Route index element={<DashboardPage />} />
-        <Route path="pharmacies" element={<PharmaciesPage />} />
+
+        <Route
+          path="pharmacies"
+          element={<PharmaciesPage />}
+        />
 
         {placeholderPages.map(([path, title]) => (
           <Route
@@ -34,9 +37,30 @@ function AppRoutes() {
           />
         ))}
 
-        <Route path="users" element={<UsersPage />} />
+        <Route
+          path="reports"
+          element={<ReportsPage />}
+        />
 
-        <Route path="*" element={<NotFoundPage />} />
+        <Route
+          path="audit-logs"
+          element={<AuditLogsPage />}
+        />
+
+        <Route
+          path="settings"
+          element={<SettingsPage />}
+        />
+
+        <Route
+          path="users"
+          element={<UsersPage />}
+        />
+
+        <Route
+          path="*"
+          element={<NotFoundPage />}
+        />
       </Route>
     </Routes>
   )

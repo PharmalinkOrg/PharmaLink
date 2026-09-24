@@ -16,6 +16,9 @@ export function PharmaciesPage() {
   const [sort, setSort] = useState('newest')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const pharmaciesPerPage = 5
 
   useEffect(() => {
     const loadPharmacies = async () => {
@@ -62,6 +65,17 @@ export function PharmaciesPage() {
     })
   }, [pharmacies, search, sort])
 
+  const totalPages = Math.ceil(
+    filteredPharmacies.length / pharmaciesPerPage
+  )
+
+  const startIndex = (currentPage - 1) * pharmaciesPerPage
+
+  const displayedPharmacies = filteredPharmacies.slice(
+    startIndex,
+    startIndex + pharmaciesPerPage
+  )
+
   const formatDate = (date) => {
     if (!date) return '—'
 
@@ -70,6 +84,16 @@ export function PharmaciesPage() {
       day: 'numeric',
       year: 'numeric',
     })
+  }
+
+  const handleSearch = (event) => {
+    setSearch(event.target.value)
+    setCurrentPage(1)
+  }
+
+  const handleSort = (event) => {
+    setSort(event.target.value)
+    setCurrentPage(1)
   }
 
   return (
@@ -99,7 +123,7 @@ export function PharmaciesPage() {
             type="text"
             placeholder="Search pharmacies..."
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={handleSearch}
           />
         </div>
 
@@ -108,7 +132,7 @@ export function PharmaciesPage() {
 
           <select
             value={sort}
-            onChange={(event) => setSort(event.target.value)}
+            onChange={handleSort}
           >
             <option value="newest">Newest to Oldest</option>
             <option value="az">A–Z</option>
@@ -144,7 +168,7 @@ export function PharmaciesPage() {
               </thead>
 
               <tbody>
-                {filteredPharmacies.map((pharmacy) => (
+                {displayedPharmacies.map((pharmacy) => (
                   <tr key={pharmacy.pharmacy_id}>
                     <td>
                       <div className="pharmacy-name-cell">
@@ -206,9 +230,44 @@ export function PharmaciesPage() {
         )}
       </div>
 
-      {!loading && !error && (
+      {!loading && !error && filteredPharmacies.length > 0 && (
         <div className="table-footer">
-          Showing {filteredPharmacies.length} of {pharmacies.length} pharmacies
+          <span>
+            Showing {startIndex + 1}–
+            {Math.min(
+              startIndex + pharmaciesPerPage,
+              filteredPharmacies.length
+            )}{' '}
+            of {filteredPharmacies.length} pharmacies
+          </span>
+
+          <div className="pagination">
+            <button
+              type="button"
+              onClick={() =>
+                setCurrentPage((page) => Math.max(page - 1, 1))
+              }
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+
+            <span>
+              Page {currentPage} of {Math.max(totalPages, 1)}
+            </span>
+
+            <button
+              type="button"
+              onClick={() =>
+                setCurrentPage((page) =>
+                  Math.min(page + 1, totalPages)
+                )
+              }
+              disabled={currentPage >= totalPages}
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
     </div>
