@@ -10,6 +10,9 @@ import MedicineDetailsPage from '../pages/MedicineDetailsPage'
 import PharmaciesPage from '../pages/PharmaciesPage'
 import PharmacyDetailsPage from '../pages/PharmacyDetailsPage'
 import ProfilePage from '../pages/ProfilePage'
+import PrivacyPage from '../pages/PrivacyPage'
+import SupportPage from '../pages/SupportPage'
+import AboutPage from '../pages/AboutPage'
 import UploadPrescriptionPage from '../pages/UploadPrescriptionPage'
 import RequestMedicinePage from '../pages/RequestMedicinePage'
 import AIAssistantPage from '../pages/AIAssistantPage'
@@ -100,6 +103,21 @@ function AppRoutes() {
           <Route
             path="profile"
             element={<ProfilePage />}
+          />
+
+          <Route
+            path="privacy"
+            element={<PrivacyPage />}
+          />
+
+          <Route
+            path="support"
+            element={<SupportPage />}
+          />
+
+          <Route
+            path="about"
+            element={<AboutPage />}
           />
 
           {/* Customer 404 */}

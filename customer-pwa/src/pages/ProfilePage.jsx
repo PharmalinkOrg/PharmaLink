@@ -853,6 +853,7 @@ function ProfilePage() {
             <div className="divide-y divide-gray-100">
               <button
                 type="button"
+                onClick={() => navigate('/privacy')}
                 className="w-full py-4 flex items-center justify-between text-left"
               >
                 <div>
@@ -869,6 +870,7 @@ function ProfilePage() {
 
               <button
                 type="button"
+                onClick={() => navigate('/support')}
                 className="w-full py-4 flex items-center justify-between text-left"
               >
                 <div>
@@ -885,6 +887,7 @@ function ProfilePage() {
 
               <button
                 type="button"
+                onClick={() => navigate('/about')}
                 className="w-full py-4 flex items-center justify-between text-left"
               >
                 <div>
