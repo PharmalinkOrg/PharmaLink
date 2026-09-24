@@ -1,5 +1,6 @@
 import { createContext, useCallback, useMemo, useState } from 'react'
-import { api } from '../lib/api' 
+import { api } from '../lib/api'
+import { supabase } from '../lib/supabaseClient'
 
 export const AuthContext = createContext(null)
 
@@ -52,9 +53,15 @@ export function AuthProvider({ children }) {
     return await api.resetPassword(email.trim().toLowerCase())
   }, [])
 
-  const signOut = useCallback(() => {
-    localStorage.removeItem(SESSION_KEY)
-    setSession(null)
+  const signOut = useCallback(async () => {
+    try {
+      await supabase.auth.signOut()
+    } catch (error) {
+      console.error('Unable to sign out of Supabase:', error)
+    } finally {
+      localStorage.removeItem(SESSION_KEY)
+      setSession(null)
+    }
   }, [])
 
   const value = useMemo(

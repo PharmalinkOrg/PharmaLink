@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pharmalink-v2'
+const CACHE_NAME = 'pharmalink-v3'
 
 const APP_SHELL = [
   '/',
@@ -30,22 +30,47 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return
+  const request = event.request
 
-  if (event.request.mode === 'navigate') {
+  if (request.method !== 'GET') {
+    return
+  }
+
+  const url = new URL(request.url)
+
+  // Never intercept requests to another origin.
+  // This is especially important for the PharmaLink backend
+  // and Supabase authenticated requests.
+  if (url.origin !== self.location.origin) {
+    return
+  }
+
+  // Navigation requests should always try the network first.
+  if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match('/')),
+      fetch(request).catch(() => caches.match('/')),
     )
     return
   }
 
+  // Cache only static frontend assets.
+  const isStaticAsset =
+    url.pathname.startsWith('/assets/') ||
+    url.pathname === '/manifest.webmanifest' ||
+    url.pathname === '/pharmalink-icon-192.png' ||
+    url.pathname === '/pharmalink-icon-512.png'
+
+  if (!isStaticAsset) {
+    return
+  }
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
+    caches.match(request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse
       }
 
-      return fetch(event.request).then((response) => {
+      return fetch(request).then((response) => {
         if (!response || response.status !== 200) {
           return response
         }
@@ -53,7 +78,7 @@ self.addEventListener('fetch', (event) => {
         const copy = response.clone()
 
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, copy)
+          cache.put(request, copy)
         })
 
         return response
