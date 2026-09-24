@@ -1,13 +1,23 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
 # Environment files
 .env
 .env.local
 .env.*.local
 
+# Build output
+dist/
+**/dist/
+
 # Vercel
-.vercel
+.vercel/
+**/.vercel/
 
 # Turbo
-.turbo
+.turbo/
 
-# Dependencies
-node_modules
+# Logs
+*.log
+npm-debug.log*
