@@ -86,8 +86,10 @@ export const api = {
   },
 
   // --------------------------------------------------
+  // --------------------------------------------------
   // AUTH
-  // These still use Supabase Auth directly
+  // Login/reset use Supabase Auth directly.
+  // Customer registration uses the PharmaLink backend.
   // --------------------------------------------------
 
   signIn: async (email, password) => {
@@ -103,21 +105,18 @@ export const api = {
   },
 
   register: async (form) => {
-    const { data, error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        data: {
-          first_name: form.first_name,
-          last_name: form.last_name,
-          phone: form.phone,
-        },
+    const response = await apiRequest('/auth/register-customer', {
+      method: 'POST',
+      body: {
+        first_name: form.first_name,
+        last_name: form.last_name,
+        phone: form.phone,
+        email: form.email,
+        password: form.password,
       },
     })
 
-    if (error) throw error
-
-    return data
+    return response?.data
   },
 
   resetPassword: async (email) => {

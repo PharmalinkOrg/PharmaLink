@@ -4,7 +4,7 @@ import { useAuth } from '../components/auth/useAuth'
 
 // Password requirements validation
 const validatePassword = (password) => {
-  if (password.length < 6) return "Password must be at least 6 characters long.";
+  if (password.length < 8) return "Password must be at least 8 characters long.";
   if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter.";
   if (!/[0-9]/.test(password)) return "Password must contain at least one number.";
   if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return "Password must contain at least one special character.";
@@ -83,7 +83,7 @@ function LoginPage() {
       if (isRegistering) {
         const response = await register(form)
 
-        if (!response.data.session) {
+        if (!response?.session) {
           setError('Account created. Please sign in.')
           setIsRegistering(false)
           return
@@ -262,7 +262,7 @@ function LoginPage() {
             <input
               name="password"
               type="password"
-              minLength="6"
+              minLength="8"
               value={form.password}
               onChange={handleChange}
               autoComplete={isRegistering ? 'new-password' : 'current-password'}
@@ -270,7 +270,7 @@ function LoginPage() {
             />
             {isRegistering && (
               <span className="password-hint">
-                * Min 6 characters, 1 Uppercase, 1 Number, 1 Special character
+                * Min 8 characters, 1 Uppercase, 1 Number, 1 Special character
               </span>
             )}
           </label>
