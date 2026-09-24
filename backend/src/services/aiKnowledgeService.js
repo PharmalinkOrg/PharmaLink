@@ -2,6 +2,34 @@ const supabaseAdmin = require('../config/supabaseAdmin')
 
 const MAX_KNOWLEDGE_RESULTS = 5
 
+const KNOWLEDGE_STOP_WORDS = new Set([
+  'a',
+  'an',
+  'and',
+  'are',
+  'can',
+  'do',
+  'does',
+  'for',
+  'how',
+  'i',
+  'in',
+  'is',
+  'it',
+  'me',
+  'my',
+  'of',
+  'on',
+  'or',
+  'the',
+  'to',
+  'what',
+  'when',
+  'where',
+  'which',
+  'with',
+])
+
 /**
  * Normalize text so matching is case-insensitive
  * and less affected by punctuation.
@@ -30,7 +58,11 @@ const tokenize = (value) => {
 
   return normalized
     .split(' ')
-    .filter((word) => word.length >= 2)
+    .filter(
+      (word) =>
+        word.length >= 2 &&
+        !KNOWLEDGE_STOP_WORDS.has(word)
+    )
 }
 
 /**

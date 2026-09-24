@@ -71,6 +71,21 @@ function AIAssistantPage() {
     setIsHistoryOpen,
   ] = useState(false)
 
+  useEffect(() => {
+    if (!suggestedMessage) {
+      return
+    }
+
+    navigate(location.pathname, {
+      replace: true,
+      state: null,
+    })
+  }, [
+    suggestedMessage,
+    navigate,
+    location.pathname,
+  ])
+
   const loadConversations =
     useCallback(async () => {
       try {
@@ -478,7 +493,8 @@ function AIAssistantPage() {
               onSend={handleSendMessage}
               disabled={
                 isSending ||
-                isLoadingConversation
+                isLoadingConversation ||
+                isClosingConversation
               }
               conversationClosed={
                 conversationStatus === 'CLOSED'

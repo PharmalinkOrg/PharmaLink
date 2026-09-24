@@ -13,9 +13,8 @@ const {
 } = require('../services/aiNavigationService')
 
 const {
-  createConversation,
   getConversationForCustomer,
-  saveMessage,
+  saveExchangeAtomic,
   getConversationMessages,
   getCustomerConversations,
   getConversationWithMessages,
@@ -99,7 +98,6 @@ const chat = async (req, res) => {
 
     let conversation = null
     let conversationHistory = []
-    let isNewConversation = false
 
     /*
      * Existing conversation:
@@ -156,7 +154,6 @@ const chat = async (req, res) => {
        * first. This prevents failed provider requests from
        * creating empty/customer-only conversations.
        */
-      isNewConversation = true
       conversationHistory = []
     }
 
@@ -220,48 +217,36 @@ const chat = async (req, res) => {
     )
 
     /* ============================================================
-       CREATE NEW CONVERSATION AFTER SUCCESSFUL GENERATION
-    ============================================================ */
-
-    if (isNewConversation) {
-      conversation = await createConversation(
-        customerId,
-        createConversationTitle(trimmedMessage)
-      )
-    }
-
-    /* ============================================================
        PERSIST SUCCESSFUL EXCHANGE
     ============================================================ */
 
-    /*
-     * Save the customer message only after the AI provider
-     * has successfully generated a response.
-     */
-    await saveMessage({
-      conversationId:
-        conversation.conversation_id,
+    const savedExchange =
+      await saveExchangeAtomic({
+        customerId,
 
-      sender: 'CUSTOMER',
+        conversationId:
+          conversation?.conversation_id ??
+          null,
 
-      message: trimmedMessage,
+        title:
+          conversation
+            ? null
+            : createConversationTitle(
+                trimmedMessage
+              ),
 
-      messageType: 'GENERAL',
-    })
+        customerMessage:
+          trimmedMessage,
 
-    /*
-     * Save the corresponding assistant response.
-     */
-    await saveMessage({
-      conversationId:
-        conversation.conversation_id,
+        assistantMessage:
+          reply,
 
-      sender: 'ASSISTANT',
+        customerMessageType:
+          'GENERAL',
 
-      message: reply,
-
-      messageType: 'GENERAL',
-    })
+        assistantMessageType:
+          'GENERAL',
+      })
 
     /* ============================================================
        RESPONSE
@@ -272,7 +257,7 @@ const chat = async (req, res) => {
 
       data: {
         conversationId:
-          conversation.conversation_id,
+          savedExchange.conversationId,
 
         reply,
 
@@ -336,6 +321,17 @@ const chat = async (req, res) => {
       })
     }
 
+    if (
+      error.code ===
+      'AI_RATE_LIMITED'
+    ) {
+      return res.status(429).json({
+        success: false,
+        message:
+          'PharmaLink Assistant is receiving too many requests right now. Please wait a moment and try again.',
+      })
+    }
+
     if (error.code === 'AI_SERVICE_ERROR') {
       return res.status(503).json({
         success: false,
@@ -376,16 +372,45 @@ const chat = async (req, res) => {
 
     if (
       error.code ===
-        'AI_CONVERSATION_CREATE_ERROR' ||
-      error.code ===
-        'AI_CONVERSATION_FETCH_ERROR' ||
-      error.code ===
-        'AI_MESSAGE_SAVE_ERROR'
+        'AI_CONVERSATION_FETCH_ERROR'
     ) {
       return res.status(500).json({
         success: false,
         message:
-          'The conversation could not be saved. Please try again.',
+          'The conversation could not be retrieved. Please try again.',
+      })
+    }
+
+    if (
+      error.code ===
+      'AI_EXCHANGE_SAVE_ERROR'
+    ) {
+      return res.status(500).json({
+        success: false,
+        message:
+          'PharmaLink Assistant could not save the conversation. Please try again.',
+      })
+    }
+
+    if (
+      error.code ===
+      'AI_CONVERSATION_NOT_FOUND'
+    ) {
+      return res.status(404).json({
+        success: false,
+        message:
+          'Conversation not found.',
+      })
+    }
+
+    if (
+      error.code ===
+      'AI_CONVERSATION_CLOSED'
+    ) {
+      return res.status(409).json({
+        success: false,
+        message:
+          'This conversation is closed. Start a new conversation to continue.',
       })
     }
 

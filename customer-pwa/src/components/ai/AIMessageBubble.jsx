@@ -3,6 +3,7 @@ import {
   Bot,
   UserRound,
 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
 
 import {
   getAINavigationRoute,
@@ -70,9 +71,11 @@ function AIMessageBubble({
             : 'rounded-bl-md border border-slate-200 bg-white text-slate-700 shadow-sm'
         }`}
       >
-        <p className="whitespace-pre-wrap break-words">
-          {text}
-        </p>
+        <div className="ai-message-markdown">
+          <ReactMarkdown>
+            {text}
+          </ReactMarkdown>
+        </div>
 
         {action && route && (
           <button

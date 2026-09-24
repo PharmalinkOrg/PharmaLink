@@ -22,6 +22,192 @@ const {
 const MAX_CONTEXT_RESULTS = 10
 
 /* ============================================================
+   AI CONTEXT SANITIZATION
+============================================================ */
+
+/**
+ * These helpers define the exact fields that may be sent to
+ * the external AI provider.
+ *
+ * Internal database IDs may still be used by PharmaLink
+ * services to perform controlled queries, but unnecessary
+ * identifiers are removed before provider context is built.
+ */
+
+const sanitizeMedicine = (medicine) => {
+  if (!medicine) {
+    return null
+  }
+
+  return {
+    generic_name: medicine.generic_name ?? null,
+    brand_name: medicine.brand_name ?? null,
+    dosage: medicine.dosage ?? null,
+    dosage_form: medicine.dosage_form ?? null,
+    description: medicine.description ?? null,
+    requires_prescription:
+      medicine.requires_prescription ?? null,
+    status: medicine.status ?? null,
+  }
+}
+
+const sanitizePharmacy = (pharmacy) => {
+  if (!pharmacy) {
+    return null
+  }
+
+  return {
+    name: pharmacy.name ?? null,
+    address: pharmacy.address ?? null,
+    contact_number:
+      pharmacy.contact_number ?? null,
+  }
+}
+
+const sanitizeAvailability = (item) => {
+  if (!item) {
+    return null
+  }
+
+  return {
+    quantity: item.quantity ?? null,
+    unit_price: item.unit_price ?? null,
+    inventory_status:
+      item.inventory_status ?? null,
+    pharmacy: sanitizePharmacy(
+      item.pharmacy
+    ),
+  }
+}
+
+const sanitizeReservationItem = (item) => {
+  if (!item) {
+    return null
+  }
+
+  return {
+    quantity: item.quantity ?? null,
+    unit_price: item.unit_price ?? null,
+    medicine: sanitizeMedicine(
+      item.medicines
+    ),
+  }
+}
+
+const sanitizeReservation = (reservation) => {
+  if (!reservation) {
+    return null
+  }
+
+  return {
+    reservation_id:
+      reservation.reservation_id,
+    reservation_date:
+      reservation.reservation_date ?? null,
+    pickup_date:
+      reservation.pickup_date ?? null,
+    pickup_time:
+      reservation.pickup_time ?? null,
+    status:
+      reservation.status ?? null,
+    notes:
+      reservation.notes ?? null,
+    confirmed_at:
+      reservation.confirmed_at ?? null,
+    completed_at:
+      reservation.completed_at ?? null,
+    created_at:
+      reservation.created_at ?? null,
+
+    pharmacy: sanitizePharmacy(
+      reservation.pharmacies
+    ),
+
+    items: Array.isArray(
+      reservation.reservation_items
+    )
+      ? reservation.reservation_items
+          .map(sanitizeReservationItem)
+          .filter(Boolean)
+      : [],
+  }
+}
+
+const sanitizePrescription = (prescription) => {
+  if (!prescription) {
+    return null
+  }
+
+  return {
+    prescription_id:
+      prescription.prescription_id,
+    prescription_date:
+      prescription.prescription_date ?? null,
+    status:
+      prescription.status ?? null,
+    notes:
+      prescription.notes ?? null,
+    verified_at:
+      prescription.verified_at ?? null,
+    created_at:
+      prescription.created_at ?? null,
+
+    pharmacy: sanitizePharmacy(
+      prescription.pharmacies
+    ),
+  }
+}
+
+const sanitizeMedicineRequestItem = (item) => {
+  if (!item) {
+    return null
+  }
+
+  return {
+    requested_quantity:
+      item.requested_quantity ?? null,
+    available_quantity:
+      item.available_quantity ?? null,
+    notes:
+      item.notes ?? null,
+    medicine: sanitizeMedicine(
+      item.medicines
+    ),
+  }
+}
+
+const sanitizeMedicineRequest = (request) => {
+  if (!request) {
+    return null
+  }
+
+  return {
+    medicine_request_id:
+      request.medicine_request_id,
+    status:
+      request.status ?? null,
+    notes:
+      request.notes ?? null,
+    reviewed_at:
+      request.reviewed_at ?? null,
+    created_at:
+      request.created_at ?? null,
+
+    pharmacy: sanitizePharmacy(
+      request.pharmacies
+    ),
+
+    items: Array.isArray(
+      request.medicine_request_items
+    )
+      ? request.medicine_request_items
+          .map(sanitizeMedicineRequestItem)
+          .filter(Boolean)
+      : [],
+  }
+}
+
+/* ============================================================
    HELPERS
 ============================================================ */
 
@@ -208,13 +394,18 @@ const resolveMedicineSearch = async (
     MAX_CONTEXT_RESULTS
   )
 
+  const sanitizedMedicines = medicines
+    .map(sanitizeMedicine)
+    .filter(Boolean)
+
   return createContextResult({
     intent,
     dataType: 'MEDICINE_SEARCH',
-    data: medicines,
+    data: sanitizedMedicines,
     metadata: {
       searchTerm,
-      resultCount: medicines.length,
+      resultCount:
+        sanitizedMedicines.length,
     },
   })
 }
@@ -284,8 +475,12 @@ const resolveMedicineAvailability = async (
     )
 
     availabilityResults.push({
-      medicine: medicineInfo,
-      pharmacies,
+      medicine:
+        sanitizeMedicine(medicineInfo),
+
+      pharmacies: pharmacies
+        .map(sanitizeAvailability)
+        .filter(Boolean),
     })
   }
 
@@ -331,12 +526,18 @@ const resolveCustomerData = async ({
           MAX_CONTEXT_RESULTS
         )
 
+      const sanitizedReservations =
+        reservations
+          .map(sanitizeReservation)
+          .filter(Boolean)
+
       return createContextResult({
         intent,
         dataType: 'CUSTOMER_RESERVATIONS',
-        data: reservations,
+        data: sanitizedReservations,
         metadata: {
-          resultCount: reservations.length,
+          resultCount:
+            sanitizedReservations.length,
         },
       })
     }
@@ -357,7 +558,9 @@ const resolveCustomerData = async ({
           intent,
           entityId,
           dataType: 'CUSTOMER_RESERVATION',
-          data: reservation,
+          data: sanitizeReservation(
+            reservation
+          ),
           metadata: {
             found: Boolean(reservation),
           },
@@ -375,12 +578,17 @@ const resolveCustomerData = async ({
           MAX_CONTEXT_RESULTS
         )
 
+      const sanitizedReservations =
+        reservations
+          .map(sanitizeReservation)
+          .filter(Boolean)
+
       return createContextResult({
         intent,
         dataType: 'CUSTOMER_RESERVATIONS',
-        data: reservations,
+        data: sanitizedReservations,
         metadata: {
-          resultCount: reservations.length,
+          resultCount: sanitizedReservations.length,
           specificReservationRequested: false,
         },
       })
@@ -393,12 +601,17 @@ const resolveCustomerData = async ({
           MAX_CONTEXT_RESULTS
         )
 
+      const sanitizedPrescriptions =
+        prescriptions
+          .map(sanitizePrescription)
+          .filter(Boolean)
+
       return createContextResult({
         intent,
         dataType: 'CUSTOMER_PRESCRIPTIONS',
-        data: prescriptions,
+        data: sanitizedPrescriptions,
         metadata: {
-          resultCount: prescriptions.length,
+          resultCount: sanitizedPrescriptions.length,
         },
       })
     }
@@ -415,7 +628,9 @@ const resolveCustomerData = async ({
           intent,
           entityId,
           dataType: 'CUSTOMER_PRESCRIPTION',
-          data: prescription,
+          data: sanitizePrescription(
+            prescription
+          ),
           metadata: {
             found: Boolean(prescription),
           },
@@ -428,12 +643,17 @@ const resolveCustomerData = async ({
           MAX_CONTEXT_RESULTS
         )
 
+      const sanitizedPrescriptions =
+        prescriptions
+          .map(sanitizePrescription)
+          .filter(Boolean)
+
       return createContextResult({
         intent,
         dataType: 'CUSTOMER_PRESCRIPTIONS',
-        data: prescriptions,
+        data: sanitizedPrescriptions,
         metadata: {
-          resultCount: prescriptions.length,
+          resultCount: sanitizedPrescriptions.length,
           specificPrescriptionRequested: false,
         },
       })
@@ -446,12 +666,17 @@ const resolveCustomerData = async ({
           MAX_CONTEXT_RESULTS
         )
 
+      const sanitizedRequests =
+        requests
+          .map(sanitizeMedicineRequest)
+          .filter(Boolean)
+
       return createContextResult({
         intent,
         dataType: 'CUSTOMER_MEDICINE_REQUESTS',
-        data: requests,
+        data: sanitizedRequests,
         metadata: {
-          resultCount: requests.length,
+          resultCount: sanitizedRequests.length,
         },
       })
     }
@@ -468,7 +693,9 @@ const resolveCustomerData = async ({
           intent,
           entityId,
           dataType: 'CUSTOMER_MEDICINE_REQUEST',
-          data: request,
+          data: sanitizeMedicineRequest(
+            request
+          ),
           metadata: {
             found: Boolean(request),
           },
@@ -481,12 +708,17 @@ const resolveCustomerData = async ({
           MAX_CONTEXT_RESULTS
         )
 
+      const sanitizedRequests =
+        requests
+          .map(sanitizeMedicineRequest)
+          .filter(Boolean)
+
       return createContextResult({
         intent,
         dataType: 'CUSTOMER_MEDICINE_REQUESTS',
-        data: requests,
+        data: sanitizedRequests,
         metadata: {
-          resultCount: requests.length,
+          resultCount: sanitizedRequests.length,
           specificRequestRequested: false,
         },
       })

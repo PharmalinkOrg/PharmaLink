@@ -1,7 +1,5 @@
 const supabaseAdmin = require('../config/supabaseAdmin')
 
-const VALID_SENDERS = ['CUSTOMER', 'ASSISTANT', 'SYSTEM']
-
 const VALID_MESSAGE_TYPES = [
   'GENERAL',
   'FAQ',
@@ -12,51 +10,6 @@ const VALID_MESSAGE_TYPES = [
   'REQUEST_HELP',
   'PLATFORM_INQUIRY',
 ]
-
-/**
- * Create a new AI conversation for a customer.
- */
-const createConversation = async (customerId, title = null) => {
-  if (!customerId) {
-    const error = new Error('Customer ID is required')
-    error.code = 'INVALID_CUSTOMER_ID'
-    throw error
-  }
-
-  const { data, error } = await supabaseAdmin
-    .from('ai_conversations')
-    .insert({
-      customer_id: customerId,
-      title,
-      status: 'ACTIVE',
-    })
-    .select(
-      `
-        conversation_id,
-        customer_id,
-        title,
-        status,
-        started_at,
-        last_message_at,
-        created_at,
-        updated_at
-      `
-    )
-    .single()
-
-  if (error) {
-    console.error('Create AI conversation error:', error)
-
-    const serviceError = new Error(
-      'Failed to create AI conversation'
-    )
-
-    serviceError.code = 'AI_CONVERSATION_CREATE_ERROR'
-    throw serviceError
-  }
-
-  return data
-}
 
 /**
  * Get one conversation belonging to a specific customer.
@@ -105,90 +58,189 @@ const getConversationForCustomer = async (
 }
 
 /**
- * Save a message to an existing AI conversation.
+ * Persist one complete customer/assistant exchange atomically.
+ *
+ * The PostgreSQL RPC guarantees that:
+ * - the conversation belongs to the customer
+ * - an existing conversation is ACTIVE
+ * - both messages are inserted together
+ * - conversation timestamps are updated
+ * - a new conversation and its messages are committed together
+ *
+ * If any database operation fails, the entire operation rolls back.
  */
-const saveMessage = async ({
-  conversationId,
-  sender,
-  message,
-  messageType = 'GENERAL',
-  medicineId = null,
+const saveExchangeAtomic = async ({
+  customerId,
+  conversationId = null,
+  title = null,
+  customerMessage,
+  assistantMessage,
+  customerMessageType = 'GENERAL',
+  assistantMessageType = 'GENERAL',
 }) => {
-  if (!conversationId) {
-    const error = new Error('Conversation ID is required')
-    error.code = 'INVALID_CONVERSATION_ID'
-    throw error
-  }
-
-  if (!VALID_SENDERS.includes(sender)) {
-    const error = new Error('Invalid AI message sender')
-    error.code = 'INVALID_AI_MESSAGE_SENDER'
-    throw error
-  }
-
-  if (!VALID_MESSAGE_TYPES.includes(messageType)) {
-    const error = new Error('Invalid AI message type')
-    error.code = 'INVALID_AI_MESSAGE_TYPE'
-    throw error
-  }
-
-  if (typeof message !== 'string' || !message.trim()) {
-    const error = new Error('AI message cannot be empty')
-    error.code = 'INVALID_AI_MESSAGE'
-    throw error
-  }
-
-  const { data, error } = await supabaseAdmin
-    .from('ai_messages')
-    .insert({
-      conversation_id: conversationId,
-      sender,
-      message: message.trim(),
-      message_type: messageType,
-      medicine_id: medicineId,
-    })
-    .select(
-      `
-        message_id,
-        conversation_id,
-        sender,
-        message,
-        message_type,
-        medicine_id,
-        created_at
-      `
+  if (
+    !Number.isInteger(Number(customerId)) ||
+    Number(customerId) <= 0
+  ) {
+    const error = new Error(
+      'Customer ID is required'
     )
-    .single()
+
+    error.code = 'INVALID_CUSTOMER_ID'
+
+    throw error
+  }
+
+  if (
+    conversationId !== null &&
+    (
+      !Number.isInteger(Number(conversationId)) ||
+      Number(conversationId) <= 0
+    )
+  ) {
+    const error = new Error(
+      'Invalid conversation ID'
+    )
+
+    error.code = 'INVALID_CONVERSATION_ID'
+
+    throw error
+  }
+
+  if (
+    typeof customerMessage !== 'string' ||
+    !customerMessage.trim()
+  ) {
+    const error = new Error(
+      'Customer message cannot be empty'
+    )
+
+    error.code = 'INVALID_AI_MESSAGE'
+
+    throw error
+  }
+
+  if (
+    typeof assistantMessage !== 'string' ||
+    !assistantMessage.trim()
+  ) {
+    const error = new Error(
+      'Assistant message cannot be empty'
+    )
+
+    error.code = 'INVALID_AI_MESSAGE'
+
+    throw error
+  }
+
+  if (
+    !VALID_MESSAGE_TYPES.includes(
+      customerMessageType
+    ) ||
+    !VALID_MESSAGE_TYPES.includes(
+      assistantMessageType
+    )
+  ) {
+    const error = new Error(
+      'Invalid AI message type'
+    )
+
+    error.code = 'INVALID_AI_MESSAGE_TYPE'
+
+    throw error
+  }
+
+  const { data, error } =
+    await supabaseAdmin.rpc(
+      'save_ai_exchange_atomic',
+      {
+        p_customer_id:
+          Number(customerId),
+
+        p_conversation_id:
+          conversationId === null
+            ? null
+            : Number(conversationId),
+
+        p_title:
+          typeof title === 'string'
+            ? title.trim() || null
+            : null,
+
+        p_customer_message:
+          customerMessage.trim(),
+
+        p_assistant_message:
+          assistantMessage.trim(),
+
+        p_customer_message_type:
+          customerMessageType,
+
+        p_assistant_message_type:
+          assistantMessageType,
+      }
+    )
 
   if (error) {
-    console.error('Save AI message error:', error)
-
-    const serviceError = new Error(
-      'Failed to save AI message'
+    console.error(
+      'Save AI exchange atomic error:',
+      error
     )
 
-    serviceError.code = 'AI_MESSAGE_SAVE_ERROR'
+    const message =
+      String(error.message || '')
+
+    const serviceError = new Error(
+      'Failed to save AI conversation exchange'
+    )
+
+    if (
+      message.includes(
+        'AI_CONVERSATION_NOT_FOUND'
+      )
+    ) {
+      serviceError.code =
+        'AI_CONVERSATION_NOT_FOUND'
+    } else if (
+      message.includes(
+        'AI_CONVERSATION_CLOSED'
+      )
+    ) {
+      serviceError.code =
+        'AI_CONVERSATION_CLOSED'
+    } else {
+      serviceError.code =
+        'AI_EXCHANGE_SAVE_ERROR'
+    }
+
     throw serviceError
   }
 
-  const timestamp = new Date().toISOString()
+  const result = Array.isArray(data)
+    ? data[0]
+    : data
 
-  const { error: updateError } = await supabaseAdmin
-    .from('ai_conversations')
-    .update({
-      last_message_at: timestamp,
-      updated_at: timestamp,
-    })
-    .eq('conversation_id', conversationId)
-
-  if (updateError) {
-    console.error(
-      'Update AI conversation timestamp error:',
-      updateError
+  if (!result?.conversation_id) {
+    const serviceError = new Error(
+      'AI exchange did not return a conversation ID'
     )
+
+    serviceError.code =
+      'AI_EXCHANGE_SAVE_ERROR'
+
+    throw serviceError
   }
 
-  return data
+  return {
+    conversationId:
+      result.conversation_id,
+
+    customerMessageId:
+      result.customer_message_id,
+
+    assistantMessageId:
+      result.assistant_message_id,
+  }
 }
 
 /**
@@ -407,9 +459,8 @@ const closeConversation = async (
 }
 
 module.exports = {
-  createConversation,
   getConversationForCustomer,
-  saveMessage,
+  saveExchangeAtomic,
   getConversationMessages,
   getCustomerConversations,
   getConversationWithMessages,

@@ -12,10 +12,12 @@ const wait = (milliseconds) =>
   )
 
 const isRetryableError = (error) => {
-  const status = Number(error?.status)
+  const status = Number(
+    error?.status ||
+    error?.response?.status
+  )
 
   return (
-    status === 429 ||
     status === 500 ||
     status === 502 ||
     status === 503 ||

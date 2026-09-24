@@ -257,16 +257,18 @@ ${JSON.stringify(
 /* ============================================================
    ERROR NORMALIZATION
 ============================================================ */
-
 const normalizeProviderError = (
   error,
   providerName
 ) => {
+  // Errors already normalized by our own provider layer.
   if (
-    error?.code ===
-      'AI_NOT_CONFIGURED' ||
-    error?.code ===
-      'AI_EMPTY_RESPONSE'
+    error?.code === 'AI_NOT_CONFIGURED' ||
+    error?.code === 'AI_EMPTY_RESPONSE' ||
+    error?.code === 'AI_QUOTA_EXHAUSTED' ||
+    error?.code === 'AI_RATE_LIMITED' ||
+    error?.code === 'AI_SERVICE_UNAVAILABLE' ||
+    error?.code === 'AI_SERVICE_ERROR'
   ) {
     return error
   }
@@ -276,50 +278,23 @@ const normalizeProviderError = (
     error?.response?.status
   )
 
-  if (status === 429) {
-    console.error(
-      `${providerName} rate limit reached:`,
-      error.message
-    )
+  const rawMessage = String(
+    error?.message || ''
+  ).toLowerCase()
 
-    const serviceError = new Error(
-      'PharmaLink AI has reached its current usage limit'
-    )
-
-    serviceError.code =
-      'AI_QUOTA_EXHAUSTED'
-
-    return serviceError
-  }
-
-  if (
-    status === 500 ||
-    status === 502 ||
-    status === 503 ||
-    status === 504
-  ) {
-    console.error(
-      `${providerName} temporarily unavailable:`,
-      error.message
-    )
-
-    const serviceError = new Error(
-      'PharmaLink AI is temporarily unavailable'
-    )
-
-    serviceError.code =
-      'AI_SERVICE_UNAVAILABLE'
-
-    return serviceError
-  }
-
+  /**
+   * 401 / 403
+   *
+   * Invalid API key, unauthorized provider access,
+   * or another provider configuration problem.
+   */
   if (
     status === 401 ||
     status === 403
   ) {
     console.error(
-      `${providerName} authentication error:`,
-      error.message
+      `${providerName} authentication/configuration error:`,
+      error?.message
     )
 
     const serviceError = new Error(
@@ -332,6 +307,106 @@ const normalizeProviderError = (
     return serviceError
   }
 
+  /**
+   * 402
+   *
+   * Provider account has no available balance/credits.
+   * We already encountered this with DeepSeek.
+   *
+   * Treat it as quota exhaustion rather than a generic
+   * application failure.
+   */
+  if (status === 402) {
+    console.error(
+      `${providerName} balance or billing limit reached:`,
+      error?.message
+    )
+
+    const serviceError = new Error(
+      'PharmaLink AI has reached its current usage limit'
+    )
+
+    serviceError.code =
+      'AI_QUOTA_EXHAUSTED'
+
+    return serviceError
+  }
+
+  /**
+   * 429
+   *
+   * A 429 may represent either:
+   * - temporary rate limiting, or
+   * - exhausted provider quota.
+   *
+   * Detect obvious quota/billing messages first.
+   */
+  if (status === 429) {
+    const looksLikeQuotaExhaustion =
+      rawMessage.includes('quota') ||
+      rawMessage.includes('billing') ||
+      rawMessage.includes('credit') ||
+      rawMessage.includes('balance') ||
+      rawMessage.includes('resource_exhausted')
+
+    if (looksLikeQuotaExhaustion) {
+      console.error(
+        `${providerName} quota exhausted:`,
+        error?.message
+      )
+
+      const serviceError = new Error(
+        'PharmaLink AI has reached its current usage limit'
+      )
+
+      serviceError.code =
+        'AI_QUOTA_EXHAUSTED'
+
+      return serviceError
+    }
+
+    console.warn(
+      `${providerName} rate limited:`,
+      error?.message
+    )
+
+    const serviceError = new Error(
+      'PharmaLink AI is receiving too many requests right now'
+    )
+
+    serviceError.code =
+      'AI_RATE_LIMITED'
+
+    return serviceError
+  }
+
+  /**
+   * Temporary provider/server failures.
+   */
+  if (
+    status === 500 ||
+    status === 502 ||
+    status === 503 ||
+    status === 504
+  ) {
+    console.error(
+      `${providerName} temporarily unavailable:`,
+      error?.message
+    )
+
+    const serviceError = new Error(
+      'PharmaLink AI is temporarily unavailable'
+    )
+
+    serviceError.code =
+      'AI_SERVICE_UNAVAILABLE'
+
+    return serviceError
+  }
+
+  /**
+   * Anything else is an unexpected provider failure.
+   */
   console.error(
     `${providerName} API error:`,
     error
@@ -346,7 +421,6 @@ const normalizeProviderError = (
 
   return serviceError
 }
-
 /* ============================================================
    GENERATE CUSTOMER REPLY
 ============================================================ */
@@ -406,13 +480,19 @@ const generateCustomerReply = async (
 
     throw error
   } catch (error) {
+    const normalizedErrorCodes = [
+      'AI_NOT_CONFIGURED',
+      'AI_EMPTY_RESPONSE',
+      'AI_QUOTA_EXHAUSTED',
+      'AI_RATE_LIMITED',
+      'AI_SERVICE_UNAVAILABLE',
+      'AI_SERVICE_ERROR',
+    ]
+
     if (
-      error?.code ===
-        'AI_QUOTA_EXHAUSTED' ||
-      error?.code ===
-        'AI_SERVICE_UNAVAILABLE' ||
-      error?.code ===
-        'AI_SERVICE_ERROR'
+      normalizedErrorCodes.includes(
+        error?.code
+      )
     ) {
       throw error
     }

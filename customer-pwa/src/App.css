@@ -2249,6 +2249,64 @@ a:focus-visible {
   background: #A7F3D0;
 }
 
+.ai-message-markdown {
+  font-size: inherit;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.ai-message-markdown > :first-child {
+  margin-top: 0;
+}
+
+.ai-message-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.ai-message-markdown p {
+  margin: 0 0 10px;
+}
+
+.ai-message-markdown h1,
+.ai-message-markdown h2,
+.ai-message-markdown h3 {
+  margin: 14px 0 8px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.ai-message-markdown h1 {
+  font-size: 18px;
+}
+
+.ai-message-markdown h2 {
+  font-size: 16px;
+}
+
+.ai-message-markdown h3 {
+  font-size: 15px;
+}
+
+.ai-message-markdown strong {
+  font-weight: 700;
+}
+
+.ai-message-markdown ul,
+.ai-message-markdown ol {
+  margin: 8px 0 10px;
+  padding-left: 22px;
+}
+
+.ai-message-markdown li {
+  margin-bottom: 4px;
+}
+
+.ai-message-markdown hr {
+  margin: 14px 0;
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+}
+
 /* --- Status & Fallbacks --- */
 .profile-status {
   margin-top: 16px;
