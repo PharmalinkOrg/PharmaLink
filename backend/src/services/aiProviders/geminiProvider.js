@@ -3,7 +3,6 @@ const gemini = require('../../config/gemini')
 const MODEL_NAME = 'gemini-3.6-flash'
 
 const MAX_GENERATION_ATTEMPTS = 2
-
 const RETRY_DELAY_MS = 1200
 
 const wait = (milliseconds) =>
@@ -26,13 +25,15 @@ const isRetryableError = (error) => {
   )
 }
 
-/*
- * Convert our provider-independent messages into
- * Gemini's contents format.
+/**
+ * Convert provider-independent conversation messages
+ * into Gemini's contents format.
+ *
+ * System messages are intentionally excluded here
+ * because they are merged into Gemini's
+ * systemInstruction separately.
  */
-const convertMessagesForGemini = (
-  messages
-) => {
+const convertMessagesForGemini = (messages) => {
   const contents = []
 
   for (const item of messages) {
@@ -43,11 +44,6 @@ const convertMessagesForGemini = (
       continue
     }
 
-    /*
-     * System messages are handled separately by
-     * aiService and should not become conversation
-     * messages here.
-     */
     if (item.role === 'system') {
       continue
     }
@@ -78,6 +74,52 @@ const convertMessagesForGemini = (
   return contents
 }
 
+/**
+ * Build Gemini's complete system instruction.
+ *
+ * This preserves:
+ * - the permanent PharmaLink Assistant prompt
+ * - verified PharmaLink knowledge
+ * - verified live PharmaLink data
+ *
+ * Dynamic system messages are produced by our
+ * trusted backend. They are not supplied directly
+ * by the customer.
+ */
+const buildSystemInstruction = (
+  messages,
+  baseSystemInstruction
+) => {
+  const sections = []
+
+  if (
+    typeof baseSystemInstruction === 'string' &&
+    baseSystemInstruction.trim()
+  ) {
+    sections.push(
+      baseSystemInstruction.trim()
+    )
+  }
+
+  const dynamicSystemMessages = messages
+    .filter(
+      (item) =>
+        item &&
+        item.role === 'system' &&
+        typeof item.content === 'string' &&
+        item.content.trim()
+    )
+    .map((item) => item.content.trim())
+
+  if (dynamicSystemMessages.length > 0) {
+    sections.push(
+      dynamicSystemMessages.join('\n\n')
+    )
+  }
+
+  return sections.join('\n\n')
+}
+
 const generate = async (
   messages,
   systemInstruction
@@ -95,6 +137,12 @@ const generate = async (
   const contents =
     convertMessagesForGemini(messages)
 
+  const completeSystemInstruction =
+    buildSystemInstruction(
+      messages,
+      systemInstruction
+    )
+
   let lastError = null
 
   for (
@@ -106,11 +154,10 @@ const generate = async (
       const response =
         await gemini.models.generateContent({
           model: MODEL_NAME,
-
           contents,
-
           config: {
-            systemInstruction,
+            systemInstruction:
+              completeSystemInstruction,
           },
         })
 

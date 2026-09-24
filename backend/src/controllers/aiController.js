@@ -187,18 +187,6 @@ const chat = async (req, res) => {
         customerId,
       })
 
-      console.log('AI LIVE DATA DEBUG:', {
-        message: trimmedMessage,
-        intent: liveDataContext?.intent,
-        dataType: liveDataContext?.dataType,
-        resultState:
-          liveDataContext?.metadata?.resultState,
-        resultCount:
-          liveDataContext?.metadata?.resultCount,
-        hasData: Array.isArray(liveDataContext?.data)
-          ? liveDataContext.data.length > 0
-          : Boolean(liveDataContext?.data),
-      })
     /* ============================================================
        CONTROLLED NAVIGATION ACTION
     ============================================================ */
