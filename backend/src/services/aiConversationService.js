@@ -249,6 +249,18 @@ const getCustomerConversations = async (customerId) => {
     return []
   }
 
+  /*
+   * Only return conversations that contain at least one
+   * persisted message.
+   *
+   * This prevents legacy empty conversations created by
+   * failed AI-provider requests from appearing in History.
+   *
+   * The ai_messages relation is used only to determine
+   * whether the conversation contains messages. The actual
+   * message contents are not returned to the conversation
+   * list.
+   */
   const { data, error } = await supabaseAdmin
     .from('ai_conversations')
     .select(`
@@ -259,23 +271,44 @@ const getCustomerConversations = async (customerId) => {
       started_at,
       last_message_at,
       created_at,
-      updated_at
+      updated_at,
+      ai_messages!inner (
+        message_id
+      )
     `)
     .eq('customer_id', customerId)
-    .order('last_message_at', { ascending: false })
+    .order('last_message_at', {
+      ascending: false,
+      nullsFirst: false,
+    })
+    .order('created_at', {
+      ascending: false,
+    })
 
   if (error) {
-    console.error('Get customer AI conversations error:', error)
+    console.error(
+      'Get customer AI conversations error:',
+      error
+    )
 
     const serviceError = new Error(
       'Failed to retrieve AI conversations'
     )
-    serviceError.code = 'AI_CONVERSATIONS_FETCH_ERROR'
+
+    serviceError.code =
+      'AI_CONVERSATIONS_FETCH_ERROR'
 
     throw serviceError
   }
 
-  return data || []
+  /*
+   * Remove the relation used for filtering before returning
+   * conversation metadata to the frontend.
+   */
+  return (data || []).map(
+    ({ ai_messages, ...conversation }) =>
+      conversation
+  )
 }
 
 /**

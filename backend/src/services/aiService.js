@@ -1,45 +1,83 @@
-const gemini = require('../config/gemini')
-const customerAssistantPrompt = require('../prompts/customerAssistantPrompt')
+const customerAssistantPrompt = require(
+  '../prompts/customerAssistantPrompt'
+)
 
-const MODEL_NAME = 'gemini-3.6-flash'
-const MAX_GENERATION_ATTEMPTS = 2
-const RETRY_DELAY_MS = 1200
+const SUPPORTED_PROVIDERS = [
+  'deepseek',
+  'gemini',
+]
 
-const wait = (milliseconds) =>
-  new Promise((resolve) =>
-    setTimeout(resolve, milliseconds)
-  )
+/* ============================================================
+   PROVIDER
+============================================================ */
 
-const isRetryableGeminiError = (error) => {
-  const status = Number(
-    error?.status ||
-    error?.code ||
-    error?.response?.status
-  )
-
+const getProviderName = () => {
   return (
-    status === 429 ||
-    status === 500 ||
-    status === 502 ||
-    status === 503 ||
-    status === 504
+    process.env.AI_PROVIDER ||
+    'deepseek'
   )
+    .trim()
+    .toLowerCase()
 }
 
-const buildConversationContents = (
+const getProvider = () => {
+  const providerName = getProviderName()
+
+  /*
+   * Require providers lazily.
+   *
+   * This prevents Gemini configuration from being loaded when
+   * DeepSeek is selected, and vice versa.
+   */
+  if (providerName === 'deepseek') {
+    return {
+      name: 'deepseek',
+
+      provider: require(
+        './aiProviders/deepseekProvider'
+      ),
+    }
+  }
+
+  if (providerName === 'gemini') {
+    return {
+      name: 'gemini',
+
+      provider: require(
+        './aiProviders/geminiProvider'
+      ),
+    }
+  }
+
+  const error = new Error(
+    `Unsupported AI provider: ${providerName}`
+  )
+
+  error.code = 'AI_NOT_CONFIGURED'
+
+  throw error
+}
+
+/* ============================================================
+   MESSAGE BUILDER
+============================================================ */
+
+const buildConversationMessages = (
   history = [],
   currentMessage,
   knowledge = [],
   liveDataContext = null
 ) => {
-  const contents = []
+  const messages = []
 
-  /*
-   * Add verified PharmaLink knowledge as context.
-   *
-   * This is kept separate from the permanent system prompt.
-   */
-  if (Array.isArray(knowledge) && knowledge.length > 0) {
+  /* ==========================================================
+     VERIFIED PHARMALINK KNOWLEDGE
+  ========================================================== */
+
+  if (
+    Array.isArray(knowledge) &&
+    knowledge.length > 0
+  ) {
     const knowledgeContext = knowledge
       .map((item, index) => {
         return [
@@ -51,46 +89,30 @@ const buildConversationContents = (
       })
       .join('\n\n')
 
-    contents.push({
-      role: 'user',
-      parts: [
-        {
-          text: `
+    messages.push({
+      role: 'system',
+
+      content: `
 VERIFIED PHARMALINK KNOWLEDGE
 
-The following information was retrieved from PharmaLink's approved knowledge base.
+The following information was retrieved from PharmaLink's
+approved knowledge base.
 
 Use it only when it is relevant to the customer's question.
 
-Do not invent additional PharmaLink facts beyond this information.
+Do not invent additional PharmaLink facts beyond this
+information.
 
 Do not treat this information as medical advice.
 
 ${knowledgeContext}
-          `.trim(),
-        },
-      ],
-    })
-
-    /*
-     * Gemini requires normal conversational role progression.
-     * This model acknowledgement separates retrieved context
-     * from the actual customer conversation.
-     */
-    contents.push({
-      role: 'model',
-      parts: [
-        {
-          text:
-            'Understood. I will use the verified PharmaLink knowledge when relevant and will not invent unsupported platform information.',
-        },
-      ],
+      `.trim(),
     })
   }
 
-  /* ============================================================
+  /* ==========================================================
      VERIFIED LIVE PHARMALINK DATA
-  ============================================================ */
+  ========================================================== */
 
   if (
     liveDataContext &&
@@ -99,78 +121,107 @@ ${knowledgeContext}
   ) {
     const liveDataPayload = {
       intent: liveDataContext.intent,
-      dataType: liveDataContext.dataType,
-      entityId: liveDataContext.entityId || null,
-      data: liveDataContext.data,
-      metadata: liveDataContext.metadata || {},
+
+      dataType:
+        liveDataContext.dataType,
+
+      entityId:
+        liveDataContext.entityId ||
+        null,
+
+      data:
+        liveDataContext.data,
+
+      metadata:
+        liveDataContext.metadata || {},
     }
 
-    contents.push({
-      role: 'user',
-      parts: [
-        {
-          text: `
+    messages.push({
+      role: 'system',
+
+      content: `
 VERIFIED LIVE PHARMALINK DATA
 
-The following data was retrieved by PharmaLink's controlled backend for the authenticated customer.
+The following data was retrieved by PharmaLink's controlled
+backend for the authenticated customer.
 
 Rules for using this data:
 
-1. Treat this data as the only verified live PharmaLink data available for this message.
+1. Treat this data as the only verified live PharmaLink data
+available for this message.
 
-2. Only state account-specific statuses, pharmacy availability, quantities, or prices that are explicitly present in this data.
+2. Only state account-specific statuses, pharmacy
+availability, quantities, or prices explicitly present in
+this data.
 
 3. Never invent missing values.
 
-4. Never infer that a medicine is unavailable everywhere merely because the returned search result is empty.
+4. Never infer that a medicine is unavailable everywhere
+merely because a returned search result is empty.
 
-5. If no matching record was returned, explain that PharmaLink did not return a matching record for this request.
+5. If no matching record was returned, explain that
+PharmaLink did not return a matching record for this request.
 
-6. Do not claim that you performed an action. This data access is read-only.
+6. Do not claim that you performed an action. This data
+access is read-only.
 
-7. Do not expose internal database fields, implementation details, authentication details, customer IDs, or backend architecture.
+7. Do not expose internal database fields, implementation
+details, authentication details, customer IDs, or backend
+architecture.
 
-8. Do not expose prescription images, storage paths, signed URLs, authentication tokens, or private information.
+8. Do not expose prescription images, storage paths, signed
+URLs, authentication tokens, or private information.
 
-9. Reservation, prescription, and medicine-request information belongs only to the authenticated customer whose data was retrieved by the backend.
+9. Reservation, prescription, and medicine-request
+information belongs only to the authenticated customer whose
+data was retrieved by the backend.
 
-10. Medical safety rules still apply. Live medicine data does not authorize diagnosis, treatment recommendations, prescribing, dosage changes, or individualized medicine selection.
+10. Medical safety rules still apply. Live medicine data
+does not authorize diagnosis, treatment recommendations,
+prescribing, dosage changes, or individualized medicine
+selection.
 
-11. Check metadata.resultState before interpreting the result.
+11. Check metadata.resultState before interpreting the
+result.
 
-12. RESULT_FOUND or RESULTS_FOUND means the controlled query returned matching PharmaLink data.
+12. RESULT_FOUND or RESULTS_FOUND means the controlled query
+returned matching PharmaLink data.
 
-13. NOT_FOUND means the requested customer-owned record was not returned. Do not claim why it was not returned.
+13. NOT_FOUND means the requested customer-owned record was
+not returned. Do not claim why it was not returned.
 
-14. NO_RESULTS means the controlled search returned no matching rows. It does not prove that the medicine or pharmacy does not exist outside the searched PharmaLink data.
+14. NO_RESULTS means the controlled search returned no
+matching rows. It does not prove that the medicine or
+pharmacy does not exist outside the searched PharmaLink data.
 
-15. NOT_APPLICABLE means no live-data result was required for this message.
+15. NOT_APPLICABLE means no live-data result was required
+for this message.
 
-16. If a customer asks about a specific private record and the backend returns NOT_FOUND, say that PharmaLink could not find that record for their authenticated account. Do not reveal whether a record with that ID belongs to another customer.
+16. If a customer asks about a specific private record and
+the backend returns NOT_FOUND, say PharmaLink could not find
+that record for their authenticated account. Do not reveal
+whether a record with that ID belongs to another customer.
 
 LIVE DATA:
-${JSON.stringify(liveDataPayload, null, 2)}
-        `.trim(),
-        },
-      ],
-    })
 
-    contents.push({
-      role: 'model',
-      parts: [
-        {
-          text:
-            'Understood. I will use only the verified live PharmaLink data provided for live account, availability, quantity, price, and status claims, while following the medical safety rules.',
-        },
-      ],
+${JSON.stringify(
+  liveDataPayload,
+  null,
+  2
+)}
+      `.trim(),
     })
   }
 
-  /*
-   * Add previous conversation messages.
-   */
+  /* ==========================================================
+     CONVERSATION HISTORY
+  ========================================================== */
+
   for (const item of history) {
-    if (!item || typeof item.message !== 'string') {
+    if (
+      !item ||
+      typeof item.message !== 'string'
+    ) {
       continue
     }
 
@@ -181,30 +232,124 @@ ${JSON.stringify(liveDataPayload, null, 2)}
     }
 
     if (item.sender === 'CUSTOMER') {
-      contents.push({
+      messages.push({
         role: 'user',
-        parts: [{ text: message }],
+        content: message,
       })
     }
 
     if (item.sender === 'ASSISTANT') {
-      contents.push({
-        role: 'model',
-        parts: [{ text: message }],
+      messages.push({
+        role: 'assistant',
+        content: message,
       })
     }
   }
 
-  /*
-   * Add the customer's current message last.
-   */
-  contents.push({
+  messages.push({
     role: 'user',
-    parts: [{ text: currentMessage }],
+    content: currentMessage,
   })
 
-  return contents
+  return messages
 }
+
+/* ============================================================
+   ERROR NORMALIZATION
+============================================================ */
+
+const normalizeProviderError = (
+  error,
+  providerName
+) => {
+  if (
+    error?.code ===
+      'AI_NOT_CONFIGURED' ||
+    error?.code ===
+      'AI_EMPTY_RESPONSE'
+  ) {
+    return error
+  }
+
+  const status = Number(
+    error?.status ||
+    error?.response?.status
+  )
+
+  if (status === 429) {
+    console.error(
+      `${providerName} rate limit reached:`,
+      error.message
+    )
+
+    const serviceError = new Error(
+      'PharmaLink AI has reached its current usage limit'
+    )
+
+    serviceError.code =
+      'AI_QUOTA_EXHAUSTED'
+
+    return serviceError
+  }
+
+  if (
+    status === 500 ||
+    status === 502 ||
+    status === 503 ||
+    status === 504
+  ) {
+    console.error(
+      `${providerName} temporarily unavailable:`,
+      error.message
+    )
+
+    const serviceError = new Error(
+      'PharmaLink AI is temporarily unavailable'
+    )
+
+    serviceError.code =
+      'AI_SERVICE_UNAVAILABLE'
+
+    return serviceError
+  }
+
+  if (
+    status === 401 ||
+    status === 403
+  ) {
+    console.error(
+      `${providerName} authentication error:`,
+      error.message
+    )
+
+    const serviceError = new Error(
+      'PharmaLink AI provider is not configured correctly'
+    )
+
+    serviceError.code =
+      'AI_NOT_CONFIGURED'
+
+    return serviceError
+  }
+
+  console.error(
+    `${providerName} API error:`,
+    error
+  )
+
+  const serviceError = new Error(
+    'PharmaLink AI service failed to generate a response'
+  )
+
+  serviceError.code =
+    'AI_SERVICE_ERROR'
+
+  return serviceError
+}
+
+/* ============================================================
+   GENERATE CUSTOMER REPLY
+============================================================ */
 
 const generateCustomerReply = async (
   message,
@@ -212,112 +357,71 @@ const generateCustomerReply = async (
   knowledge = [],
   liveDataContext = null
 ) => {
-  if (!gemini) {
-    const error = new Error('Gemini is not configured')
-    error.code = 'AI_NOT_CONFIGURED'
-    throw error
-  }
+  let providerInfo = null
 
   try {
-    const contents = buildConversationContents(
-      conversationHistory,
-      message,
-      knowledge,
-      liveDataContext
-    )
+    providerInfo = getProvider()
 
-    let response = null
-    let lastError = null
-
-    for (
-      let attempt = 1;
-      attempt <= MAX_GENERATION_ATTEMPTS;
-      attempt += 1
-    ) {
-      try {
-        response =
-          await gemini.models.generateContent({
-            model: MODEL_NAME,
-            contents,
-            config: {
-              systemInstruction:
-                customerAssistantPrompt,
-            },
-          })
-
-        lastError = null
-        break
-      } catch (error) {
-        lastError = error
-
-        const shouldRetry =
-          isRetryableGeminiError(error) &&
-          attempt < MAX_GENERATION_ATTEMPTS
-
-        if (!shouldRetry) {
-          throw error
-        }
-
-        console.warn(
-          `Gemini request temporarily unavailable. Retrying (${attempt + 1}/${MAX_GENERATION_ATTEMPTS})...`
-        )
-
-        await wait(RETRY_DELAY_MS)
-      }
-    }
-
-    if (!response && lastError) {
-      throw lastError
-    }
-
-    const reply = response?.text
-
-    if (
-      !reply ||
-      typeof reply !== 'string' ||
-      !reply.trim()
-    ) {
-      const error = new Error(
-        'Gemini returned an empty response'
+    const messages =
+      buildConversationMessages(
+        conversationHistory,
+        message,
+        knowledge,
+        liveDataContext
       )
 
-      error.code = 'AI_EMPTY_RESPONSE'
-      throw error
+    /*
+     * Gemini receives the permanent system prompt separately.
+     *
+     * DeepSeek receives it as the first system message.
+     */
+    if (
+      providerInfo.name === 'deepseek'
+    ) {
+      messages.unshift({
+        role: 'system',
+        content:
+          customerAssistantPrompt,
+      })
+
+      return await providerInfo.provider.generate(
+        messages
+      )
     }
 
-    return reply.trim()
+    if (
+      providerInfo.name === 'gemini'
+    ) {
+      return await providerInfo.provider.generate(
+        messages,
+        customerAssistantPrompt
+      )
+    }
+
+    const error = new Error(
+      'AI provider is not configured'
+    )
+
+    error.code = 'AI_NOT_CONFIGURED'
+
+    throw error
   } catch (error) {
     if (
-      error.code === 'AI_NOT_CONFIGURED' ||
-      error.code === 'AI_EMPTY_RESPONSE'
+      error?.code ===
+        'AI_QUOTA_EXHAUSTED' ||
+      error?.code ===
+        'AI_SERVICE_UNAVAILABLE' ||
+      error?.code ===
+        'AI_SERVICE_ERROR'
     ) {
       throw error
     }
 
-    if (Number(error?.status) === 503) {
-      console.error(
-        'Gemini temporarily unavailable:',
-        error
-      )
-
-      const serviceError = new Error(
-        'PharmaLink AI is temporarily unavailable'
-      )
-
-      serviceError.code = 'AI_SERVICE_UNAVAILABLE'
-
-      throw serviceError
-    }
-
-    console.error('Gemini API error:', error)
-
-    const serviceError = new Error(
-      'PharmaLink AI service failed to generate a response'
+    throw normalizeProviderError(
+      error,
+      providerInfo?.name ||
+        getProviderName()
     )
-
-    serviceError.code = 'AI_SERVICE_ERROR'
-
-    throw serviceError
   }
 }
 

@@ -4,7 +4,10 @@ import {
   useState,
 } from 'react'
 import { AlertCircle, X } from 'lucide-react'
-import { useLocation } from 'react-router-dom'
+import {
+  useLocation,
+  useNavigate,
+} from 'react-router-dom'
 
 import AIChatHeader from '../components/ai/AIChatHeader'
 import AIConversationList from '../components/ai/AIConversationList'
@@ -21,6 +24,7 @@ import {
 
 function AIAssistantPage() {
   const location = useLocation()
+  const navigate = useNavigate()
 
   const suggestedMessage =
     typeof location.state?.suggestedMessage ===
@@ -268,12 +272,27 @@ function AIAssistantPage() {
         id: `assistant-${Date.now()}`,
         sender: 'ASSISTANT',
         message: result.reply,
+
+        /*
+         * Ephemeral UI action returned by the backend.
+         *
+         * AIMessageBubble will independently validate this against
+         * the frontend navigation allowlist before displaying it.
+         */
+        action: result.action ?? null,
       }
 
       setMessages((current) => [
         ...current,
         assistantMessage,
       ])
+
+      /*
+       * Refresh conversation history after a successful
+       * exchange so newly created conversations and their
+       * latest activity appear immediately in the sidebar.
+       */
+      await loadConversations()
 
       return result
     } catch (requestError) {
@@ -341,6 +360,22 @@ function AIAssistantPage() {
        * No additional UI action is required here.
        */
     }
+  }
+
+  /* ============================================================
+     CONTROLLED AI NAVIGATION
+  ============================================================ */
+
+  const handleAINavigation = (route) => {
+    if (typeof route !== 'string' || !route) {
+      return
+    }
+
+    /*
+     * The route reaching this function has already been resolved
+     * from the frontend-owned AI navigation allowlist.
+     */
+    navigate(route)
   }
 
   /* ============================================================
@@ -435,6 +470,7 @@ function AIAssistantPage() {
               <AIMessageList
                 messages={messages}
                 isSending={isSending}
+                onNavigate={handleAINavigation}
               />
             )}
 

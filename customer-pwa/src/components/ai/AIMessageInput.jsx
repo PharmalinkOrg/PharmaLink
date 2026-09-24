@@ -2,6 +2,7 @@ import {
   useEffect,
   useState,
 } from 'react'
+
 import { SendHorizontal } from 'lucide-react'
 
 const MAX_MESSAGE_LENGTH = 2000
@@ -37,14 +38,18 @@ function AIMessageInput({
       return
     }
 
+    /*
+     * Clear the textarea immediately while the
+     * message is being sent.
+     */
     setMessage('')
 
     try {
       await onSend(trimmedMessage)
     } catch {
       /*
-       * Restore the customer's text if sending fails so
-       * they do not need to type it again.
+       * Restore the customer's text if sending fails
+       * so they do not need to type it again.
        */
       setMessage(trimmedMessage)
     }
@@ -84,6 +89,7 @@ function AIMessageInput({
                 !event.shiftKey
               ) {
                 event.preventDefault()
+
                 event.currentTarget.form?.requestSubmit()
               }
             }}

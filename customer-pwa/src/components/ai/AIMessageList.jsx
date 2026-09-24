@@ -4,6 +4,7 @@ import AIMessageBubble from './AIMessageBubble'
 function AIMessageList({
   messages = [],
   isSending = false,
+  onNavigate,
 }) {
   const bottomRef = useRef(null)
 
@@ -24,6 +25,7 @@ function AIMessageList({
               `${message.sender}-${index}`
             }
             message={message}
+            onNavigate={onNavigate}
           />
         ))}
 
@@ -39,7 +41,9 @@ function AIMessageList({
                 aria-label="Assistant is responding"
               >
                 <span className="h-2 w-2 animate-pulse rounded-full bg-slate-400" />
+
                 <span className="h-2 w-2 animate-pulse rounded-full bg-slate-400 [animation-delay:150ms]" />
+
                 <span className="h-2 w-2 animate-pulse rounded-full bg-slate-400 [animation-delay:300ms]" />
               </div>
             </div>
