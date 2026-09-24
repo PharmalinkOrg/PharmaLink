@@ -63,22 +63,24 @@ function ReservationDetailsPage() {
   const getStatusClasses = (status) => {
     switch (status) {
       case 'PENDING':
-        return 'border-amber-200 bg-amber-50 text-amber-700'
+        return 'reservation-status-pending'
 
       case 'CONFIRMED':
-        return 'border-blue-200 bg-blue-50 text-blue-700'
+        return 'reservation-status-confirmed'
 
       case 'READY':
-        return 'border-emerald-200 bg-emerald-50 text-emerald-700'
+      case 'READY_FOR_PICKUP':
+        return 'reservation-status-ready'
 
       case 'COMPLETED':
-        return 'border-slate-200 bg-slate-100 text-slate-700'
+        return 'reservation-status-completed'
 
       case 'CANCELLED':
-        return 'border-red-200 bg-red-50 text-red-700'
+      case 'EXPIRED':
+        return 'reservation-status-cancelled'
 
       default:
-        return 'border-slate-200 bg-slate-50 text-slate-600'
+        return 'reservation-status-neutral'
     }
   }
 
@@ -161,17 +163,17 @@ function ReservationDetailsPage() {
 
   if (loading) {
     return (
-      <section className="mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
+      <section className="reservation-details-page mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
         <div className="animate-pulse">
-          <div className="h-4 w-20 rounded bg-slate-200" />
+          <div className="h-4 w-20 rounded bg-[var(--border)]" />
 
-          <div className="mt-5 h-7 w-52 rounded bg-slate-200" />
+          <div className="mt-5 h-7 w-52 rounded bg-[var(--border)]" />
 
-          <div className="mt-2 h-4 w-72 rounded bg-slate-100" />
+          <div className="mt-2 h-4 w-72 rounded bg-[var(--surface-soft)]" />
 
-          <div className="mt-6 h-40 rounded-2xl bg-slate-100" />
+          <div className="mt-6 h-40 rounded-2xl bg-[var(--surface-soft)]" />
 
-          <div className="mt-4 h-48 rounded-2xl bg-slate-100" />
+          <div className="mt-4 h-48 rounded-2xl bg-[var(--surface-soft)]" />
         </div>
       </section>
     )
@@ -179,13 +181,13 @@ function ReservationDetailsPage() {
 
   if (error || !reservation) {
     return (
-      <section className="mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
+      <section className="reservation-details-page mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
         <button
           type="button"
           onClick={() =>
             navigate('/my-reservations')
           }
-          className="mb-5 flex items-center gap-2 text-xs font-bold text-slate-500 transition hover:text-emerald-700"
+          className="mb-5 flex items-center gap-2 text-xs font-bold text-[var(--text-secondary)] transition hover:text-[var(--primary-hover)]"
         >
           <ArrowLeft size={16} />
           My Reservations
@@ -196,7 +198,7 @@ function ReservationDetailsPage() {
             <Pill size={24} />
           </div>
 
-          <h1 className="mt-4 text-base font-extrabold text-slate-800">
+          <h1 className="mt-4 text-base font-extrabold text-[var(--text-primary)]">
             Unable to load reservation
           </h1>
 
@@ -220,14 +222,14 @@ function ReservationDetailsPage() {
   const totalPrice = calculateTotal()
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
+    <section className="reservation-details-page mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
       {/* Back */}
       <button
         type="button"
         onClick={() =>
           navigate('/my-reservations')
         }
-        className="mb-5 flex items-center gap-2 text-xs font-bold text-slate-500 transition hover:text-emerald-700"
+        className="mb-5 flex items-center gap-2 text-xs font-bold text-[var(--text-secondary)] transition hover:text-[var(--primary-hover)]"
       >
         <ArrowLeft size={16} />
         My Reservations
@@ -235,18 +237,18 @@ function ReservationDetailsPage() {
 
       {/* Header */}
       <div>
-        <p className="text-xs font-semibold text-emerald-700">
+        <p className="text-xs font-semibold text-[var(--primary)]">
           Reservation Details
         </p>
 
         <div className="mt-1 flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-extrabold text-slate-800">
+            <h1 className="text-2xl font-extrabold text-[var(--text-primary)]">
               Reservation #
               {reservation.reservation_id}
             </h1>
 
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">
               Submitted{' '}
               {formatDateTime(
                 reservation.created_at
@@ -265,18 +267,18 @@ function ReservationDetailsPage() {
       </div>
 
       {/* Status */}
-      <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+      <div className="reservation-status-callout mt-6 rounded-2xl p-5">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+          <div className="reservation-status-callout-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
             <CheckCircle2 size={20} />
           </div>
 
           <div>
-            <h2 className="text-sm font-extrabold text-slate-800">
+            <h2 className="text-sm font-extrabold text-[var(--text-primary)]">
               Reservation submitted
             </h2>
 
-            <p className="mt-1 text-xs leading-relaxed text-slate-600">
+            <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
               Your reservation is currently{' '}
               <strong>
                 {formatStatus(
@@ -291,23 +293,23 @@ function ReservationDetailsPage() {
       </div>
 
       {/* Pharmacy */}
-      <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="reservation-detail-card mt-4 rounded-2xl p-5">
         <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+          <div className="reservation-detail-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
             <MapPin size={19} />
           </div>
 
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
               Pickup pharmacy
             </p>
 
-            <h2 className="mt-1 text-sm font-extrabold text-slate-800">
+            <h2 className="mt-1 text-sm font-extrabold text-[var(--text-primary)]">
               {reservation.pharmacies?.name ||
                 'Pharmacy unavailable'}
             </h2>
 
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">
               {reservation.pharmacies?.address ||
                 'Address unavailable'}
             </p>
@@ -316,8 +318,8 @@ function ReservationDetailsPage() {
       </div>
 
       {/* Pickup information */}
-      <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-sm font-extrabold text-slate-800">
+      <div className="reservation-detail-card mt-4 rounded-2xl p-5">
+        <h2 className="text-sm font-extrabold text-[var(--text-primary)]">
           Pickup information
         </h2>
 
@@ -325,15 +327,15 @@ function ReservationDetailsPage() {
           <div className="flex items-start gap-3">
             <CalendarDays
               size={18}
-              className="mt-0.5 shrink-0 text-emerald-700"
+              className="mt-0.5 shrink-0 text-[var(--primary)]"
             />
 
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                 Pickup date
               </p>
 
-              <p className="mt-1 text-sm font-bold text-slate-800">
+              <p className="mt-1 text-sm font-bold text-[var(--text-primary)]">
                 {formatDate(
                   reservation.pickup_date
                 )}
@@ -344,15 +346,15 @@ function ReservationDetailsPage() {
           <div className="flex items-start gap-3">
             <Clock3
               size={18}
-              className="mt-0.5 shrink-0 text-emerald-700"
+              className="mt-0.5 shrink-0 text-[var(--primary)]"
             />
 
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                 Pickup time
               </p>
 
-              <p className="mt-1 text-sm font-bold text-slate-800">
+              <p className="mt-1 text-sm font-bold text-[var(--text-primary)]">
                 {formatTime(
                   reservation.pickup_time
                 )}
@@ -363,14 +365,14 @@ function ReservationDetailsPage() {
       </div>
 
       {/* Medicines */}
-      <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="reservation-detail-card mt-4 rounded-2xl p-5">
         <div className="flex items-center gap-2">
           <Pill
             size={18}
-            className="text-emerald-700"
+            className="text-[var(--primary)]"
           />
 
-          <h2 className="text-sm font-extrabold text-slate-800">
+          <h2 className="text-sm font-extrabold text-[var(--text-primary)]">
             Reserved medicines
           </h2>
         </div>
@@ -385,11 +387,11 @@ function ReservationDetailsPage() {
               return (
                 <div
                   key={item.reservation_item_id}
-                  className="rounded-xl bg-slate-50 p-4"
+                  className="reservation-medicine-item rounded-xl p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-extrabold text-slate-800">
+                      <p className="text-sm font-extrabold text-[var(--text-primary)]">
                         {item.medicines
                           ?.generic_name ||
                           'Medicine unavailable'}
@@ -397,7 +399,7 @@ function ReservationDetailsPage() {
 
                       {item.medicines
                         ?.brand_name && (
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-[var(--text-secondary)]">
                           {
                             item.medicines
                               .brand_name
@@ -405,7 +407,7 @@ function ReservationDetailsPage() {
                         </p>
                       )}
 
-                      <p className="mt-1 text-[11px] text-slate-500">
+                      <p className="mt-1 text-[11px] text-[var(--text-secondary)]">
                         {item.medicines
                           ?.dosage || ''}
                         {' • '}
@@ -415,18 +417,18 @@ function ReservationDetailsPage() {
                     </div>
 
                     <div className="shrink-0 text-right">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                         Qty
                       </p>
 
-                      <p className="mt-1 text-sm font-extrabold text-slate-800">
+                      <p className="mt-1 text-sm font-extrabold text-[var(--text-primary)]">
                         {item.quantity}
                       </p>
                     </div>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-3">
-                    <span className="text-xs text-slate-500">
+                  <div className="mt-3 flex items-center justify-between border-t border-[var(--border)] pt-3">
+                    <span className="text-xs text-[var(--text-secondary)]">
                       ₱
                       {Number(
                         item.unit_price || 0
@@ -434,7 +436,7 @@ function ReservationDetailsPage() {
                       × {item.quantity}
                     </span>
 
-                    <span className="text-sm font-extrabold text-slate-800">
+                    <span className="text-sm font-extrabold text-[var(--text-primary)]">
                       ₱{itemTotal.toFixed(2)}
                     </span>
                   </div>
@@ -445,12 +447,12 @@ function ReservationDetailsPage() {
         </div>
 
         {/* Total */}
-        <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
-          <span className="text-sm font-bold text-slate-600">
+        <div className="mt-4 flex items-center justify-between border-t border-[var(--border)] pt-4">
+          <span className="text-sm font-bold text-[var(--text-secondary)]">
             Estimated total
           </span>
 
-          <span className="text-lg font-extrabold text-emerald-700">
+          <span className="reservation-total text-lg font-extrabold">
             ₱{totalPrice.toFixed(2)}
           </span>
         </div>
@@ -458,12 +460,12 @@ function ReservationDetailsPage() {
 
       {/* Notes */}
       {reservation.notes && (
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-sm font-extrabold text-slate-800">
+        <div className="reservation-detail-card mt-4 rounded-2xl p-5">
+          <h2 className="text-sm font-extrabold text-[var(--text-primary)]">
             Notes
           </h2>
 
-          <p className="mt-2 text-xs leading-relaxed text-slate-600">
+          <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">
             {reservation.notes}
           </p>
         </div>
@@ -487,12 +489,12 @@ function ReservationDetailsPage() {
 
       {/* Completed information */}
       {reservation.completed_at && (
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-          <p className="text-xs font-extrabold text-slate-800">
+        <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-5">
+          <p className="text-xs font-extrabold text-[var(--text-primary)]">
             Reservation completed
           </p>
 
-          <p className="mt-1 text-xs text-slate-600">
+          <p className="mt-1 text-xs text-[var(--text-secondary)]">
             Completed on{' '}
             {formatDateTime(
               reservation.completed_at
@@ -507,7 +509,7 @@ function ReservationDetailsPage() {
         onClick={() =>
           navigate('/my-reservations')
         }
-        className="mt-6 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-extrabold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700"
+        className="reservation-secondary-button mt-6 w-full rounded-xl px-4 py-3 text-xs font-extrabold"
       >
         Back to My Reservations
       </button>

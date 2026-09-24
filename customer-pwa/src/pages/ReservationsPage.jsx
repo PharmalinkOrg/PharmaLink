@@ -350,65 +350,65 @@ function ReservationsPage() {
    */
   if (success) {
     return (
-      <section className="mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+      <section className="create-reservation-page mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
+        <div className="reservation-success-card rounded-2xl p-6 text-center">
+          <div className="reservation-success-icon mx-auto flex h-16 w-16 items-center justify-center rounded-full">
             <CheckCircle2 size={34} />
           </div>
 
-          <h1 className="mt-4 text-xl font-extrabold text-slate-800">
+          <h1 className="mt-4 text-xl font-extrabold text-[var(--text-primary)]">
             Reservation submitted
           </h1>
 
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">
+          <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
             Your medicine has been reserved
             successfully.
           </p>
 
           {createdReservation?.reservation_id && (
-            <p className="mt-3 text-xs font-bold text-emerald-700">
+            <p className="mt-3 text-xs font-bold text-[var(--primary)]">
               Reservation #
               {createdReservation.reservation_id}
             </p>
           )}
 
-          <div className="mt-5 rounded-2xl border border-emerald-100 bg-white p-4 text-left">
+          <div className="mt-5 rounded-2xl border border-[var(--success-border)] bg-[var(--surface)] p-4 text-left">
             <div className="flex items-start gap-3">
               <Pill
                 size={20}
-                className="mt-0.5 shrink-0 text-emerald-700"
+                className="mt-0.5 shrink-0 text-[var(--primary)]"
               />
 
               <div className="min-w-0">
-                <p className="text-sm font-extrabold text-slate-800">
+                <p className="text-sm font-extrabold text-[var(--text-primary)]">
                   {medicine?.generic_name}
                 </p>
 
                 {medicine?.brand_name && (
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[var(--text-secondary)]">
                     {medicine.brand_name}
                   </p>
                 )}
 
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">
                   Quantity: {quantity}
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 border-t border-slate-100 pt-4">
+            <div className="mt-4 border-t border-[var(--border-light)] pt-4">
               <div className="flex items-start gap-3">
                 <MapPin
                   size={18}
-                  className="mt-0.5 shrink-0 text-emerald-700"
+                  className="mt-0.5 shrink-0 text-[var(--primary)]"
                 />
 
                 <div>
-                  <p className="text-sm font-bold text-slate-800">
+                  <p className="text-sm font-bold text-[var(--text-primary)]">
                     {pharmacy?.name}
                   </p>
 
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-[var(--text-secondary)]">
                     {pharmacy?.address ||
                       'Address unavailable'}
                   </p>
@@ -416,19 +416,19 @@ function ReservationsPage() {
               </div>
             </div>
 
-            <div className="mt-4 border-t border-slate-100 pt-4">
+            <div className="mt-4 border-t border-[var(--border-light)] pt-4">
               <div className="flex items-start gap-3">
                 <CalendarDays
                   size={18}
-                  className="mt-0.5 shrink-0 text-emerald-700"
+                  className="mt-0.5 shrink-0 text-[var(--primary)]"
                 />
 
                 <div>
-                  <p className="text-xs font-semibold text-slate-500">
+                  <p className="text-xs font-semibold text-[var(--text-secondary)]">
                     Pickup date
                   </p>
 
-                  <p className="mt-1 text-sm font-bold text-slate-800">
+                  <p className="mt-1 text-sm font-bold text-[var(--text-primary)]">
                     {pickupDate}
                   </p>
                 </div>
@@ -437,15 +437,15 @@ function ReservationsPage() {
               <div className="mt-3 flex items-start gap-3">
                 <Clock3
                   size={18}
-                  className="mt-0.5 shrink-0 text-emerald-700"
+                  className="mt-0.5 shrink-0 text-[var(--primary)]"
                 />
 
                 <div>
-                  <p className="text-xs font-semibold text-slate-500">
+                  <p className="text-xs font-semibold text-[var(--text-secondary)]">
                     Pickup time
                   </p>
 
-                  <p className="mt-1 text-sm font-bold text-slate-800">
+                  <p className="mt-1 text-sm font-bold text-[var(--text-primary)]">
                     {pickupTime}
                   </p>
                 </div>
@@ -453,12 +453,12 @@ function ReservationsPage() {
             </div>
 
             {createdReservation?.status && (
-              <div className="mt-4 border-t border-slate-100 pt-4">
-                <p className="text-xs font-semibold text-slate-500">
+              <div className="mt-4 border-t border-[var(--border-light)] pt-4">
+                <p className="text-xs font-semibold text-[var(--text-secondary)]">
                   Reservation status
                 </p>
 
-                <p className="mt-1 text-sm font-extrabold text-emerald-700">
+                <p className="mt-1 text-sm font-extrabold text-[var(--primary)]">
                   {createdReservation.status}
                 </p>
               </div>
@@ -468,7 +468,7 @@ function ReservationsPage() {
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="mt-5 w-full rounded-xl bg-emerald-600 px-4 py-3 text-xs font-extrabold text-white transition hover:bg-emerald-700"
+            className="mt-5 w-full rounded-xl bg-[var(--primary)] px-4 py-3 text-xs font-extrabold text-white transition hover:bg-[var(--primary-hover)]"
           >
             Back to Home
           </button>
@@ -485,13 +485,13 @@ function ReservationsPage() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
+    <section className="create-reservation-page mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
       {/* Back */}
       <button
         type="button"
         onClick={() => navigate(-1)}
         disabled={submitting}
-        className="mb-5 flex items-center gap-2 text-xs font-bold text-slate-500 transition hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mb-5 flex items-center gap-2 text-xs font-bold text-[var(--text-secondary)] transition hover:text-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
       >
         <ArrowLeft size={16} />
         Back
@@ -499,39 +499,39 @@ function ReservationsPage() {
 
       {/* Page heading */}
       <div className="mb-6">
-        <p className="text-xs font-semibold text-emerald-700">
+        <p className="text-xs font-semibold text-[var(--primary)]">
           Reservation
         </p>
 
-        <h1 className="mt-1 text-2xl font-extrabold text-slate-800">
+        <h1 className="mt-1 text-2xl font-extrabold text-[var(--text-primary)]">
           Reserve for pickup
         </h1>
 
-        <p className="mt-1 text-xs leading-relaxed text-slate-500">
+        <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
           Choose how many you need and when you want
           to pick them up.
         </p>
       </div>
 
       {/* Medicine summary */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
         <div className="flex items-start gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-light)] text-[var(--primary)]">
             <Pill size={22} />
           </div>
 
           <div className="min-w-0 flex-1">
-            <h2 className="text-sm font-extrabold text-slate-800">
+            <h2 className="text-sm font-extrabold text-[var(--text-primary)]">
               {medicine.generic_name}
             </h2>
 
             {medicine.brand_name && (
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--text-secondary)]">
                 {medicine.brand_name}
               </p>
             )}
 
-            <p className="mt-1 text-xs font-semibold text-slate-600">
+            <p className="mt-1 text-xs font-semibold text-[var(--text-secondary)]">
               {medicine.dosage} •{' '}
               {medicine.dosage_form}
             </p>
@@ -554,45 +554,45 @@ function ReservationsPage() {
       </div>
 
       {/* Pharmacy */}
-      <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
         <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--surface-soft)] text-[var(--text-secondary)]">
             <MapPin size={19} />
           </div>
 
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
               Pickup pharmacy
             </p>
 
-            <h2 className="mt-1 text-sm font-extrabold text-slate-800">
+            <h2 className="mt-1 text-sm font-extrabold text-[var(--text-primary)]">
               {pharmacy.name}
             </h2>
 
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">
               {pharmacy.address ||
                 'Address unavailable'}
             </p>
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+        <div className="mt-4 flex items-center justify-between border-t border-[var(--border-light)] pt-4">
           <div>
-            <p className="text-xs font-semibold text-slate-500">
+            <p className="text-xs font-semibold text-[var(--text-secondary)]">
               Price per unit
             </p>
 
-            <p className="mt-1 text-sm font-extrabold text-slate-800">
+            <p className="mt-1 text-sm font-extrabold text-[var(--text-primary)]">
               ₱{unitPrice.toFixed(2)}
             </p>
           </div>
 
           <div className="text-right">
-            <p className="text-xs font-semibold text-slate-500">
+            <p className="text-xs font-semibold text-[var(--text-secondary)]">
               Available
             </p>
 
-            <p className="mt-1 text-sm font-extrabold text-emerald-700">
+            <p className="mt-1 text-sm font-extrabold text-[var(--primary)]">
               {availableStock} units
             </p>
           </div>
@@ -605,14 +605,14 @@ function ReservationsPage() {
         className="mt-4"
       >
         {/* Quantity */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-extrabold text-slate-800">
+              <h2 className="text-sm font-extrabold text-[var(--text-primary)]">
                 Quantity
               </h2>
 
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[var(--text-secondary)]">
                 Select the number of units.
               </p>
             </div>
@@ -624,12 +624,12 @@ function ReservationsPage() {
                 disabled={
                   quantity <= 1 || submitting
                 }
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-300 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] transition hover:border-[var(--primary-muted)] hover:text-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Minus size={16} />
               </button>
 
-              <span className="min-w-8 text-center text-base font-extrabold text-slate-800">
+              <span className="min-w-8 text-center text-base font-extrabold text-[var(--text-primary)]">
                 {quantity}
               </span>
 
@@ -640,38 +640,38 @@ function ReservationsPage() {
                   quantity >= availableStock ||
                   submitting
                 }
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-300 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] transition hover:border-[var(--primary-muted)] hover:text-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Plus size={16} />
               </button>
             </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5">
-            <span className="text-xs font-semibold text-slate-500">
+          <div className="mt-4 flex items-center justify-between rounded-xl bg-[var(--surface-soft)] px-3 py-2.5">
+            <span className="text-xs font-semibold text-[var(--text-secondary)]">
               Estimated total
             </span>
 
-            <span className="text-sm font-extrabold text-slate-800">
+            <span className="text-sm font-extrabold text-[var(--text-primary)]">
               ₱{totalPrice.toFixed(2)}
             </span>
           </div>
         </div>
 
         {/* Pickup date */}
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
           <label
             htmlFor="pickup-date"
-            className="flex items-center gap-2 text-sm font-extrabold text-slate-800"
+            className="flex items-center gap-2 text-sm font-extrabold text-[var(--text-primary)]"
           >
             <CalendarDays
               size={17}
-              className="text-emerald-700"
+              className="text-[var(--primary)]"
             />
             Pickup date
           </label>
 
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--text-secondary)]">
             Choose the date you want to collect your
             reservation.
           </p>
@@ -683,25 +683,25 @@ function ReservationsPage() {
             value={pickupDate}
             onChange={handlePickupDateChange}
             disabled={submitting}
-            className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-50"
+            className="mt-4 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--primary)_16%,transparent)] disabled:cursor-not-allowed disabled:bg-[var(--surface-soft)]"
             required
           />
         </div>
 
         {/* Pickup time */}
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
           <label
             htmlFor="pickup-time"
-            className="flex items-center gap-2 text-sm font-extrabold text-slate-800"
+            className="flex items-center gap-2 text-sm font-extrabold text-[var(--text-primary)]"
           >
             <Clock3
               size={17}
-              className="text-emerald-700"
+              className="text-[var(--primary)]"
             />
             Pickup time
           </label>
 
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--text-secondary)]">
             Select your preferred pickup time.
           </p>
 
@@ -711,24 +711,24 @@ function ReservationsPage() {
             value={pickupTime}
             onChange={handlePickupTimeChange}
             disabled={submitting}
-            className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-50"
+            className="mt-4 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm font-semibold text-[var(--text-primary)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--primary)_16%,transparent)] disabled:cursor-not-allowed disabled:bg-[var(--surface-soft)]"
             required
           />
         </div>
 
         {/* Notes */}
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
           <label
             htmlFor="notes"
-            className="text-sm font-extrabold text-slate-800"
+            className="text-sm font-extrabold text-[var(--text-primary)]"
           >
             Notes
-            <span className="ml-1 text-xs font-normal text-slate-400">
+            <span className="ml-1 text-xs font-normal text-[var(--text-muted)]">
               (optional)
             </span>
           </label>
 
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--text-secondary)]">
             Add any additional information for the
             pharmacy.
           </p>
@@ -744,10 +744,10 @@ function ReservationsPage() {
             maxLength={500}
             disabled={submitting}
             placeholder="Example: I will pick this up after work."
-            className="mt-4 w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-50"
+            className="mt-4 w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--primary)_16%,transparent)] disabled:cursor-not-allowed disabled:bg-[var(--surface-soft)]"
           />
 
-          <p className="mt-1 text-right text-[10px] text-slate-400">
+          <p className="mt-1 text-right text-[10px] text-[var(--text-muted)]">
             {notes.length}/500
           </p>
         </div>
@@ -762,18 +762,16 @@ function ReservationsPage() {
         )}
 
         {/* Submit */}
-        <div className="mt-6 rounded-2xl bg-slate-800 p-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-700 text-emerald-200">
+        <div className="reservation-confirm-card">
+          <div className="reservation-confirm-header">
+            <div className="reservation-confirm-icon">
               <ShoppingBag size={17} />
             </div>
 
-            <div className="min-w-0 flex-1">
-              <h2 className="text-sm font-bold text-white">
-                Confirm reservation
-              </h2>
+            <div className="reservation-confirm-copy">
+              <h3>Confirm reservation</h3>
 
-              <p className="mt-1 text-xs leading-relaxed text-slate-300">
+              <p>
                 Reserve {quantity}{' '}
                 {quantity === 1
                   ? 'unit'
@@ -789,14 +787,14 @@ function ReservationsPage() {
               submitting ||
               availableStock <= 0
             }
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 text-xs font-extrabold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="reservation-confirm-button"
           >
             {submitting ? (
               'Submitting reservation...'
             ) : (
               <>
                 <CheckCircle2 size={15} />
-                Confirm reservation
+                <span>Confirm reservation</span>
               </>
             )}
           </button>

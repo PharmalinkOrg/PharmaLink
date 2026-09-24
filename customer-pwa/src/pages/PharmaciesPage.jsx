@@ -59,60 +59,60 @@ function PharmaciesPage() {
   }, [pharmacies, searchTerm, showActiveOnly])
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
+    <section className="pharmacies-customer-page mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
       {/* Header */}
       <div className="mb-5">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="mb-4 flex items-center gap-2 text-xs font-bold text-slate-500 transition hover:text-emerald-700"
+          className="mb-4 flex items-center gap-2 text-xs font-bold text-[var(--text-secondary)] transition hover:text-[var(--primary-hover)]"
         >
           <ArrowLeft size={16} />
           Back
         </button>
 
-        <p className="mb-1 text-xs font-bold uppercase tracking-widest text-emerald-700">
+        <p className="mb-1 text-xs font-bold uppercase tracking-widest text-[var(--primary)]">
           Pharmacies
         </p>
 
-        <h1 className="text-2xl font-extrabold leading-tight text-slate-800">
+        <h1 className="text-2xl font-extrabold leading-tight text-[var(--text-primary)]">
           Find a pharmacy
         </h1>
 
-        <p className="mt-1 text-sm leading-relaxed text-slate-500">
+        <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">
           Browse registered pharmacies and view their information.
         </p>
       </div>
 
       {/* Location */}
-      <div className="mb-4 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-emerald-700 shadow-sm">
+      <div className="pharmacy-location-card mb-4 flex items-center gap-3 rounded-2xl p-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--primary)] shadow-sm">
           <MapPin size={18} />
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--primary)]">
             Your location
           </p>
 
-          <p className="mt-0.5 truncate text-sm font-bold text-slate-700">
+          <p className="mt-0.5 truncate text-sm font-bold text-[var(--text-primary)]">
             Cebu City, Philippines
           </p>
         </div>
 
         <button
           type="button"
-          className="text-xs font-bold text-emerald-700"
+          className="text-xs font-bold text-[var(--primary)]"
         >
           Change
         </button>
       </div>
 
       {/* Search */}
-      <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
+      <div className="pharmacy-search-box flex items-center gap-2 rounded-2xl px-4 py-3">
         <Search
           size={19}
-          className="shrink-0 text-slate-400"
+          className="shrink-0 text-[var(--text-muted)]"
         />
 
         <input
@@ -120,14 +120,14 @@ function PharmaciesPage() {
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
           placeholder="Search pharmacies..."
-          className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+          className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
           aria-label="Search pharmacies"
         />
       </div>
 
       {/* Filters */}
       <div className="mt-4 flex items-center justify-between">
-        <p className="text-xs font-bold text-slate-500">
+        <p className="text-xs font-bold text-[var(--text-secondary)]">
           {filteredPharmacies.length}{' '}
           {filteredPharmacies.length === 1
             ? 'pharmacy'
@@ -141,8 +141,8 @@ function PharmaciesPage() {
           }
           className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
             showActiveOnly
-              ? 'border-emerald-700 bg-emerald-700 text-white'
-              : 'border-slate-200 bg-white text-slate-500 hover:border-emerald-300 hover:text-emerald-700'
+              ? 'border-[var(--primary)] bg-[var(--primary)] text-white'
+              : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--primary-muted)] hover:text-[var(--primary-hover)]'
           }`}
         >
           Active only
@@ -155,17 +155,17 @@ function PharmaciesPage() {
           {[1, 2, 3].map((item) => (
             <div
               key={item}
-              className="animate-pulse rounded-2xl border border-slate-200 bg-white p-4"
+              className="animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4"
             >
               <div className="flex gap-3">
-                <div className="h-12 w-12 rounded-xl bg-slate-200" />
+                <div className="h-12 w-12 rounded-xl bg-[var(--border)]" />
 
                 <div className="flex-1">
-                  <div className="h-4 w-40 rounded bg-slate-200" />
+                  <div className="h-4 w-40 rounded bg-[var(--border)]" />
 
-                  <div className="mt-2 h-3 w-56 rounded bg-slate-100" />
+                  <div className="mt-2 h-3 w-56 rounded bg-[var(--surface-soft)]" />
 
-                  <div className="mt-3 h-3 w-32 rounded bg-slate-100" />
+                  <div className="mt-3 h-3 w-32 rounded bg-[var(--surface-soft)]" />
                 </div>
               </div>
             </div>
@@ -207,11 +207,11 @@ function PharmaciesPage() {
                     `/pharmacy/${pharmacy.pharmacy_id}`
                   )
                 }
-                className="group w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-emerald-300 hover:shadow-md"
+                className="pharmacy-list-card group w-full rounded-2xl p-4 text-left"
               >
                 <div className="flex items-start gap-3">
                   {/* Pharmacy Icon */}
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-light)] text-[var(--primary)]">
                     <MapPin size={21} />
                   </div>
 
@@ -219,11 +219,11 @@ function PharmaciesPage() {
                     {/* Name + Status */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h2 className="truncate text-sm font-extrabold text-slate-800">
+                        <h2 className="truncate text-sm font-extrabold text-[var(--text-primary)]">
                           {pharmacy.name}
                         </h2>
 
-                        <p className="mt-1 flex items-start gap-1 text-xs text-slate-500">
+                        <p className="mt-1 flex items-start gap-1 text-xs text-[var(--text-secondary)]">
                           <MapPin
                             size={13}
                             className="mt-0.5 shrink-0"
@@ -239,10 +239,10 @@ function PharmaciesPage() {
                       <span
                         className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${
                           pharmacy.status === 'ACTIVE'
-                            ? 'bg-emerald-50 text-emerald-700'
+                            ? 'bg-[var(--success-bg)] text-[var(--success)]'
                             : pharmacy.status === 'SUSPENDED'
                               ? 'bg-amber-50 text-amber-700'
-                              : 'bg-slate-100 text-slate-500'
+                              : 'bg-[var(--surface-soft)] text-[var(--text-secondary)]'
                         }`}
                       >
                         {pharmacy.status || 'UNKNOWN'}
@@ -252,10 +252,10 @@ function PharmaciesPage() {
                     {/* Contact Information */}
                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
                       {pharmacy.contact_number && (
-                        <span className="flex items-center gap-1.5 text-xs text-slate-500">
+                        <span className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
                           <Phone
                             size={13}
-                            className="text-emerald-600"
+                            className="text-[var(--primary)]"
                           />
 
                           {pharmacy.contact_number}
@@ -263,10 +263,10 @@ function PharmaciesPage() {
                       )}
 
                       {pharmacy.email && (
-                        <span className="flex min-w-0 items-center gap-1.5 text-xs text-slate-500">
+                        <span className="flex min-w-0 items-center gap-1.5 text-xs text-[var(--text-secondary)]">
                           <Mail
                             size={13}
-                            className="shrink-0 text-emerald-600"
+                            className="shrink-0 text-[var(--primary)]"
                           />
 
                           <span className="truncate">
@@ -277,17 +277,17 @@ function PharmaciesPage() {
                     </div>
 
                     {/* View */}
-                    <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-                      <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                    <div className="mt-3 flex items-center justify-between border-t border-[var(--border-light)] pt-3">
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-secondary)]">
                         <Clock3
                           size={13}
-                          className="text-emerald-600"
+                          className="text-[var(--primary)]"
                         />
 
                         Pharmacy information
                       </span>
 
-                      <span className="flex items-center gap-1 text-xs font-bold text-emerald-700 transition group-hover:gap-2">
+                      <span className="flex items-center gap-1 text-xs font-bold text-[var(--primary)] transition group-hover:gap-2">
                         View
                         <ArrowRight size={14} />
                       </span>
@@ -297,16 +297,16 @@ function PharmaciesPage() {
               </button>
             ))
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+            <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] px-5 py-10 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-soft)] text-[var(--text-muted)]">
                 <MapPin size={21} />
               </div>
 
-              <h2 className="mt-3 text-sm font-bold text-slate-700">
+              <h2 className="mt-3 text-sm font-bold text-[var(--text-primary)]">
                 No pharmacies found
               </h2>
 
-              <p className="mt-1 text-xs leading-relaxed text-slate-500">
+              <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
                 Try searching for another pharmacy or turn
                 off the Active only filter.
               </p>
@@ -317,7 +317,7 @@ function PharmaciesPage() {
                   setSearchTerm('')
                   setShowActiveOnly(false)
                 }}
-                className="mt-4 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-emerald-800"
+                className="pharmacy-primary-button mt-4 rounded-xl px-4 py-2.5 text-xs font-bold"
               >
                 Clear filters
               </button>
@@ -327,17 +327,17 @@ function PharmaciesPage() {
       )}
 
       {/* Map Placeholder */}
-      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+      <div className="pharmacy-map-placeholder mt-6 overflow-hidden rounded-2xl">
         <div className="flex min-h-36 flex-col items-center justify-center px-5 text-center">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-emerald-700 shadow-sm">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--primary)] shadow-sm">
             <Navigation size={19} />
           </div>
 
-          <h2 className="mt-3 text-sm font-bold text-slate-700">
+          <h2 className="mt-3 text-sm font-bold text-[var(--text-primary)]">
             Pharmacy map
           </h2>
 
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--text-secondary)]">
             An interactive map will be connected here later.
           </p>
         </div>

@@ -38,7 +38,7 @@ const navigation = [
 
 function CustomerLayout() {
   return (
-    <div className="customer-layout min-h-screen bg-slate-50 pb-24">
+    <div className="customer-layout">
       <header className="app-header">
         <h1 className="brand">PharmaLink</h1>
         <span className="location">Find medicines nearby</span>
@@ -49,7 +49,7 @@ function CustomerLayout() {
       </main>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 mx-auto flex w-full max-w-2xl items-center border-t border-slate-200 bg-white px-2 pb-[env(safe-area-inset-bottom)] pt-2 shadow-[0_-8px_24px_rgba(23,60,52,0.08)]"
+        className="customer-bottom-nav"
         aria-label="Main navigation"
       >
         {navigation.map((item) => {
@@ -61,10 +61,8 @@ function CustomerLayout() {
               to={item.to}
               end={item.to === '/'}
               className={({ isActive }) =>
-                `flex min-h-14 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 text-[11px] font-semibold transition ${
-                  isActive
-                    ? 'bg-teal-50 text-teal-700'
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-teal-700'
+                `customer-nav-item ${
+                  isActive ? 'customer-nav-item-active' : ''
                 }`
               }
             >
@@ -73,10 +71,10 @@ function CustomerLayout() {
                   <Icon
                     size={21}
                     strokeWidth={isActive ? 2.5 : 2}
-                    className="shrink-0"
+                    className="customer-nav-icon"
                   />
 
-                  <span className="truncate">
+                  <span className="customer-nav-label">
                     {item.label}
                   </span>
                 </>

@@ -75,32 +75,32 @@ function PharmacyDetailsPage() {
   const getStatusClasses = (status) => {
     switch (status) {
       case 'ACTIVE':
-        return 'bg-emerald-50 text-emerald-700'
+        return 'pharmacy-status-active'
 
       case 'SUSPENDED':
-        return 'bg-amber-50 text-amber-700'
+        return 'pharmacy-status-suspended'
 
       case 'INACTIVE':
-        return 'bg-slate-100 text-slate-500'
+        return 'pharmacy-status-inactive'
 
       default:
-        return 'bg-slate-100 text-slate-500'
+        return 'pharmacy-status-inactive'
     }
   }
 
   const getInventoryStatusClasses = (status) => {
     switch (status) {
       case 'AVAILABLE':
-        return 'bg-emerald-50 text-emerald-700'
+        return 'inventory-status-available'
 
       case 'LOW_STOCK':
-        return 'bg-amber-50 text-amber-700'
+        return 'inventory-status-low'
 
       case 'OUT_OF_STOCK':
-        return 'bg-red-50 text-red-700'
+        return 'inventory-status-out'
 
       default:
-        return 'bg-slate-100 text-slate-500'
+        return 'inventory-status-neutral'
     }
   }
 
@@ -121,27 +121,27 @@ function PharmacyDetailsPage() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
+    <section className="pharmacy-details-page mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
       {/* Header */}
       <div className="mb-5">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="mb-4 flex items-center gap-2 text-xs font-bold text-slate-500 transition hover:text-emerald-700"
+          className="mb-4 flex items-center gap-2 text-xs font-bold text-[var(--text-secondary)] transition hover:text-[var(--primary-hover)]"
         >
           <ArrowLeft size={16} />
           Back
         </button>
 
-        <p className="mb-1 text-xs font-bold uppercase tracking-widest text-emerald-700">
+        <p className="mb-1 text-xs font-bold uppercase tracking-widest text-[var(--primary)]">
           Pharmacy
         </p>
 
-        <h1 className="text-2xl font-extrabold leading-tight text-slate-800">
+        <h1 className="text-2xl font-extrabold leading-tight text-[var(--text-primary)]">
           Pharmacy details
         </h1>
 
-        <p className="mt-1 text-sm leading-relaxed text-slate-500">
+        <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">
           View pharmacy information and available medicines.
         </p>
       </div>
@@ -149,21 +149,21 @@ function PharmacyDetailsPage() {
       {/* Pharmacy Loading */}
       {loading && (
         <div className="space-y-4">
-          <div className="animate-pulse rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
             <div className="flex items-start gap-4">
-              <div className="h-14 w-14 rounded-2xl bg-slate-200" />
+              <div className="h-14 w-14 rounded-2xl bg-[var(--border)]" />
 
               <div className="flex-1">
-                <div className="h-5 w-48 rounded bg-slate-200" />
-                <div className="mt-2 h-3 w-64 rounded bg-slate-100" />
-                <div className="mt-3 h-5 w-20 rounded-full bg-slate-100" />
+                <div className="h-5 w-48 rounded bg-[var(--border)]" />
+                <div className="mt-2 h-3 w-64 rounded bg-[var(--surface-soft)]" />
+                <div className="mt-3 h-5 w-20 rounded-full bg-[var(--surface-soft)]" />
               </div>
             </div>
 
             <div className="mt-6 space-y-3">
-              <div className="h-12 rounded-xl bg-slate-100" />
-              <div className="h-12 rounded-xl bg-slate-100" />
-              <div className="h-12 rounded-xl bg-slate-100" />
+              <div className="h-12 rounded-xl bg-[var(--surface-soft)]" />
+              <div className="h-12 rounded-xl bg-[var(--surface-soft)]" />
+              <div className="h-12 rounded-xl bg-[var(--surface-soft)]" />
             </div>
           </div>
         </div>
@@ -172,7 +172,7 @@ function PharmacyDetailsPage() {
       {/* Pharmacy Error */}
       {!loading && error && (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-10 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-red-500 shadow-sm">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface)] text-red-500 shadow-sm">
             <MapPin size={21} />
           </div>
 
@@ -198,20 +198,20 @@ function PharmacyDetailsPage() {
       {!loading && !error && pharmacy && (
         <div className="space-y-4">
           {/* Main Pharmacy Card */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="pharmacy-detail-card rounded-2xl p-5">
             <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary-light)] text-[var(--primary)]">
                 <MapPin size={25} />
               </div>
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h2 className="text-lg font-extrabold leading-tight text-slate-800">
+                    <h2 className="text-lg font-extrabold leading-tight text-[var(--text-primary)]">
                       {pharmacy.name}
                     </h2>
 
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-[var(--text-secondary)]">
                       Registered pharmacy
                     </p>
                   </div>
@@ -230,34 +230,34 @@ function PharmacyDetailsPage() {
             {/* Pharmacy Information */}
             <div className="mt-6 space-y-3">
               {/* Address */}
-              <div className="flex items-start gap-3 rounded-xl bg-slate-50 p-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-emerald-700 shadow-sm">
+              <div className="pharmacy-info-row flex items-start gap-3 rounded-xl p-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--surface)] text-[var(--primary)] shadow-sm">
                   <MapPin size={17} />
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                     Address
                   </p>
 
-                  <p className="mt-0.5 text-sm font-semibold leading-relaxed text-slate-700">
+                  <p className="mt-0.5 text-sm font-semibold leading-relaxed text-[var(--text-primary)]">
                     {pharmacy.address || 'No address provided'}
                   </p>
                 </div>
               </div>
 
               {/* Contact Number */}
-              <div className="flex items-start gap-3 rounded-xl bg-slate-50 p-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-emerald-700 shadow-sm">
+              <div className="pharmacy-info-row flex items-start gap-3 rounded-xl p-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--surface)] text-[var(--primary)] shadow-sm">
                   <Phone size={17} />
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                     Contact number
                   </p>
 
-                  <p className="mt-0.5 text-sm font-semibold text-slate-700">
+                  <p className="mt-0.5 text-sm font-semibold text-[var(--text-primary)]">
                     {pharmacy.contact_number ||
                       'No contact number provided'}
                   </p>
@@ -265,17 +265,17 @@ function PharmacyDetailsPage() {
               </div>
 
               {/* Email */}
-              <div className="flex items-start gap-3 rounded-xl bg-slate-50 p-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-emerald-700 shadow-sm">
+              <div className="pharmacy-info-row flex items-start gap-3 rounded-xl p-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--surface)] text-[var(--primary)] shadow-sm">
                   <Mail size={17} />
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                     Email
                   </p>
 
-                  <p className="mt-0.5 break-all text-sm font-semibold text-slate-700">
+                  <p className="mt-0.5 break-all text-sm font-semibold text-[var(--text-primary)]">
                     {pharmacy.email || 'No email provided'}
                   </p>
                 </div>
@@ -284,18 +284,18 @@ function PharmacyDetailsPage() {
           </div>
 
           {/* Available Medicines */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="pharmacy-detail-card rounded-2xl p-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-light)] text-[var(--primary)]">
                 <Pill size={19} />
               </div>
 
               <div>
-                <h2 className="text-sm font-extrabold text-slate-800">
+                <h2 className="text-sm font-extrabold text-[var(--text-primary)]">
                   Available medicines
                 </h2>
 
-                <p className="mt-0.5 text-xs text-slate-500">
+                <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
                   Medicines currently available at this pharmacy.
                 </p>
               </div>
@@ -307,15 +307,15 @@ function PharmacyDetailsPage() {
                 {[1, 2].map((item) => (
                   <div
                     key={item}
-                    className="animate-pulse rounded-xl border border-slate-100 p-4"
+                    className="animate-pulse rounded-xl border border-[var(--border-light)] p-4"
                   >
                     <div className="flex gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-slate-200" />
+                      <div className="h-10 w-10 rounded-xl bg-[var(--border)]" />
 
                       <div className="flex-1">
-                        <div className="h-4 w-40 rounded bg-slate-200" />
-                        <div className="mt-2 h-3 w-28 rounded bg-slate-100" />
-                        <div className="mt-3 h-3 w-20 rounded bg-slate-100" />
+                        <div className="h-4 w-40 rounded bg-[var(--border)]" />
+                        <div className="mt-2 h-3 w-28 rounded bg-[var(--surface-soft)]" />
+                        <div className="mt-3 h-3 w-20 rounded bg-[var(--surface-soft)]" />
                       </div>
                     </div>
                   </div>
@@ -356,23 +356,23 @@ function PharmacyDetailsPage() {
                     return (
                       <div
                         key={item.inventory_id}
-                        className="rounded-xl border border-slate-200 p-4"
+                        className="pharmacy-medicine-card rounded-xl p-4"
                       >
                         <div className="flex items-start gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-light)] text-[var(--primary)]">
                             <Pill size={18} />
                           </div>
 
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
-                                <h3 className="text-sm font-extrabold text-slate-800">
+                                <h3 className="text-sm font-extrabold text-[var(--text-primary)]">
                                   {medicine?.generic_name ||
                                     'Unknown medicine'}
                                 </h3>
 
                                 {medicine?.brand_name && (
-                                  <p className="mt-0.5 text-xs text-slate-500">
+                                  <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
                                     {medicine.brand_name}
                                   </p>
                                 )}
@@ -388,45 +388,45 @@ function PharmacyDetailsPage() {
                             </div>
 
                             <div className="mt-3 grid grid-cols-2 gap-2">
-                              <div className="rounded-lg bg-slate-50 p-2.5">
-                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                              <div className="rounded-lg bg-[var(--surface-soft)] p-2.5">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                                   Dosage
                                 </p>
 
-                                <p className="mt-0.5 text-xs font-semibold text-slate-700">
+                                <p className="mt-0.5 text-xs font-semibold text-[var(--text-primary)]">
                                   {medicine?.dosage || 'Not specified'}
                                 </p>
                               </div>
 
-                              <div className="rounded-lg bg-slate-50 p-2.5">
-                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                              <div className="rounded-lg bg-[var(--surface-soft)] p-2.5">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                                   Form
                                 </p>
 
-                                <p className="mt-0.5 text-xs font-semibold text-slate-700">
+                                <p className="mt-0.5 text-xs font-semibold text-[var(--text-primary)]">
                                   {medicine?.dosage_form ||
                                     'Not specified'}
                                 </p>
                               </div>
                             </div>
 
-                            <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                            <div className="mt-3 flex items-center justify-between border-t border-[var(--border-light)] pt-3">
                               <div>
-                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                                   Price
                                 </p>
 
-                                <p className="mt-0.5 text-sm font-extrabold text-emerald-700">
+                                <p className="mt-0.5 text-sm font-extrabold text-[var(--primary)]">
                                   ₱{Number(item.unit_price).toFixed(2)}
                                 </p>
                               </div>
 
                               <div className="text-right">
-                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                                   Stock
                                 </p>
 
-                                <p className="mt-0.5 text-xs font-bold text-slate-700">
+                                <p className="mt-0.5 text-xs font-bold text-[var(--text-primary)]">
                                   {item.quantity} available
                                 </p>
                               </div>
@@ -451,16 +451,16 @@ function PharmacyDetailsPage() {
             {!medicinesLoading &&
               !medicinesError &&
               medicines.length === 0 && (
-                <div className="mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center">
-                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm">
+                <div className="mt-5 rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-soft)] px-4 py-8 text-center">
+                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--text-muted)] shadow-sm">
                     <Pill size={19} />
                   </div>
 
-                  <h3 className="mt-3 text-sm font-bold text-slate-700">
+                  <h3 className="mt-3 text-sm font-bold text-[var(--text-primary)]">
                     No medicines available
                   </h3>
 
-                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                  <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
                     This pharmacy currently has no medicines available
                     for viewing.
                   </p>
@@ -469,35 +469,35 @@ function PharmacyDetailsPage() {
           </div>
 
           {/* Location Card */}
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+          <div className="pharmacy-map-placeholder overflow-hidden rounded-2xl">
             <div className="flex min-h-44 flex-col items-center justify-center px-5 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-emerald-700 shadow-sm">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--primary)] shadow-sm">
                 <Navigation size={20} />
               </div>
 
-              <h2 className="mt-3 text-sm font-bold text-slate-700">
+              <h2 className="mt-3 text-sm font-bold text-[var(--text-primary)]">
                 Pharmacy location
               </h2>
 
-              <p className="mt-1 max-w-sm text-xs leading-relaxed text-slate-500">
+              <p className="mt-1 max-w-sm text-xs leading-relaxed text-[var(--text-secondary)]">
                 An interactive map will be connected here later.
               </p>
             </div>
           </div>
 
           {/* Pharmacy Information */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="pharmacy-detail-card rounded-2xl p-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-light)] text-[var(--primary)]">
                 <Clock3 size={18} />
               </div>
 
               <div>
-                <h2 className="text-sm font-extrabold text-slate-800">
+                <h2 className="text-sm font-extrabold text-[var(--text-primary)]">
                   Pharmacy information
                 </h2>
 
-                <p className="mt-0.5 text-xs text-slate-500">
+                <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
                   More pharmacy details can be added here later.
                 </p>
               </div>
@@ -506,12 +506,12 @@ function PharmacyDetailsPage() {
 
           {/* Future Actions */}
           {pharmacy.status === 'ACTIVE' && (
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
-              <h2 className="text-sm font-extrabold text-slate-800">
+            <div className="pharmacy-action-card rounded-2xl p-5">
+              <h2 className="text-sm font-extrabold text-[var(--text-primary)]">
                 What would you like to do?
               </h2>
 
-              <p className="mt-1 text-xs leading-relaxed text-slate-500">
+              <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
                 Reservation features will be connected here in the
                 next step.
               </p>
@@ -520,7 +520,7 @@ function PharmacyDetailsPage() {
                 <button
                   type="button"
                   disabled
-                  className="w-full rounded-xl bg-emerald-700 px-4 py-3 text-xs font-bold text-white opacity-50"
+                  className="pharmacy-primary-button w-full rounded-xl px-4 py-3 text-xs font-bold opacity-50"
                 >
                   Reserve medicine
                 </button>
@@ -532,23 +532,23 @@ function PharmacyDetailsPage() {
 
       {/* Pharmacy Not Found */}
       {!loading && !error && !pharmacy && (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+        <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] px-5 py-10 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-soft)] text-[var(--text-muted)]">
             <MapPin size={21} />
           </div>
 
-          <h2 className="mt-3 text-sm font-bold text-slate-700">
+          <h2 className="mt-3 text-sm font-bold text-[var(--text-primary)]">
             Pharmacy not found
           </h2>
 
-          <p className="mt-1 text-xs leading-relaxed text-slate-500">
+          <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
             The pharmacy you are looking for could not be found.
           </p>
 
           <button
             type="button"
             onClick={() => navigate('/pharmacies')}
-            className="mt-4 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-emerald-800"
+            className="pharmacy-primary-button mt-4 rounded-xl px-4 py-2.5 text-xs font-bold"
           >
             Back to pharmacies
           </button>

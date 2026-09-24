@@ -398,8 +398,8 @@ function AIAssistantPage() {
   ============================================================ */
 
   return (
-    <section className="mx-auto w-full max-w-5xl px-3 py-4 sm:px-4 sm:py-6">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section className="ai-assistant-page mx-auto w-full max-w-5xl px-3 py-4 sm:px-4 sm:py-6">
+      <div className="ai-assistant-shell overflow-hidden rounded-2xl">
         <div className="grid min-h-[calc(100vh-13rem)] grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)]">
           <div className="hidden md:block">
             <AIConversationList
@@ -465,11 +465,11 @@ function AIAssistantPage() {
             )}
 
             {isLoadingConversation ? (
-              <div className="flex flex-1 items-center justify-center p-8">
+              <div className="ai-loading-state flex flex-1 items-center justify-center p-8">
                 <div className="text-center">
-                  <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-teal-700" />
+                  <div className="ai-loading-spinner mx-auto h-8 w-8 animate-spin rounded-full border-2" />
 
-                  <p className="mt-3 text-sm text-slate-500">
+                  <p className="mt-3 text-sm text-[var(--text-secondary)]">
                     Loading conversation...
                   </p>
                 </div>
@@ -513,17 +513,17 @@ function AIAssistantPage() {
             onClick={() =>
               setIsHistoryOpen(false)
             }
-            className="absolute inset-0 bg-slate-900/40"
+            className="ai-history-overlay absolute inset-0"
           />
 
-          <div className="absolute inset-y-0 left-0 flex w-[85%] max-w-[320px] flex-col bg-white shadow-xl">
-            <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
+          <div className="ai-history-drawer absolute inset-y-0 left-0 flex w-[85%] max-w-[320px] flex-col shadow-xl">
+            <div className="ai-history-drawer-header flex h-16 items-center justify-between border-b px-4">
               <div>
-                <h2 className="font-bold text-slate-900">
+                <h2 className="font-bold text-[var(--text-primary)]">
                   Conversations
                 </h2>
 
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--text-secondary)]">
                   Your PharmaLink Assistant history
                 </p>
               </div>
@@ -534,7 +534,7 @@ function AIAssistantPage() {
                   setIsHistoryOpen(false)
                 }
                 aria-label="Close history"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100"
+                className="ai-icon-button flex h-9 w-9 items-center justify-center rounded-lg transition"
               >
                 <X size={19} />
               </button>

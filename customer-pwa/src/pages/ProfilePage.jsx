@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../components/auth/useAuth'
+import { useAppSettings } from '../context/AppSettingsContext'
 import {
   Pencil,
   Bell,
@@ -12,9 +13,7 @@ import {
   ShieldCheck,
   HelpCircle,
   ChevronRight,
-  MapPin,
   Type,
-  Building2,
   Eye,
   EyeOff,
 } from 'lucide-react'
@@ -39,7 +38,18 @@ const getInitials = (firstName, lastName) => {
 
 function ProfilePage() {
   const navigate = useNavigate()
+
   const { signOut, accessToken, refreshToken, user } = useAuth()
+
+  const {
+    language,
+    theme,
+    textSize,
+    setLanguage,
+    setTheme,
+    setTextSize,
+  } = useAppSettings()
+
   const [profile, setProfile] = useState(null)
   const [form, setForm] = useState({ first_name: '', last_name: '', phone: '' })
   const [status, setStatus] = useState(() => (
@@ -57,14 +67,6 @@ function ProfilePage() {
     push: true,
     email: true,
     sms: false,
-  })
-
-  const [appSettings, setAppSettings] = useState({
-    language: 'English',
-    theme: 'Light',
-    textSize: 'Default',
-    preferredPharmacy: '',
-    locationAccess: false,
   })
 
   const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -334,7 +336,7 @@ function ProfilePage() {
   }
 
   return (
-    <section className="min-h-screen bg-gray-50 pb-24 px-4 pt-6" aria-labelledby="profile-title">
+    <section className="profile-page-v2 min-h-screen pb-24 px-4 pt-6" aria-labelledby="profile-title">
       {/* Top Header */}
       {!isLoading && profile && (
         <div className="flex justify-between items-center mb-6">
@@ -343,7 +345,7 @@ function ProfilePage() {
           </h2>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-100 transition-colors"
+            className="profile-logout-button flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
           >
             <LogOut size={16} />
             Log out
@@ -361,7 +363,7 @@ function ProfilePage() {
       {!isLoading && profile && (
         <div className="flex flex-col gap-4 max-w-lg mx-auto">
           {/* Profile Header Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center">
+          <div className="profile-main-card rounded-2xl p-6 flex flex-col items-center">
             <div className="relative mb-4">
               {profile.avatar_url ? (
                 <img
@@ -396,7 +398,7 @@ function ProfilePage() {
 
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="flex items-center justify-center gap-2 w-full py-3 bg-white border border-gray-300 rounded-xl text-gray-800 font-semibold hover:bg-gray-50 transition-colors"
+              className="profile-secondary-button flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold transition-colors"
             >
               <Pencil size={16} />
               {isEditing ? 'Cancel Edit' : 'Edit Profile'}
@@ -405,7 +407,7 @@ function ProfilePage() {
 
           {/* Edit Form (Conditional) */}
           {isEditing && (
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="profile-edit-card rounded-2xl p-6 animate-in fade-in slide-in-from-top-2 duration-300">
               <h3 className="text-base font-bold text-gray-900 mb-1">Personal details</h3>
               <p className="text-xs text-gray-500 mb-4">Only your name and phone number can be changed.</p>
               <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -418,7 +420,7 @@ function ProfilePage() {
                       value={form.first_name}
                       onChange={handleChange}
                       required
-                      className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 transition-all"
+                      className="profile-input px-3 py-2.5 rounded-lg text-sm transition-all"
                     />
                   </label>
                   <label className="flex flex-col gap-1.5">
@@ -429,7 +431,7 @@ function ProfilePage() {
                       value={form.last_name}
                       onChange={handleChange}
                       required
-                      className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 transition-all"
+                      className="profile-input px-3 py-2.5 rounded-lg text-sm transition-all"
                     />
                   </label>
                 </div>
@@ -440,13 +442,13 @@ function ProfilePage() {
                     type="tel"
                     value={form.phone}
                     onChange={handleChange}
-                    className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 transition-all"
+                    className="profile-input px-3 py-2.5 rounded-lg text-sm transition-all"
                   />
                 </label>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="mt-2 w-full py-3 bg-teal-700 text-white rounded-xl font-semibold text-sm hover:bg-teal-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="profile-primary-button mt-2 w-full py-3 rounded-xl font-semibold text-sm disabled:cursor-not-allowed"
                 >
                   {isSaving ? 'Saving...' : 'Save changes'}
                 </button>
@@ -455,7 +457,7 @@ function ProfilePage() {
           )}
 
           {/* Account & Security */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <div className="profile-section-card profile-security-card rounded-2xl p-5">
             <div className="flex justify-between items-center mb-5">
               <div>
                 <h3 className="text-base font-bold text-gray-900">
@@ -543,7 +545,7 @@ function ProfilePage() {
                             ? 'current-password'
                             : 'new-password'
                         }
-                        className="w-full px-3 py-2.5 pr-11 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700"
+                        className="profile-input w-full px-3 py-2.5 pr-11 rounded-lg text-sm"
                       />
 
                       <button
@@ -574,7 +576,7 @@ function ProfilePage() {
                         confirmPassword: '',
                       })
                     }}
-                    className="flex-1 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                    className="profile-secondary-button flex-1 py-2.5 rounded-xl text-sm font-semibold"
                   >
                     Cancel
                   </button>
@@ -582,7 +584,7 @@ function ProfilePage() {
                   <button
                     type="submit"
                     disabled={isUpdatingPassword}
-                    className="flex-1 py-2.5 bg-teal-700 text-white rounded-xl text-sm font-semibold hover:bg-teal-800 disabled:opacity-60"
+                    className="profile-primary-button flex-1 py-2.5 rounded-xl text-sm font-semibold"
                   >
                     {isUpdatingPassword ? 'Updating...' : 'Change Password'}
                   </button>
@@ -592,7 +594,7 @@ function ProfilePage() {
           </div>
 
           {/* Notification Preferences Card */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <div className="profile-section-card profile-notifications-card rounded-2xl p-5">
             <div className="flex justify-between items-start mb-5">
               <div>
                 <h3 className="text-base font-bold text-gray-900">
@@ -672,12 +674,13 @@ function ProfilePage() {
           </div>
 
           {/* App Settings */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <div className="profile-settings-card bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
             <div className="flex justify-between items-start mb-5">
               <div>
                 <h3 className="text-base font-bold text-gray-900">
                   App Settings
                 </h3>
+
                 <p className="text-xs text-gray-500 mt-1">
                   Personalize your PharmaLink experience.
                 </p>
@@ -697,24 +700,21 @@ function ProfilePage() {
                     <p className="text-sm font-semibold text-gray-900">
                       Language
                     </p>
+
                     <p className="text-xs text-gray-500">
-                      Application language
+                      Additional languages coming later
                     </p>
                   </div>
                 </div>
 
                 <select
-                  value={appSettings.language}
-                  onChange={(event) =>
-                    setAppSettings({
-                      ...appSettings,
-                      language: event.target.value,
-                    })
-                  }
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                  value={language}
+                  onChange={(event) => setLanguage(event.target.value)}
+                  className="profile-settings-select"
+                  aria-label="Application language"
+                  disabled
                 >
-                  <option>English</option>
-                  <option>Filipino</option>
+                  <option value="en">English</option>
                 </select>
               </div>
 
@@ -723,28 +723,25 @@ function ProfilePage() {
                   <p className="text-sm font-semibold text-gray-900">
                     Theme
                   </p>
+
                   <p className="text-xs text-gray-500">
                     Choose your preferred appearance
                   </p>
                 </div>
 
                 <select
-                  value={appSettings.theme}
-                  onChange={(event) =>
-                    setAppSettings({
-                      ...appSettings,
-                      theme: event.target.value,
-                    })
-                  }
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                  value={theme}
+                  onChange={(event) => setTheme(event.target.value)}
+                  className="profile-settings-select"
+                  aria-label="Application theme"
                 >
-                  <option>Light</option>
-                  <option>Dark</option>
-                  <option>System Default</option>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                  <option value="system">System Default</option>
                 </select>
               </div>
 
-              <div className="flex justify-between items-center gap-4 py-4">
+              <div className="flex justify-between items-center gap-4 py-4 last:pb-0">
                 <div className="flex items-center gap-3">
                   <Type size={17} className="text-teal-700" />
 
@@ -752,6 +749,7 @@ function ProfilePage() {
                     <p className="text-sm font-semibold text-gray-900">
                       Text Size
                     </p>
+
                     <p className="text-xs text-gray-500">
                       Improve readability
                     </p>
@@ -759,84 +757,21 @@ function ProfilePage() {
                 </div>
 
                 <select
-                  value={appSettings.textSize}
-                  onChange={(event) =>
-                    setAppSettings({
-                      ...appSettings,
-                      textSize: event.target.value,
-                    })
-                  }
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+                  value={textSize}
+                  onChange={(event) => setTextSize(event.target.value)}
+                  className="profile-settings-select"
+                  aria-label="Application text size"
                 >
-                  <option>Small</option>
-                  <option>Default</option>
-                  <option>Large</option>
+                  <option value="small">Small</option>
+                  <option value="default">Default</option>
+                  <option value="large">Large</option>
                 </select>
-              </div>
-
-              <div className="flex justify-between items-center gap-4 py-4">
-                <div className="flex items-center gap-3">
-                  <Building2 size={17} className="text-teal-700" />
-
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      Preferred Pharmacy
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Default pharmacy for future actions
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => navigate('/pharmacies')}
-                  className="flex items-center gap-1 text-sm font-semibold text-teal-700"
-                >
-                  {appSettings.preferredPharmacy || 'Choose'}
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-
-              <div className="flex justify-between items-center gap-4 py-4 last:pb-0">
-                <div className="flex items-center gap-3">
-                  <MapPin size={17} className="text-teal-700" />
-
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      Location Access
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Help find nearby pharmacies
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setAppSettings((current) => ({
-                      ...current,
-                      locationAccess: !current.locationAccess,
-                    }))
-                  }
-                  className={`relative w-11 h-6 rounded-full transition-colors ${
-                    appSettings.locationAccess ? 'bg-teal-700' : 'bg-gray-300'
-                  }`}
-                  aria-label="Toggle location access"
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                      appSettings.locationAccess ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
               </div>
             </div>
           </div>
 
           {/* Privacy & Support */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <div className="profile-section-card profile-support-card rounded-2xl p-5">
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h3 className="text-base font-bold text-gray-900">
@@ -905,7 +840,7 @@ function ProfilePage() {
           </div>
 
           {/* PharmaLink AI Card */}
-          <div className="bg-[#0B2B2B] rounded-2xl p-5 shadow-sm text-white">
+          <div className="profile-ai-card rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
                 <MessageSquare size={18} />
@@ -919,7 +854,7 @@ function ProfilePage() {
             <button
               type="button"
               onClick={() => navigate('/assistant')}
-              className="w-full py-3 bg-emerald-100 text-teal-800 rounded-xl font-bold text-sm hover:bg-emerald-200 transition-colors flex items-center justify-center gap-2"
+              className="profile-ai-button w-full py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
             >
               <MessageSquare size={16} />
               Start Chat Session

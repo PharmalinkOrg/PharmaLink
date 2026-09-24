@@ -37,19 +37,15 @@ function HomePage() {
   const navigate = useNavigate()
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-4 pb-28 pt-5 sm:px-6">
+    <section className="home-page">
       {/* Header */}
-      <header className="mb-5 flex items-start justify-between">
+      <header className="home-header">
         <div>
-          <p className="mb-1 text-sm font-medium text-teal-700">
-            PharmaLink
-          </p>
-
-          <h1 className="text-xl font-extrabold tracking-tight text-slate-800 sm:text-2xl">
+          <h1 className="home-greeting">
             Good day!
           </h1>
 
-          <div className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500">
+          <div className="home-location">
             <MapPin size={14} strokeWidth={2} />
             <span>Finding pharmacies near you</span>
           </div>
@@ -58,11 +54,11 @@ function HomePage() {
         <button
           type="button"
           aria-label="Notifications"
-          className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100"
+          className="home-notification-button"
         >
           <Bell size={21} strokeWidth={2} />
 
-          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+          <span className="home-notification-badge">
             2
           </span>
         </button>
@@ -72,90 +68,82 @@ function HomePage() {
       <button
         type="button"
         onClick={() => navigate('/search')}
-        className="flex min-h-12 w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-left shadow-sm transition hover:border-teal-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+        className="home-search"
       >
         <Search
           size={20}
           strokeWidth={2}
-          className="shrink-0 text-slate-400"
+          className="home-search-icon"
         />
 
-        <span className="flex-1 text-sm text-slate-400">
+        <span className="home-search-placeholder">
           Search for a medicine...
         </span>
 
-        <span className="text-xs text-slate-400">
+        <span className="home-search-label">
           Search
         </span>
       </button>
 
       {/* Quick Actions */}
-      <section className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-slate-700">
-            What do you need?
-          </h2>
+      <section className="home-section">
+        <div className="home-section-header">
+          <h2>What do you need?</h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="home-quick-actions">
           <button
             type="button"
             onClick={() => navigate('/search')}
-            className="group flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="home-action-card"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-50 text-cyan-700 transition group-hover:bg-cyan-100">
+            <span className="home-action-icon">
               <Pill size={21} />
             </span>
 
-            <span className="text-xs font-bold text-slate-600">
+            <span className="home-action-label">
               Search Medicine
             </span>
           </button>
 
           <button
             type="button"
-            onClick={() =>
-              navigate('/upload-prescription')
-            }
-            className="group flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+            onClick={() => navigate('/upload-prescription')}
+            className="home-action-card"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-50 text-cyan-700 transition group-hover:bg-cyan-100">
+            <span className="home-action-icon">
               <FileText size={21} />
             </span>
 
-            <span className="text-xs font-bold text-slate-600">
+            <span className="home-action-label">
               Upload Prescription
             </span>
           </button>
 
           <button
             type="button"
-            onClick={() =>
-              navigate('/request-medicine')
-            }
-            className="group flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+            onClick={() => navigate('/request-medicine')}
+            className="home-action-card"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-50 text-cyan-700 transition group-hover:bg-cyan-100">
+            <span className="home-action-icon">
               <Plus size={21} />
             </span>
 
-            <span className="text-xs font-bold text-slate-600">
+            <span className="home-action-label">
               Request Medicine
             </span>
           </button>
 
           <button
             type="button"
-            onClick={() =>
-              navigate('/pharmacies')
-            }
-            className="group flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+            onClick={() => navigate('/pharmacies')}
+            className="home-action-card"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-50 text-cyan-700 transition group-hover:bg-cyan-100">
+            <span className="home-action-icon">
               <MapPin size={21} />
             </span>
 
-            <span className="text-xs font-bold text-slate-600">
+            <span className="home-action-label">
               Nearby Pharmacies
             </span>
           </button>
@@ -163,33 +151,29 @@ function HomePage() {
       </section>
 
       {/* Categories */}
-      <section className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-slate-700">
-            Browse categories
-          </h2>
+      <section className="home-section">
+        <div className="home-section-header">
+          <h2>Browse categories</h2>
 
           <button
             type="button"
             onClick={() => navigate('/search')}
-            className="text-xs font-bold text-slate-500 transition hover:text-teal-700"
+            className="home-view-all"
           >
             View all
           </button>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="home-categories">
           {categories.map((category, index) => (
             <button
               key={category}
               type="button"
-              onClick={() =>
-                navigate('/search')
-              }
-              className={`shrink-0 rounded-full border px-4 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+              onClick={() => navigate('/search')}
+              className={`home-category ${
                 index === 0
-                  ? 'border-teal-700 bg-teal-700 text-white'
-                  : 'border-slate-200 bg-white text-slate-500 hover:border-teal-300 hover:text-teal-700'
+                  ? 'home-category-active'
+                  : ''
               }`}
             >
               {category}
@@ -199,55 +183,48 @@ function HomePage() {
       </section>
 
       {/* Nearby Pharmacies */}
-      <section className="mt-7">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-slate-700">
-            Nearby pharmacies
-          </h2>
+      <section className="home-section">
+        <div className="home-section-header">
+          <h2>Nearby pharmacies</h2>
 
           <button
             type="button"
-            onClick={() =>
-              navigate('/pharmacies')
-            }
-            className="text-xs font-bold text-slate-500 transition hover:text-teal-700"
+            onClick={() => navigate('/pharmacies')}
+            className="home-view-all"
           >
             View all
           </button>
         </div>
 
-        <div className="space-y-2.5">
+        <div className="home-pharmacy-list">
           {nearbyPharmacies.map((pharmacy) => (
             <button
               key={pharmacy.name}
               type="button"
-              onClick={() =>
-                navigate('/pharmacies')
-              }
-              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-teal-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+              onClick={() => navigate('/pharmacies')}
+              className="home-pharmacy-card"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-700">
+              <span className="home-pharmacy-icon">
                 <Pill size={19} />
               </span>
 
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-bold text-slate-700">
+              <span className="home-pharmacy-info">
+                <span className="home-pharmacy-name">
                   {pharmacy.name}
                 </span>
 
-                <span className="mt-0.5 block text-xs text-slate-500">
-                  {pharmacy.distance} ·{' '}
-                  {pharmacy.status}
+                <span className="home-pharmacy-meta">
+                  {pharmacy.distance} · {pharmacy.status}
                 </span>
 
-                <span className="mt-0.5 block text-[11px] font-medium text-teal-700">
+                <span className="home-pharmacy-availability">
                   {pharmacy.availability}
                 </span>
               </span>
 
               <ChevronRight
                 size={19}
-                className="shrink-0 text-slate-400"
+                className="home-pharmacy-chevron"
               />
             </button>
           ))}
@@ -255,31 +232,26 @@ function HomePage() {
       </section>
 
       {/* AI Assistant */}
-      <section className="mt-7 overflow-hidden rounded-2xl bg-slate-800 p-4 shadow-md">
-        <div className="flex gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-700 text-teal-200">
+      <section className="home-ai-card">
+        <div className="home-ai-header">
+          <span className="home-ai-icon">
             <Sparkles size={19} />
           </span>
 
-          <div>
-            <h2 className="text-sm font-bold text-white">
-              Need help finding a medicine?
-            </h2>
+          <div className="home-ai-text">
+            <h2>Need help finding a medicine?</h2>
 
-            <p className="mt-1 text-xs leading-relaxed text-slate-300">
-              Ask PharmaLink AI about medicines,
-              reservations, prescriptions, or how to
-              use the app.
+            <p>
+              Ask PharmaLink AI about medicines, reservations,
+              prescriptions, or how to use the app.
             </p>
           </div>
         </div>
 
         <button
           type="button"
-          onClick={() =>
-            navigate('/assistant')
-          }
-          className="mt-4 flex min-h-9 w-full items-center justify-center rounded-lg bg-teal-100 px-4 text-xs font-extrabold text-teal-900 transition hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-slate-800"
+          onClick={() => navigate('/assistant')}
+          className="home-ai-button"
         >
           Ask PharmaLink AI
         </button>

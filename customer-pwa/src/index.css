@@ -1,22 +1,72 @@
 @import "tailwindcss";
+
+/* =========================================================
+   PHARMALINK GLOBAL APPLICATION SETTINGS
+   ========================================================= */
+
 :root {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #1f2933;
-  background: #f5f8f7;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+
+  /*
+   * Default application font scale.
+   * AppSettingsContext updates data-text-size on <html>.
+   */
+  --app-font-scale: 1;
 }
 
+/* =========================================================
+   TEXT SIZE
+   ========================================================= */
 
+:root[data-text-size="small"] {
+  --app-font-scale: 0.9;
+}
+
+:root[data-text-size="default"] {
+  --app-font-scale: 1;
+}
+
+:root[data-text-size="large"] {
+  --app-font-scale: 1.12;
+}
+
+html {
+  font-size: calc(16px * var(--app-font-scale));
+}
+
+/* =========================================================
+   BASE
+   ========================================================= */
 
 * {
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;  
+html,
+body,
+#root {
   min-width: 320px;
-  background: #f5f8f7;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--background, #f5f8f7);
+  color: var(--text-primary, #1f2933);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 button,

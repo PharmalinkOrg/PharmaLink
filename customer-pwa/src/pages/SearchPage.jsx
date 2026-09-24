@@ -72,8 +72,7 @@ function SearchPage() {
     if (trimmedSearch) {
       navigate('/assistant', {
         state: {
-          suggestedMessage:
-            `Help me find ${trimmedSearch}.`,
+          suggestedMessage: `Help me find ${trimmedSearch}.`,
         },
       })
 
@@ -84,28 +83,27 @@ function SearchPage() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
+    <section className="search-page">
       {/* Header */}
-      <div className="mb-5">
-        <p className="mb-1 text-xs font-bold uppercase tracking-widest text-emerald-700">
+      <header className="search-page-header">
+        <p className="search-eyebrow">
           Medicine Search
         </p>
 
-        <h1 className="text-2xl font-extrabold leading-tight text-slate-800">
-          Find your medicine
-        </h1>
+        <h1>Find your medicine</h1>
 
-        <p className="mt-1 text-sm leading-relaxed text-slate-500">
-          Search medicines and see which nearby pharmacies have them available.
+        <p className="search-description">
+          Search medicines and see which nearby pharmacies
+          have them available.
         </p>
-      </div>
+      </header>
 
-      {/* Search bar */}
-      <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
+      {/* Search */}
+      <div className="medicine-search-box">
         <Search
           size={20}
           strokeWidth={2}
-          className="shrink-0 text-slate-400"
+          className="medicine-search-icon"
         />
 
         <input
@@ -113,7 +111,6 @@ function SearchPage() {
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
           placeholder="Search medicine or brand..."
-          className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
           aria-label="Search medicines"
         />
       </div>
@@ -122,34 +119,32 @@ function SearchPage() {
       <button
         type="button"
         onClick={handleAskAssistant}
-        className="mt-3 flex w-full items-center gap-3 rounded-2xl bg-slate-800 px-4 py-3 text-left shadow-sm transition hover:bg-slate-700"
+        className="search-ai-card"
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-700 text-emerald-200">
+        <span className="search-ai-icon">
           <Sparkles size={17} />
         </span>
 
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-bold text-white">
-            Ask PharmaLink AI
-          </span>
-
-          <span className="mt-0.5 block text-xs text-slate-300">
+        <span className="search-ai-text">
+          <strong>Ask PharmaLink AI</strong>
+          <span>
             Need help understanding or finding a medicine?
           </span>
         </span>
 
-        <ArrowRight size={17} className="shrink-0 text-slate-300" />
+        <ArrowRight
+          size={17}
+          className="search-ai-arrow"
+        />
       </button>
 
       {/* Categories */}
-      <div className="mt-6">
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-slate-700">
-            Categories
-          </h2>
+      <section className="search-section">
+        <div className="search-section-header">
+          <h2>Categories</h2>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="search-categories">
           {categories.map((category) => {
             const isActive = selectedCategory === category
 
@@ -158,10 +153,8 @@ function SearchPage() {
                 key={category}
                 type="button"
                 onClick={() => setSelectedCategory(category)}
-                className={`shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition ${
-                  isActive
-                    ? 'border-emerald-700 bg-emerald-700 text-white'
-                    : 'border-slate-200 bg-white text-slate-500 hover:border-emerald-300 hover:text-emerald-700'
+                className={`search-category ${
+                  isActive ? 'search-category-active' : ''
                 }`}
               >
                 {category}
@@ -169,161 +162,160 @@ function SearchPage() {
             )
           })}
         </div>
-      </div>
+      </section>
 
       {/* Results */}
-      <div className="mt-6">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-slate-700">
-            {searchTerm ? 'Search results' : 'Available medicines'}
+      <section className="search-section">
+        <div className="search-section-header">
+          <h2>
+            {searchTerm
+              ? 'Search results'
+              : 'Available medicines'}
           </h2>
 
           {!loading && !error && (
-            <span className="text-xs text-slate-400">
+            <span className="search-result-count">
               {filteredMedicines.length} found
             </span>
           )}
         </div>
 
-        {/* Loading state */}
+        {/* Loading */}
         {loading && (
-          <div className="rounded-2xl border border-slate-200 bg-white px-5 py-10 text-center shadow-sm">
-            <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-emerald-600" />
+          <div className="search-state-card">
+            <div className="search-loading-spinner" />
 
-            <p className="mt-3 text-xs font-semibold text-slate-500">
-              Loading medicines...
-            </p>
+            <p>Loading medicines...</p>
           </div>
         )}
 
-        {/* Error state */}
+        {/* Error */}
         {!loading && error && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-10 text-center">
-            <h3 className="text-sm font-bold text-red-700">
-              Unable to load medicines
-            </h3>
+          <div className="search-error-card">
+            <h3>Unable to load medicines</h3>
 
-            <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-red-600">
-              {error}
-            </p>
+            <p>{error}</p>
 
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="mt-4 rounded-xl bg-red-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-red-700"
             >
               Try again
             </button>
           </div>
         )}
 
-        {/* Medicine results */}
-        {!loading && !error && filteredMedicines.length > 0 && (
-          <div className="space-y-3">
-            {filteredMedicines.map((medicine) => (
-              <button
-                key={medicine.medicine_id}
-                type="button"
-                onClick={() => navigate(`/medicine/${medicine.medicine_id}`)}
-                className="group w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-emerald-300 hover:shadow-md"
-              >
-                <div className="flex items-start gap-3">
-                  {/* Medicine icon */}
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-sm font-extrabold text-emerald-700">
-                    Rx
-                  </div>
+        {/* Results */}
+        {!loading &&
+          !error &&
+          filteredMedicines.length > 0 && (
+            <div className="medicine-result-list">
+              {filteredMedicines.map((medicine) => (
+                <button
+                  key={medicine.medicine_id}
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      `/medicine/${medicine.medicine_id}`,
+                    )
+                  }
+                  className="medicine-result-card"
+                >
+                  <div className="medicine-result-content">
+                    <div className="medicine-rx-icon">
+                      Rx
+                    </div>
 
-                  {/* Medicine information */}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="truncate text-sm font-extrabold text-slate-800">
-                          {medicine.generic_name}
-                        </h3>
+                    <div className="medicine-result-info">
+                      <div className="medicine-result-heading">
+                        <div>
+                          <h3>
+                            {medicine.generic_name}
+                          </h3>
 
-                        <p className="mt-0.5 text-xs text-slate-500">
-                          {medicine.brand_name}
-                        </p>
+                          <p>
+                            {medicine.brand_name}
+                          </p>
+                        </div>
+
+                        <span className="medicine-active-badge">
+                          Active
+                        </span>
                       </div>
 
-                      <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">
-                        Active
-                      </span>
-                    </div>
+                      <p className="medicine-dosage">
+                        {medicine.dosage} •{' '}
+                        {medicine.dosage_form}
+                      </p>
 
-                    <p className="mt-2 text-xs text-slate-500">
-                      {medicine.dosage} • {medicine.dosage_form}
-                    </p>
+                      <div className="medicine-availability-row">
+                        <span className="medicine-availability-label">
+                          <MapPin size={14} />
+                          View pharmacy availability
+                        </span>
 
-                    <div className="mt-3 flex items-center justify-between">
-                      <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-                        <MapPin size={14} className="text-emerald-600" />
-                        View pharmacy availability
-                      </span>
-
-                      <span className="flex items-center gap-1 text-xs font-bold text-emerald-700 transition group-hover:gap-2">
-                        View
-                        <ArrowRight size={14} />
-                      </span>
+                        <span className="medicine-view-link">
+                          View
+                          <ArrowRight size={14} />
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!loading && !error && filteredMedicines.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-              <Search size={21} />
+                </button>
+              ))}
             </div>
+          )}
 
-            <h3 className="mt-3 text-sm font-bold text-slate-700">
-              No medicines found
-            </h3>
+        {/* Empty */}
+        {!loading &&
+          !error &&
+          filteredMedicines.length === 0 && (
+            <div className="search-empty-card">
+              <div className="search-empty-icon">
+                <Search size={21} />
+              </div>
 
-            <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-slate-500">
-              Try another medicine name, brand, dosage, or form. You can also
-              ask PharmaLink AI for assistance.
-            </p>
+              <h3>No medicines found</h3>
 
-            <button
-              type="button"
-              onClick={() => {
-                setSearchTerm('')
-                setSelectedCategory('All')
-              }}
-              className="mt-4 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-emerald-800"
-            >
-              Clear search
-            </button>
-          </div>
-        )}
-      </div>
+              <p>
+                Try another medicine name, brand, dosage,
+                or form. You can also ask PharmaLink AI
+                for assistance.
+              </p>
 
-      {/* Nearby pharmacies shortcut */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm('')
+                  setSelectedCategory('All')
+                }}
+                className="search-clear-button"
+              >
+                Clear search
+              </button>
+            </div>
+          )}
+      </section>
+
+      {/* Nearby pharmacies */}
       <button
         type="button"
         onClick={() => navigate('/pharmacies')}
-        className="mt-6 flex w-full items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-left transition hover:border-emerald-200"
+        className="search-pharmacy-shortcut"
       >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-emerald-700 shadow-sm">
+        <span className="search-pharmacy-icon">
           <MapPin size={18} />
         </span>
 
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-bold text-slate-700">
-            Browse nearby pharmacies
-          </span>
-
-          <span className="mt-0.5 block text-xs text-slate-500">
-            See pharmacies near your location.
-          </span>
+        <span className="search-pharmacy-text">
+          <strong>Browse nearby pharmacies</strong>
+          <span>See pharmacies near your location.</span>
         </span>
 
-        <ArrowRight size={17} className="text-emerald-700" />
+        <ArrowRight
+          size={17}
+          className="search-pharmacy-arrow"
+        />
       </button>
     </section>
   )

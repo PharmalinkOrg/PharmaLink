@@ -1,49 +1,136 @@
 /* =========================================================
-   PharmaLink Customer PWA
-   Unified Application Styles
-   ========================================================= */
-
-/* =========================================================
-   DESIGN TOKENS
+   PHARMALINK DESIGN TOKENS
+   Ocean / Midnight / Pearl Perfect
    ========================================================= */
 
 :root {
-  --primary: #17634f;
-  --primary-dark: #104b3b;
-  --primary-light: #e0f1eb;
-  --primary-soft: #f0fdf4;
-  --primary-muted: #c8e3da;
+  /* Brand */
+  --primary: #5B88B2;
+  --primary-hover: #4B769F;
+  --primary-dark: #122C4F;
+  --primary-light: #E8F0F7;
+  --primary-soft: #F3F7FB;
+  --primary-muted: #B8CEE1;
 
-  --text-primary: #173c34;
-  --text-secondary: #5f6c68;
-  --text-muted: #718184;
+  /* Secondary */
+  --secondary: #122C4F;
+  --secondary-hover: #0D223D;
+  --secondary-light: #E7ECF2;
 
-  --background: #f5f8f7;
-  --surface: #ffffff;
+  /* Warm accent / surface */
+  --pearl: #FBF9E4;
+  --pearl-hover: #F4F0D1;
+  --pearl-muted: #EDE8C9;
 
-  --border: #dce8e3;
-  --border-light: #edf2f0;
+  /* Text */
+  --text-primary: #122C4F;
+  --text-secondary: #4D6175;
+  --text-muted: #748596;
+  --text-inverse: #FFFFFF;
 
-  --success: #166534;
-  --success-bg: #f0fdf4;
-  --success-border: #bbf7d0;
+  /* Application surfaces */
+  --background: #F6F8FA;
+  --surface: #FFFFFF;
+  --surface-soft: #F3F7FB;
+  --surface-warm: #FBF9E4;
 
-  --error: #b91c1c;
-  --error-bg: #fef2f2;
-  --error-border: #fecaca;
+  /* Borders */
+  --border: #D6E0E8;
+  --border-light: #E8EDF2;
 
-  --focus: #88cab6;
+  /* Semantic */
+  --success: #287A57;
+  --success-bg: #EDF8F2;
+  --success-border: #B9DFC9;
 
-  --disabled: #94a3b8;
-  --disabled-bg: #f1f5f9;
+  --error: #B42318;
+  --error-bg: #FEF3F2;
+  --error-border: #FECDCA;
 
-  --shadow-card: 0 8px 24px rgba(23, 60, 52, 0.08);
-  --shadow-soft: 0 4px 16px rgba(23, 60, 52, 0.06);
-  --shadow-nav: 0 -8px 24px rgba(23, 60, 52, 0.08);
+  /* Interaction */
+  --focus: #5B88B2;
 
+  --disabled: #94A3B8;
+  --disabled-bg: #F1F5F9;
+
+  /* Shadows */
+  --shadow-card: 0 8px 24px rgba(18, 44, 79, 0.08);
+  --shadow-soft: 0 4px 16px rgba(18, 44, 79, 0.06);
+  --shadow-nav: 0 -8px 24px rgba(18, 44, 79, 0.08);
+
+  /* Radius */
   --radius-card: 12px;
   --radius-panel: 16px;
   --radius-button: 10px;
+}
+
+/* =========================================================
+   PHARMALINK DARK THEME
+   Midnight / Ocean
+   ========================================================= */
+
+:root[data-theme="dark"] {
+  /* Brand */
+  --primary: #7FA6C8;
+  --primary-hover: #91B3D0;
+  --primary-dark: #B6CEE2;
+  --primary-light: #1D3B5E;
+  --primary-soft: #172F4C;
+  --primary-muted: #35597C;
+
+  /* Secondary */
+  --secondary: #FBF9E4;
+  --secondary-hover: #FFFFFF;
+  --secondary-light: #233E5D;
+
+  /* Pearl becomes a restrained accent in dark mode */
+  --pearl: #FBF9E4;
+  --pearl-hover: #F4F0D1;
+  --pearl-muted: #CEC9AB;
+
+  /* Text */
+  --text-primary: #F7F8FA;
+  --text-secondary: #C6D2DE;
+  --text-muted: #91A5B7;
+  --text-inverse: #122C4F;
+
+  /* Midnight-based surfaces */
+  --background: #0C1D31;
+  --surface: #122C4F;
+  --surface-soft: #183858;
+  --surface-warm: #242D35;
+
+  /* Borders */
+  --border: #31506E;
+  --border-light: #233F5C;
+
+  /* Semantic */
+  --success: #86D3AD;
+  --success-bg: #153B2D;
+  --success-border: #286149;
+
+  --error: #FDA29B;
+  --error-bg: #401A1A;
+  --error-border: #7A2E2E;
+
+  /* Interaction */
+  --focus: #7FA6C8;
+
+  --disabled: #718396;
+  --disabled-bg: #1A3049;
+
+  /* Shadows */
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.26);
+  --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.20);
+  --shadow-nav: 0 -8px 24px rgba(0, 0, 0, 0.30);
+
+  color-scheme: dark;
+}
+
+.pearl-surface {
+  background: var(--surface-warm);
+  color: var(--secondary);
+  border: 1px solid var(--pearl-muted);
 }
 
 /* =========================================================
@@ -152,8 +239,99 @@ a:focus-visible {
 
 .location {
   margin-top: 4px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-size: 0.85rem;
+}
+
+/* =========================================================
+   CUSTOMER BOTTOM NAVIGATION
+   ========================================================= */
+
+.customer-bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 50;
+
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  max-width: 672px;
+
+  padding:
+    8px 8px
+    calc(8px + env(safe-area-inset-bottom));
+
+  background: var(--surface);
+  border-top: 1px solid var(--border-light);
+  box-shadow: var(--shadow-nav);
+
+  transform: translateX(-50%);
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.customer-nav-item {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+  min-height: 56px;
+
+  gap: 4px;
+  padding: 6px 4px;
+
+  border-radius: 12px;
+
+  color: var(--text-muted);
+  text-decoration: none;
+
+  font-size: 0.6875rem;
+  font-weight: 600;
+
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.customer-nav-item:hover {
+  color: var(--primary);
+  background: var(--surface-soft);
+}
+
+.customer-nav-item-active {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.customer-nav-item-active:hover {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.customer-nav-icon {
+  flex-shrink: 0;
+}
+
+.customer-nav-label {
+  display: block;
+
+  max-width: 100%;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:root[data-theme="dark"] .customer-nav-item-active {
+  color: var(--primary);
+  background: var(--primary-soft);
 }
 
 .page-title {
@@ -588,316 +766,6 @@ a:focus-visible {
   margin-top: 10px;
   color: var(--text-muted);
   font-size: 0.78rem;
-}
-
-/* =========================================================
-   HOME PAGE
-   ========================================================= */
-
-.home-page {
-  min-height: 100vh;
-  padding: 20px 20px 100px;
-  background: var(--background);
-}
-
-.home-header {
-  width: 100%;
-  max-width: 680px;
-  margin: 0 auto;
-}
-
-.home-greeting {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: 1.5rem;
-  font-weight: 750;
-  letter-spacing: -0.025em;
-}
-
-.home-location {
-  margin-top: 5px;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-.home-notification {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  background: var(--surface);
-  color: var(--text-secondary);
-}
-
-.home-notification:hover {
-  background: var(--primary-light);
-  color: var(--primary);
-}
-
-.notification-dot {
-  position: absolute;
-  top: 7px;
-  right: 7px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--primary);
-  border: 2px solid var(--surface);
-}
-
-.home-search {
-  width: 100%;
-  max-width: 680px;
-  margin: 20px auto 0;
-  padding: 13px 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-soft);
-}
-
-.home-section {
-  width: 100%;
-  max-width: 680px;
-  margin: 26px auto 0;
-}
-
-.home-section-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.home-section-heading h2 {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: 1rem;
-  font-weight: 750;
-}
-
-.home-view-all {
-  color: var(--primary);
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.home-view-all:hover {
-  color: var(--primary-dark);
-}
-
- 
-
-/* Quick actions */
-
-.home-quick-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.quick-action-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 72px;
-  padding: 14px;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-  box-shadow: var(--shadow-soft);
-  color: var(--text-primary);
-  transition:
-    transform 0.2s ease,
-    border-color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.quick-action-card:hover {
-  transform: translateY(-1px);
-  border-color: var(--primary-muted);
-  background: var(--primary-soft);
-}
-
-.quick-action-icon {
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 11px;
-  background: var(--primary-light);
-  color: var(--primary);
-}
-
-.quick-action-ai {
-  background: var(--primary);
-  color: #ffffff;
-}
-
-/* Categories */
-
-.category-list {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: none;
-}
-
-.category-list::-webkit-scrollbar {
-  display: none;
-}
-
-.category-chip {
-  flex: 0 0 auto;
-  padding: 9px 13px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--text-secondary);
-  font-size: 0.78rem;
-  font-weight: 650;
-}
-
-.category-chip:hover,
-.category-chip.active {
-  border-color: var(--primary-muted);
-  background: var(--primary-light);
-  color: var(--primary);
-}
-
-/* Pharmacy list */
-
-.pharmacy-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.nearby-pharmacy-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-  box-shadow: var(--shadow-soft);
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.nearby-pharmacy-card:hover {
-  border-color: var(--primary-muted);
-  background: var(--primary-soft);
-}
-
-.nearby-pharmacy-icon {
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 11px;
-  background: var(--primary-light);
-  color: var(--primary);
-}
-
-.nearby-pharmacy-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.nearby-pharmacy-info h3 {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.nearby-pharmacy-info p {
-  margin: 4px 0 0;
-  overflow: hidden;
-  color: var(--text-muted);
-  font-size: 0.76rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pharmacy-arrow {
-  color: var(--primary);
-  font-size: 1rem;
-}
-
-/* AI card */
-
-.home-ai-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 18px;
-  border-radius: var(--radius-card);
-  background: var(--primary);
-  color: #ffffff;
-  box-shadow: var(--shadow-card);
-}
-
-.home-ai-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.home-ai-content h3 {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 750;
-}
-
-.home-ai-content p {
-  margin: 5px 0 0;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.home-ai-icon {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.14);
-  color: #ffffff;
-}
-
-.home-ai-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 38px;
-  padding: 7px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 9px;
-  background: #ffffff;
-  color: var(--primary);
-  font-size: 0.78rem;
-  font-weight: 750;
-}
-
-.home-ai-button:hover {
-  background: var(--primary-soft);
 }
 
 /* =========================================================
@@ -1528,11 +1396,11 @@ a:focus-visible {
 }
 
 .reservation-table tbody tr:hover {
-  background: #f8faf9;
+  background: var(--surface-soft);
 }
 
 .reservation-table tbody tr:focus-visible {
-  background: #f0fdf4;
+  background: var(--primary-light);
   box-shadow: inset 0 0 0 2px var(--primary);
 }
 
@@ -1751,85 +1619,6 @@ a:focus-visible {
 }
 
 /* =========================================================
-   BOTTOM NAVIGATION
-   ========================================================= */
-
-.bottom-nav {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 100;
-
-  display: flex;
-  align-items: stretch;
-  justify-content: space-around;
-
-  width: 100%;
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 8px 4px;
-
-  border-top: 1px solid var(--border);
-  border-radius: 16px 16px 0 0;
-  background: var(--surface);
-  box-shadow: var(--shadow-nav);
-}
-
-.bottom-nav .nav-item {
-  flex: 1 1 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-
-  min-width: 0;
-  min-height: 54px;
-  padding: 6px 4px;
-
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-
-  color: #62736e;
-  font-size: 0.65rem;
-  font-weight: 650;
-
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.bottom-nav .nav-item:hover {
-  background: var(--primary-light);
-  color: var(--primary);
-}
-
-.bottom-nav .nav-item.active {
-  background: var(--primary-light);
-  color: var(--primary);
-}
-
-.bottom-nav .nav-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 22px;
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
-.bottom-nav .nav-label {
-  display: block;
-  overflow: hidden;
-  max-width: 100%;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 1.2;
-}
-
-/* =========================================================
    SCROLLBARS
    ========================================================= */
 
@@ -1866,7 +1655,7 @@ a:focus-visible {
 .profile-page {
   padding: 16px;
   padding-bottom: 80px; /* Space for bottom nav */
-  background-color: #F8F9FA;
+  background-color: var(--background);
   min-height: 100vh;
 }
 
@@ -1878,19 +1667,21 @@ a:focus-visible {
 }
 
 .profile-logout-button {
-  background: #FEE2E2;
-  color: #DC2626;
-  border: none;
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error-border);
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
 }
 
 .profile-logout-button:hover {
-  background: #FECACA;
+  background: var(--error-border);
 }
 
 .profile-content {
@@ -1901,11 +1692,11 @@ a:focus-visible {
 
 /* --- Base Card Styles --- */
 .profile-card {
-  background: #FFFFFF;
+  background: var(--surface);
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: 1px solid #E5E7EB;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-light);
 }
 
 .card-header-row {
@@ -1918,19 +1709,19 @@ a:focus-visible {
 .card-title {
   font-size: 1rem;
   font-weight: 700;
-  color: #1F2937;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .card-subtitle {
   font-size: 0.8rem;
-  color: #6B7280;
+  color: var(--text-muted);
   margin: -12px 0 16px 0;
 }
 
 .card-icon {
   font-size: 1.1rem;
-  color: #0F5A5A;
+  color: var(--primary);
 }
 
 /* --- Profile Header Card --- */
@@ -1953,13 +1744,13 @@ a:focus-visible {
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #FFFFFF;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border: 3px solid var(--surface);
+  box-shadow: var(--shadow-soft);
 }
 
 .profile-avatar-placeholder {
-  background: #0F5A5A;
-  color: #FFFFFF;
+  background: var(--primary);
+  color: var(--text-inverse);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1971,8 +1762,8 @@ a:focus-visible {
   position: absolute;
   bottom: 0;
   right: 0;
-  background: #0F5A5A;
-  color: #FFFFFF;
+  background: var(--primary);
+  color: var(--text-inverse);
   width: 26px;
   height: 26px;
   border-radius: 50%;
@@ -1980,7 +1771,7 @@ a:focus-visible {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border: 2px solid #FFFFFF;
+  border: 2px solid var(--surface);
   transition: transform 0.2s;
 }
 
@@ -1995,14 +1786,14 @@ a:focus-visible {
 .profile-name {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1F2937;
+  color: var(--text-primary);
   margin: 0 0 4px 0;
 }
 
 .profile-email,
 .profile-phone {
   font-size: 0.85rem;
-  color: #6B7280;
+  color: var(--text-secondary);
   margin: 2px 0;
 }
 
@@ -2013,19 +1804,21 @@ a:focus-visible {
   gap: 8px;
   width: 100%;
   padding: 10px 16px;
-  background: #FFFFFF;
-  border: 1px solid #D1D5DB;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  color: #1F2937;
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
 }
 
 .profile-edit-toggle-btn:hover {
-  background: #F3F4F6;
-  border-color: #9CA3AF;
+  background: var(--surface-soft);
+  border-color: var(--primary-muted);
 }
 
 /* --- Edit Form --- */
@@ -2059,38 +1852,46 @@ a:focus-visible {
 .profile-field span {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 .profile-field input {
   padding: 10px 12px;
-  border: 1px solid #D1D5DB;
+  border: 1px solid var(--border);
   border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-primary);
   font-size: 0.9rem;
   outline: none;
-  transition: border-color 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.profile-field input::placeholder {
+  color: var(--text-muted);
 }
 
 .profile-field input:focus {
-  border-color: #0F5A5A;
-  box-shadow: 0 0 0 2px rgba(15, 90, 90, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
 }
 
 .profile-save-button {
   margin-top: 8px;
   padding: 12px;
-  background: #0F5A5A;
-  color: #FFFFFF;
+  background: var(--primary);
+  color: var(--text-inverse);
   border: none;
   border-radius: 10px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background-color 0.2s;
 }
 
-.profile-save-button:hover {
-  background: #0B4545;
+.profile-save-button:hover:not(:disabled) {
+  background: var(--primary-hover);
 }
 
 .profile-save-button:disabled {
@@ -2119,13 +1920,13 @@ a:focus-visible {
 .setting-title {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #1F2937;
+  color: var(--text-primary);
   margin: 0 0 2px 0;
 }
 
 .setting-desc {
   font-size: 0.75rem;
-  color: #6B7280;
+  color: var(--text-muted);
   margin: 0;
   line-height: 1.3;
 }
@@ -2134,7 +1935,7 @@ a:focus-visible {
 .toggle-switch {
   width: 44px;
   height: 24px;
-  background: #D1D5DB;
+  background: var(--border);
   border-radius: 12px;
   border: none;
   position: relative;
@@ -2145,7 +1946,7 @@ a:focus-visible {
 }
 
 .toggle-switch.active {
-  background: #0F5A5A;
+  background: var(--primary);
 }
 
 .toggle-knob {
@@ -2154,7 +1955,7 @@ a:focus-visible {
   left: 2px;
   width: 20px;
   height: 20px;
-  background: #FFFFFF;
+  background: #ffffff;
   border-radius: 50%;
   transition: transform 0.3s;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
@@ -2171,25 +1972,31 @@ a:focus-visible {
 
 .setting-select {
   padding: 8px 12px;
-  border: 1px solid #D1D5DB;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 0.85rem;
-  color: #1F2937;
-  background: #FFFFFF;
+  color: var(--text-primary);
+  background: var(--surface);
   outline: none;
   cursor: pointer;
   min-width: 120px;
 }
 
 .setting-select:focus {
-  border-color: #0F5A5A;
+  border-color: var(--primary);
 }
 
 /* --- PharmaLink AI Card --- */
 .ai-card {
-  background: #0B2B2B; /* Dark green/teal */
-  color: #FFFFFF;
-  border: none;
+  background: var(--secondary);
+  color: #ffffff;
+  border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  box-shadow: var(--shadow-card);
+}
+
+:root[data-theme="dark"] .ai-card {
+  background: var(--surface-soft);
+  border-color: var(--border);
 }
 
 .ai-card-header {
@@ -2202,7 +2009,8 @@ a:focus-visible {
 .ai-icon-wrapper {
   width: 32px;
   height: 32px;
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--primary) 22%, transparent);
+  color: #ffffff;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -2210,6 +2018,7 @@ a:focus-visible {
 }
 
 .ai-title {
+  color: #ffffff;
   font-size: 1rem;
   font-weight: 700;
   margin: 0;
@@ -2222,8 +2031,8 @@ a:focus-visible {
 }
 
 .ai-desc {
+  color: rgba(255, 255, 255, 0.78);
   font-size: 0.8rem;
-  opacity: 0.8;
   margin: 0 0 16px 0;
   line-height: 1.4;
 }
@@ -2235,18 +2044,24 @@ a:focus-visible {
   gap: 8px;
   width: 100%;
   padding: 12px;
-  background: #D1FAE5; /* Light mint green */
-  color: #0F5A5A;
+  background: var(--pearl);
+  color: #122C4F;
   border: none;
   border-radius: 10px;
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+  transition:
+    background-color 0.2s,
+    transform 0.15s;
 }
 
 .ai-chat-btn:hover {
-  background: #A7F3D0;
+  background: var(--pearl-hover);
+}
+
+.ai-chat-btn:active {
+  transform: translateY(1px);
 }
 
 .ai-message-markdown {
@@ -2317,19 +2132,21 @@ a:focus-visible {
 }
 
 .profile-status.success {
-  background: #D1FAE5;
-  color: #065F46;
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-border);
 }
 
 .profile-status.error {
-  background: #FEE2E2;
-  color: #991B1B;
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error-border);
 }
 
 .profile-state {
   text-align: center;
   padding: 40px 20px;
-  color: #6B7280;
+  color: var(--text-muted);
 }
 
 .profile-fallback {
@@ -2339,12 +2156,13 @@ a:focus-visible {
 }
 
 .profile-login-link {
-  color: #0F5A5A;
+  color: var(--primary);
   font-weight: 600;
   text-decoration: none;
 }
 
 .profile-login-link:hover {
+  color: var(--primary-hover);
   text-decoration: underline;
 }
 
@@ -2371,24 +2189,6 @@ a:focus-visible {
 }
 
 @media (max-width: 400px) {
-  .bottom-nav {
-    padding-right: 2px;
-    padding-left: 2px;
-  }
-
-  .bottom-nav .nav-item {
-    padding-right: 2px;
-    padding-left: 2px;
-  }
-
-  .bottom-nav .nav-icon {
-    font-size: 1.15rem;
-  }
-
-  .bottom-nav .nav-label {
-    font-size: 0.6rem;
-  }
-
   .home-quick-actions {
     grid-template-columns: 1fr;
   }
@@ -2398,6 +2198,2107 @@ a:focus-visible {
   }
 }
 
+
+/* =========================================================
+   HOME PAGE — OCEAN / MIDNIGHT / PEARL
+   ========================================================= */
+
+.home-page {
+  width: 100%;
+  max-width: 672px;
+  margin: 0 auto;
+  padding: 20px 16px 112px;
+  color: var(--text-primary);
+}
+
+/* Header */
+
+.home-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.home-eyebrow {
+  margin: 0 0 4px;
+  color: var(--primary);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.home-greeting {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.home-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.home-notification-button {
+  position: relative;
+  display: flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.home-notification-button:hover {
+  color: var(--primary);
+  background: var(--surface-soft);
+}
+
+.home-notification-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+
+  border-radius: 999px;
+
+  background: var(--error);
+  color: #ffffff;
+
+  font-size: 0.5625rem;
+  font-weight: 700;
+}
+
+/* Search */
+
+.home-search {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  gap: 12px;
+
+  padding: 0 16px;
+
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  background: var(--surface);
+  color: var(--text-primary);
+
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  text-align: left;
+
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.home-search:hover {
+  border-color: var(--primary-muted);
+  box-shadow: var(--shadow-card);
+}
+
+.home-search:focus-visible {
+  outline: 3px solid
+    color-mix(in srgb, var(--focus) 25%, transparent);
+  outline-offset: 2px;
+}
+
+.home-search-icon {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.home-search-placeholder {
+  flex: 1;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.home-search-label {
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Sections */
+
+.home-section {
+  margin-top: 28px;
+}
+
+.home-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.home-section-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.home-view-all {
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.home-view-all:hover {
+  color: var(--primary-hover);
+}
+
+/* Quick actions */
+
+.home-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.home-action-card {
+  display: flex;
+  min-height: 96px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 12px;
+
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+
+  background: var(--surface);
+  color: var(--text-primary);
+
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  text-align: center;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.home-action-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary-muted);
+  background: var(--surface-soft);
+  box-shadow: var(--shadow-card);
+}
+
+.home-action-card:focus-visible {
+  outline: 3px solid
+    color-mix(in srgb, var(--focus) 25%, transparent);
+  outline-offset: 2px;
+}
+
+.home-action-icon {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.home-action-label {
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Categories */
+
+.home-categories {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.home-categories::-webkit-scrollbar {
+  display: none;
+}
+
+.home-category {
+  flex-shrink: 0;
+
+  padding: 6px 16px;
+
+  border: 1px solid var(--border);
+  border-radius: 999px;
+
+  background: var(--surface);
+  color: var(--text-secondary);
+
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.home-category:hover {
+  border-color: var(--primary-muted);
+  color: var(--primary);
+}
+
+.home-category-active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.home-category-active:hover {
+  border-color: var(--primary-hover);
+  background: var(--primary-hover);
+  color: #ffffff;
+}
+
+/* Pharmacy cards */
+
+.home-pharmacy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.home-pharmacy-card {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px;
+
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+
+  background: var(--surface);
+  color: var(--text-primary);
+
+  box-shadow: var(--shadow-soft);
+
+  cursor: pointer;
+  text-align: left;
+
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.home-pharmacy-card:hover {
+  border-color: var(--primary-muted);
+  background: var(--surface-soft);
+  box-shadow: var(--shadow-card);
+}
+
+.home-pharmacy-icon {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.home-pharmacy-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.home-pharmacy-name {
+  display: block;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-pharmacy-meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/*
+ * Availability is semantic.
+ * Keep this green instead of converting it to Ocean.
+ */
+.home-pharmacy-availability {
+  display: block;
+  margin-top: 2px;
+  color: var(--success);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.home-pharmacy-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+/* AI Assistant */
+
+.home-ai-card {
+  margin-top: 28px;
+  overflow: hidden;
+
+  padding: 16px;
+
+  border: 1px solid
+    color-mix(in srgb, var(--primary) 30%, transparent);
+  border-radius: 16px;
+
+  background: var(--secondary);
+  color: #ffffff;
+
+  box-shadow: var(--shadow-card);
+}
+
+:root[data-theme="dark"] .home-ai-card {
+  background: var(--surface-soft);
+  border-color: var(--border);
+}
+
+.home-ai-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+.home-ai-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  flex: 0 0 40px;
+
+  border-radius: 50%;
+
+  background: color-mix(
+    in srgb,
+    var(--primary) 28%,
+    transparent
+  );
+
+  color: #ffffff;
+}
+
+.home-ai-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.home-ai-text h2 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.35;
+
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.home-ai-text p {
+  margin: 6px 0 0;
+
+  color: rgba(255, 255, 255, 0.78);
+
+  font-size: 0.75rem;
+  line-height: 1.55;
+
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.home-ai-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-height: 42px;
+
+  margin-top: 16px;
+  padding: 10px 16px;
+
+  border: 0;
+  border-radius: 10px;
+
+  background: var(--pearl);
+  color: #122c4f;
+
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.2;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.home-ai-button:hover {
+  background: var(--pearl-hover);
+}
+
+.home-ai-button:active {
+  transform: translateY(1px);
+}
+
+/* Mobile */
+
+@media (max-width: 400px) {
+  .home-page {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .home-quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-ai-card {
+    padding: 16px;
+  }
+
+  .home-ai-header {
+    gap: 10px;
+  }
+
+  .home-ai-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    flex-basis: 36px;
+  }
+
+  .home-ai-text h2 {
+    font-size: 0.875rem;
+  }
+
+  .home-ai-text p {
+    font-size: 0.75rem;
+  }
+
+  .home-ai-button {
+    width: 100%;
+    margin-top: 14px;
+  }
+}
+
+
+/* =========================================================
+   MEDICINE SEARCH — OCEAN / MIDNIGHT / PEARL
+   ========================================================= */
+
+.search-page {
+  width: 100%;
+  max-width: 672px;
+  margin: 0 auto;
+  padding: 20px 16px 112px;
+  color: var(--text-primary);
+}
+
+.search-page-header {
+  margin-bottom: 20px;
+}
+
+.search-eyebrow {
+  margin: 0 0 4px;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.search-page-header h1 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.search-description {
+  max-width: 480px;
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+/* Search input */
+
+.medicine-search-box {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.medicine-search-box:focus-within {
+  border-color: var(--primary);
+  box-shadow:
+    var(--shadow-soft),
+    0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+.medicine-search-icon {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.medicine-search-box input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.medicine-search-box input::placeholder {
+  color: var(--text-muted);
+}
+
+/* AI shortcut */
+
+.search-ai-card {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px 16px;
+  border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+  border-radius: 16px;
+  background: var(--secondary);
+  color: #ffffff;
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+:root[data-theme="dark"] .search-ai-card {
+  background: var(--surface-soft);
+  border-color: var(--border);
+}
+
+.search-ai-card:hover {
+  border-color: var(--primary-muted);
+}
+
+.search-ai-icon {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--primary) 25%, transparent);
+  color: #ffffff;
+}
+
+.search-ai-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.search-ai-text strong,
+.search-ai-text span {
+  display: block;
+}
+
+.search-ai-text strong {
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.search-ai-text span {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.search-ai-arrow {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Sections */
+
+.search-section {
+  margin-top: 24px;
+}
+
+.search-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.search-section-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.search-result-count {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* Categories */
+
+.search-categories {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.search-categories::-webkit-scrollbar {
+  display: none;
+}
+
+.search-category {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.search-category:hover {
+  border-color: var(--primary-muted);
+  color: var(--primary);
+}
+
+.search-category-active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.search-category-active:hover {
+  border-color: var(--primary-hover);
+  background: var(--primary-hover);
+  color: #ffffff;
+}
+
+/* Medicine results */
+
+.medicine-result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.medicine-result-card {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.medicine-result-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--primary-muted);
+  background: var(--surface-soft);
+  box-shadow: var(--shadow-card);
+}
+
+.medicine-result-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.medicine-rx-icon {
+  display: flex;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.medicine-result-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.medicine-result-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.medicine-result-heading > div {
+  min-width: 0;
+}
+
+.medicine-result-heading h3 {
+  overflow: hidden;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.medicine-result-heading p {
+  margin: 2px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.medicine-dosage {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+/* Active is a semantic status, so it remains green. */
+
+.medicine-active-badge {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--success-border);
+  border-radius: 999px;
+  background: var(--success-bg);
+  color: var(--success);
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.medicine-availability-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.medicine-availability-label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.medicine-availability-label svg {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.medicine-view-link {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Loading */
+
+.search-state-card {
+  padding: 40px 20px;
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  text-align: center;
+}
+
+.search-loading-spinner {
+  width: 24px;
+  height: 24px;
+  margin: 0 auto;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: search-spin 0.8s linear infinite;
+}
+
+@keyframes search-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.search-state-card p {
+  margin: 12px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Error */
+
+.search-error-card {
+  padding: 40px 20px;
+  border: 1px solid var(--error-border);
+  border-radius: 16px;
+  background: var(--error-bg);
+  text-align: center;
+}
+
+.search-error-card h3 {
+  margin: 0;
+  color: var(--error);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.search-error-card p {
+  max-width: 384px;
+  margin: 4px auto 0;
+  color: var(--error);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.search-error-card button {
+  margin-top: 16px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--error);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Empty */
+
+.search-empty-card {
+  padding: 40px 20px;
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.search-empty-icon {
+  display: flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  color: var(--text-muted);
+}
+
+.search-empty-card h3 {
+  margin: 12px 0 0;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.search-empty-card p {
+  max-width: 384px;
+  margin: 4px auto 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.search-clear-button {
+  margin-top: 16px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--primary);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.search-clear-button:hover {
+  background: var(--primary-hover);
+}
+
+/* Nearby pharmacy shortcut */
+
+.search-pharmacy-shortcut {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid var(--primary-muted);
+  border-radius: 16px;
+  background: var(--primary-soft);
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.search-pharmacy-shortcut:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.search-pharmacy-icon {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: var(--shadow-soft);
+}
+
+.search-pharmacy-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.search-pharmacy-text strong,
+.search-pharmacy-text span {
+  display: block;
+}
+
+.search-pharmacy-text strong {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.search-pharmacy-text span {
+  margin-top: 2px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.search-pharmacy-arrow {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+/* Search mobile adjustments */
+
+@media (max-width: 400px) {
+  .search-page {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .medicine-result-card {
+    padding: 14px;
+  }
+
+  .medicine-result-heading {
+    gap: 8px;
+  }
+
+  .medicine-availability-row {
+    align-items: flex-start;
+  }
+
+  .medicine-availability-label {
+    line-height: 1.4;
+  }
+
+  .search-pharmacy-shortcut {
+    padding: 14px;
+  }
+}
+
+
+
+
+/* =========================================================
+   RESERVATIONS — OCEAN / MIDNIGHT / PEARL
+   ========================================================= */
+
+.reservations-page,
+.reservation-details-page,
+.create-reservation-page {
+  color: var(--text-primary);
+}
+
+/* Shared buttons */
+
+.reservation-refresh-button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.reservation-refresh-button:hover:not(:disabled) {
+  border-color: var(--primary-muted);
+  background: var(--surface-soft);
+  color: var(--primary);
+}
+
+.reservation-primary-button {
+  border: 0;
+  background: var(--primary);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.reservation-primary-button:hover {
+  background: var(--primary-hover);
+}
+
+.reservation-secondary-button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.reservation-secondary-button:hover {
+  border-color: var(--primary-muted);
+  background: var(--surface-soft);
+  color: var(--primary);
+}
+
+/* Semantic reservation statuses */
+
+.reservation-status-pending {
+  border-color: #f3cf77;
+  background: #fff7df;
+  color: #8a5a00;
+}
+
+.reservation-status-confirmed {
+  border-color: var(--primary-muted);
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.reservation-status-ready {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.reservation-status-completed,
+.reservation-status-neutral {
+  border-color: var(--border);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+}
+
+.reservation-status-cancelled {
+  border-color: var(--error-border);
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+:root[data-theme="dark"] .reservation-status-pending {
+  border-color: #7a5a1f;
+  background: #332810;
+  color: #f2c96d;
+}
+
+:root[data-theme="dark"] .reservation-status-confirmed {
+  border-color: var(--primary-muted);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* Reservation detail cards */
+
+.reservation-detail-card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-soft);
+}
+
+.reservation-detail-icon {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.reservation-medicine-item {
+  background: var(--surface-soft);
+  color: var(--text-primary);
+}
+
+.reservation-total {
+  color: var(--primary);
+}
+
+/* Current-status callout */
+
+.reservation-status-callout {
+  border: 1px solid var(--success-border);
+  background: var(--success-bg);
+  color: var(--text-primary);
+}
+
+.reservation-status-callout-icon {
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: var(--success);
+}
+
+/* Reservation-created success state */
+
+.reservation-success-card {
+  border: 1px solid var(--success-border);
+  background: var(--success-bg);
+  color: var(--text-primary);
+}
+
+.reservation-success-icon {
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: var(--success);
+}
+
+/* Table refinements */
+
+.reservation-table-wrapper {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.reservation-table thead {
+  background: var(--primary-light);
+}
+
+:root[data-theme="dark"] .reservation-table thead {
+  background: var(--primary-soft);
+}
+
+.reservation-table th {
+  border-bottom-color: var(--border);
+  color: var(--text-secondary);
+}
+
+.reservation-table tbody tr:not(:last-child) td {
+  border-bottom-color: var(--border-light);
+}
+
+.reservation-table tbody tr:hover {
+  background: var(--surface-soft);
+}
+
+.reservation-table tbody tr:focus-visible {
+  background: var(--primary-light);
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+:root[data-theme="dark"] .reservation-table tbody tr:focus-visible {
+  background: var(--primary-soft);
+}
+
+.reservation-table-footer {
+  border-top-color: var(--border);
+  background: var(--surface);
+}
+
+/* Reservation confirmation */
+
+.reservation-confirm-card {
+  margin-top: 24px;
+  padding: 18px;
+
+  border: 1px solid var(--border);
+  border-radius: 18px;
+
+  background: var(--surface);
+  color: var(--text-primary);
+
+  box-shadow: var(--shadow-soft);
+}
+
+.reservation-confirm-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.reservation-confirm-icon {
+  display: flex;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.reservation-confirm-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.reservation-confirm-copy h3 {
+  margin: 0;
+
+  color: var(--text-primary);
+
+  font-size: 0.875rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.reservation-confirm-copy p {
+  margin: 4px 0 0;
+
+  color: var(--text-secondary);
+
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.reservation-confirm-button {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  margin-top: 16px;
+  padding: 11px 16px;
+
+  border: 0;
+  border-radius: 12px;
+
+  background: var(--primary);
+  color: #ffffff;
+
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.15s ease;
+}
+
+.reservation-confirm-button:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.reservation-confirm-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.reservation-confirm-button:disabled {
+  border: 1px solid var(--border);
+
+  background: var(--surface-soft);
+  color: var(--text-muted);
+
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+:root[data-theme="dark"] .reservation-confirm-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+:root[data-theme="dark"] .reservation-confirm-button:disabled {
+  background: var(--surface-soft);
+  color: var(--text-muted);
+}
+/* Make form controls on the create-reservation page theme-aware. */
+
+.create-reservation-page input,
+.create-reservation-page textarea,
+.create-reservation-page select {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.create-reservation-page input::placeholder,
+.create-reservation-page textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.create-reservation-page input:focus,
+.create-reservation-page textarea:focus,
+.create-reservation-page select:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+.create-reservation-page input[type="date"],
+.create-reservation-page input[type="time"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] .create-reservation-page input[type="date"],
+:root[data-theme="dark"] .create-reservation-page input[type="time"] {
+  color-scheme: dark;
+}
+
+@media (max-width: 480px) {
+  .reservation-details-page,
+  .create-reservation-page,
+  .reservations-page {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+
+
+/* =========================================================
+   MEDICINES + PHARMACIES — OCEAN / MIDNIGHT / PEARL
+   ========================================================= */
+
+.medicine-details-page,
+.pharmacies-customer-page,
+.pharmacy-details-page {
+  color: var(--text-primary);
+}
+
+/* Shared primary actions */
+
+.medicine-primary-button,
+.pharmacy-primary-button {
+  border: 0;
+  background: var(--primary);
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.medicine-primary-button:hover:not(:disabled),
+.pharmacy-primary-button:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+/* Medicine details */
+
+.medicine-detail-card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-soft);
+}
+
+.medicine-prescription-none {
+  border: 1px solid var(--success-border);
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.medicine-reservation-action {
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  color: #ffffff;
+}
+
+:root[data-theme="dark"] .medicine-reservation-action {
+  background: var(--surface-soft);
+}
+
+.medicine-details-page button[class*="border-[var(--primary)]"] {
+  background: var(--primary-soft);
+}
+
+/* Pharmacy browse */
+
+.pharmacy-location-card {
+  border: 1px solid var(--primary-muted);
+  background: var(--primary-soft);
+  color: var(--text-primary);
+}
+
+.pharmacy-search-box {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-soft);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.pharmacy-search-box:focus-within {
+  border-color: var(--primary);
+  box-shadow:
+    var(--shadow-soft),
+    0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+.pharmacy-search-box input {
+  color: var(--text-primary);
+}
+
+.pharmacy-search-box input::placeholder {
+  color: var(--text-muted);
+}
+
+.pharmacy-list-card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.pharmacy-list-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--primary-muted);
+  background: var(--surface-soft);
+  box-shadow: var(--shadow-card);
+}
+
+.pharmacy-map-placeholder {
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text-primary);
+}
+
+/* Pharmacy details */
+
+.pharmacy-detail-card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-soft);
+}
+
+.pharmacy-info-row {
+  background: var(--surface-soft);
+  color: var(--text-primary);
+}
+
+.pharmacy-medicine-card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.pharmacy-action-card {
+  border: 1px solid var(--primary-muted);
+  background: var(--primary-soft);
+  color: var(--text-primary);
+}
+
+/* Semantic pharmacy status */
+
+.pharmacy-status-active,
+.inventory-status-available {
+  border: 1px solid var(--success-border);
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.pharmacy-status-suspended,
+.inventory-status-low {
+  border: 1px solid #f3cf77;
+  background: #fff7df;
+  color: #8a5a00;
+}
+
+.pharmacy-status-inactive,
+.inventory-status-neutral {
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+}
+
+.inventory-status-out {
+  border: 1px solid var(--error-border);
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+:root[data-theme="dark"] .pharmacy-status-suspended,
+:root[data-theme="dark"] .inventory-status-low {
+  border-color: #7a5a1f;
+  background: #332810;
+  color: #f2c96d;
+}
+
+/* Mobile refinements */
+
+@media (max-width: 480px) {
+  .medicine-details-page,
+  .pharmacies-customer-page,
+  .pharmacy-details-page {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+}
+
+
+/* =========================================================
+   PROFILE — APP SETTINGS CONTROLS
+   ========================================================= */
+
+.profile-settings-card {
+  background: var(--surface);
+  border-color: var(--border-light);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-soft);
+}
+
+.profile-settings-card h3,
+.profile-settings-card p {
+  color: inherit;
+}
+
+.profile-settings-card > div:first-child p,
+.profile-settings-card .text-gray-500 {
+  color: var(--text-secondary);
+}
+
+.profile-settings-card .text-gray-900 {
+  color: var(--text-primary);
+}
+
+.profile-settings-card .text-teal-700 {
+  color: var(--primary);
+}
+
+.profile-settings-card .bg-teal-50 {
+  background: var(--primary-light);
+}
+
+.profile-settings-card .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-light);
+}
+
+.profile-settings-select {
+  min-width: 110px;
+  max-width: 150px;
+  padding: 9px 34px 9px 12px;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  background-color: var(--surface);
+  color: var(--text-primary);
+
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.25;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.profile-settings-select:hover:not(:disabled) {
+  border-color: var(--primary-muted);
+}
+
+.profile-settings-select:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+.profile-settings-select option {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.profile-settings-select:disabled {
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  border-color: var(--border);
+  cursor: not-allowed;
+  opacity: 1;
+  -webkit-text-fill-color: var(--text-secondary);
+}
+
+:root[data-theme="dark"] .profile-settings-select {
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] .profile-settings-select {
+  color-scheme: light;
+}
+
+@media (max-width: 400px) {
+  .profile-settings-select {
+    min-width: 104px;
+    max-width: 132px;
+  }
+}
+
+
+/* =========================================================
+   PROFILE — THEME CLEANUP
+   ========================================================= */
+
+.profile-page-v2 {
+  background: var(--background);
+  color: var(--text-primary);
+}
+
+.profile-page-v2 .text-gray-900,
+.profile-page-v2 .text-gray-800,
+.profile-page-v2 .text-gray-700 {
+  color: var(--text-primary);
+}
+
+.profile-page-v2 .text-gray-500 {
+  color: var(--text-secondary);
+}
+
+.profile-page-v2 .text-gray-400 {
+  color: var(--text-muted);
+}
+
+.profile-page-v2 .text-teal-700 {
+  color: var(--primary);
+}
+
+.profile-page-v2 .bg-teal-50 {
+  background: var(--primary-light);
+}
+
+.profile-page-v2 .border-gray-100,
+.profile-page-v2 .border-gray-300,
+.profile-page-v2 .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border);
+}
+
+.profile-main-card,
+.profile-edit-card,
+.profile-section-card {
+  border: 1px solid var(--border-light);
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-soft);
+}
+
+.profile-main-card img {
+  border-color: var(--surface);
+}
+
+.profile-logout-button {
+  border: 1px solid var(--error-border);
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.profile-logout-button:hover {
+  background: color-mix(in srgb, var(--error) 14%, var(--error-bg));
+}
+
+.profile-primary-button {
+  border: 0;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.profile-primary-button:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.profile-primary-button:disabled {
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  opacity: 1;
+}
+
+.profile-secondary-button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.profile-secondary-button:hover {
+  border-color: var(--primary-muted);
+  background: var(--surface-soft);
+  color: var(--primary);
+}
+
+.profile-input {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.profile-input::placeholder {
+  color: var(--text-muted);
+}
+
+.profile-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+/* Notification switches */
+
+.profile-notifications-card button[aria-label^="Toggle"] {
+  outline: none;
+}
+
+.profile-notifications-card .bg-teal-700 {
+  background: var(--primary);
+}
+
+.profile-notifications-card .bg-gray-300 {
+  background: var(--border);
+}
+
+.profile-notifications-card button[aria-label^="Toggle"] span {
+  background: #fff;
+}
+
+/* Privacy & Support */
+
+.profile-support-card button {
+  color: var(--text-primary);
+}
+
+.profile-support-card button:hover {
+  color: var(--primary);
+}
+
+.profile-support-card button:hover .text-gray-400 {
+  color: var(--primary);
+}
+
+/* PharmaLink AI */
+
+.profile-ai-card {
+  border: 1px solid var(--primary-muted);
+  background: var(--secondary);
+  color: #fff;
+  box-shadow: var(--shadow-soft);
+}
+
+.profile-ai-card p {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.profile-ai-button {
+  border: 1px solid var(--pearl-muted);
+  background: var(--pearl);
+  color: var(--secondary);
+  cursor: pointer;
+}
+
+.profile-ai-button:hover {
+  background: var(--pearl-hover);
+}
+
+:root[data-theme="dark"] .profile-ai-card {
+  background: var(--surface-soft);
+  border-color: var(--primary-muted);
+}
+
+:root[data-theme="dark"] .profile-ai-button {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .profile-ai-button:hover {
+  background: var(--primary-hover);
+}
+
+/* Account/status badge remains semantic green */
+
+.profile-security-card .bg-emerald-50 {
+  background: var(--success-bg);
+}
+
+.profile-security-card .text-emerald-700 {
+  color: var(--success);
+}
+
+@media (max-width: 480px) {
+  .profile-main-card,
+  .profile-edit-card,
+  .profile-section-card,
+  .profile-ai-card {
+    border-radius: 16px;
+  }
+}
+
+/* =========================================================
+   AI ASSISTANT — THEME CLEANUP
+   Add this once near the end of App.css, before REDUCED MOTION.
+   ========================================================= */
+
+.ai-assistant-page { color: var(--text-primary); }
+.ai-assistant-shell {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+.ai-chat-header {
+  display:flex; min-height:80px; align-items:center; gap:12px;
+  padding:12px 20px; border-bottom:1px solid var(--border);
+  background:var(--surface);
+}
+.ai-chat-title { display:flex; min-width:0; flex:1; align-items:center; gap:12px; }
+.ai-chat-title h1 { margin:0; color:var(--text-primary); font-size:1.05rem; font-weight:800; }
+.ai-chat-title p { margin:2px 0 0; color:var(--text-secondary); font-size:.8rem; }
+.ai-brand-icon,.ai-empty-bot,.ai-suggestion-icon,.ai-assistant-avatar {
+  display:flex; align-items:center; justify-content:center;
+  background:var(--primary-light); color:var(--primary);
+}
+.ai-brand-icon { width:44px; height:44px; flex:0 0 44px; border-radius:12px; }
+.ai-icon-button,.ai-header-new-chat {
+  border:1px solid var(--border); background:var(--surface); color:var(--text-secondary);
+}
+.ai-icon-button { width:40px; height:40px; align-items:center; justify-content:center; }
+.ai-icon-button:hover,.ai-header-new-chat:hover { background:var(--surface-soft); color:var(--primary); }
+.ai-header-new-chat { min-height:40px; align-items:center; gap:6px; padding:0 12px; border-radius:12px; font-weight:700; }
+.ai-mobile-only { display:flex; }
+.ai-conversation-sidebar {
+  display:flex; height:100%; flex-direction:column;
+  border-right:1px solid var(--border); background:var(--surface-soft);
+}
+.ai-new-chat-wrap { padding:12px; border-bottom:1px solid var(--border); }
+.ai-primary-button {
+  display:flex; min-height:42px; width:100%; align-items:center; justify-content:center; gap:8px;
+  border:0; border-radius:12px; background:var(--primary); color:#fff; font-weight:800;
+}
+.ai-primary-button:hover:not(:disabled) { background:var(--primary-hover); }
+.ai-primary-button:disabled,.ai-header-new-chat:disabled,.ai-icon-button:disabled { cursor:not-allowed; opacity:.55; }
+.ai-conversation-scroll { flex:1; overflow-y:auto; padding:8px; }
+.ai-conversation-label { padding:4px 8px 8px; color:var(--text-muted); font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
+.ai-conversation-skeleton { height:56px; animation:pulse 2s cubic-bezier(.4,0,.6,1) infinite; border-radius:12px; background:var(--border-light); }
+.ai-conversation-empty { padding:16px 8px; color:var(--text-secondary); font-size:.875rem; }
+.ai-conversation-row { display:flex; align-items:center; border-radius:12px; transition:.2s; }
+.ai-conversation-row:hover { background:var(--surface); }
+.ai-conversation-row.is-selected { background:var(--primary-light); }
+.ai-conversation-select { display:flex; min-width:0; flex:1; align-items:center; gap:10px; padding:10px 12px; text-align:left; background:transparent; border:0; color:inherit; }
+.ai-conversation-icon { flex-shrink:0; color:var(--text-muted); }
+.ai-conversation-row.is-selected .ai-conversation-icon,.ai-conversation-row.is-selected .ai-conversation-title { color:var(--primary); }
+.ai-conversation-title { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-primary); font-size:.875rem; font-weight:700; }
+.ai-conversation-meta { display:flex; align-items:center; gap:8px; margin-top:2px; color:var(--text-muted); font-size:.68rem; }
+.ai-closed-badge { border-radius:5px; background:var(--border-light); color:var(--text-secondary); padding:2px 6px; }
+.ai-close-conversation { width:32px; height:32px; margin-right:4px; border:0; border-radius:8px; background:transparent; color:var(--text-muted); opacity:0; }
+.ai-conversation-row:hover .ai-close-conversation,.ai-close-conversation:focus { opacity:1; }
+.ai-close-conversation:hover { background:var(--border-light); color:var(--text-primary); }
+
+.ai-empty-state { display:flex; flex:1; align-items:center; justify-content:center; padding:32px 16px; background:var(--surface); }
+.ai-empty-bot { width:56px; height:56px; margin:auto; border-radius:16px; }
+.ai-empty-state h2 { margin:16px 0 0; color:var(--text-primary); font-size:1.25rem; font-weight:800; }
+.ai-empty-description { max-width:32rem; margin:8px auto 0; color:var(--text-secondary); font-size:.875rem; line-height:1.7; }
+.ai-suggestion-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:24px; }
+.ai-suggestion-card { display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--border); border-radius:12px; background:var(--surface); color:var(--text-primary); text-align:left; }
+.ai-suggestion-card:hover { border-color:var(--primary-muted); background:var(--primary-soft); }
+.ai-suggestion-icon { width:36px; height:36px; flex:0 0 36px; border-radius:9px; }
+.ai-suggestion-card span { font-size:.875rem; font-weight:700; }
+.ai-disclaimer { margin-top:24px; color:var(--text-muted); font-size:.75rem; line-height:1.65; }
+
+.ai-message-list { flex:1; overflow-y:auto; padding:20px; background:var(--surface); }
+.ai-message-row { display:flex; gap:10px; }
+.ai-message-row.is-customer { justify-content:flex-end; }
+.ai-message-row.is-assistant { justify-content:flex-start; }
+.ai-message-avatar { display:flex; width:32px; height:32px; flex:0 0 32px; align-items:center; justify-content:center; margin-top:4px; border-radius:50%; }
+.ai-customer-avatar { background:var(--surface-soft); color:var(--text-secondary); }
+.ai-message-bubble { max-width:72%; padding:12px 16px; border-radius:16px; font-size:.875rem; line-height:1.65; }
+.ai-message-bubble.customer { border-bottom-right-radius:5px; background:var(--primary); color:#fff; }
+.ai-message-bubble.assistant { border:1px solid var(--border); border-bottom-left-radius:5px; background:var(--surface-soft); color:var(--text-primary); box-shadow:var(--shadow-soft); }
+.ai-message-action { display:inline-flex; align-items:center; gap:8px; margin-top:12px; padding:8px 12px; border:1px solid var(--primary-muted); border-radius:9px; background:var(--primary-light); color:var(--primary-dark); font-weight:800; }
+.ai-message-action:hover { background:var(--primary-soft); }
+.ai-typing-row { display:flex; align-items:flex-start; gap:10px; }
+.ai-typing-bubble { padding:14px 16px; border:1px solid var(--border); border-radius:16px 16px 16px 5px; background:var(--surface-soft); }
+.ai-typing-bubble span { width:8px; height:8px; animation:pulse 1.4s infinite; border-radius:50%; background:var(--text-muted); }
+
+.ai-message-form,.ai-closed-input { border-top:1px solid var(--border); background:var(--surface); }
+.ai-message-form { padding:12px 16px; }
+.ai-message-composer { display:flex; align-items:flex-end; gap:8px; padding:8px; border:1px solid var(--border); border-radius:16px; background:var(--surface-soft); box-shadow:var(--shadow-soft); }
+.ai-message-composer:focus-within { border-color:var(--primary); box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 15%,transparent); }
+.ai-message-textarea { min-height:44px; max-height:128px; flex:1; resize:none; border:0; outline:0; padding:10px 8px; background:transparent; color:var(--text-primary); font:inherit; font-size:.875rem; }
+.ai-message-textarea::placeholder { color:var(--text-muted); }
+.ai-send-button { display:flex; width:44px; height:44px; flex:0 0 44px; align-items:center; justify-content:center; border:0; border-radius:12px; background:var(--primary); color:#fff; }
+.ai-send-button:hover:not(:disabled) { background:var(--primary-hover); }
+.ai-send-button:disabled { background:var(--border); color:var(--text-muted); cursor:not-allowed; }
+.ai-message-hint { display:flex; justify-content:space-between; gap:12px; margin-top:6px; padding:0 4px; color:var(--text-muted); font-size:.68rem; }
+.ai-closed-input { padding:16px 20px; text-align:center; color:var(--text-secondary); font-size:.875rem; }
+.ai-history-overlay { background:rgba(12,29,49,.58); }
+.ai-history-drawer { background:var(--surface); color:var(--text-primary); }
+.ai-history-drawer-header { border-color:var(--border); background:var(--surface); }
+.ai-loading-state { background:var(--surface); }
+.ai-loading-spinner { border-color:var(--border); border-top-color:var(--primary); }
+
+@media (min-width:768px) { .ai-mobile-only { display:none; } }
+@media (max-width:767px) {
+  .ai-assistant-page { padding:8px 8px 16px; }
+  .ai-assistant-shell { border-radius:16px; }
+  .ai-chat-header { min-height:68px; padding:10px 12px; }
+  .ai-chat-title h1 { font-size:.95rem; }
+  .ai-chat-title p { font-size:.72rem; }
+  .ai-brand-icon { width:38px; height:38px; flex-basis:38px; }
+  .ai-header-new-chat span { display:none; }
+  .ai-header-new-chat { width:40px; padding:0; }
+  .ai-message-list { padding:16px 12px; }
+  .ai-message-bubble { max-width:84%; }
+  .ai-suggestion-grid { grid-template-columns:1fr; }
+  .ai-message-hint span:first-child { display:none; }
+}
 
 /* =========================================================
    REDUCED MOTION
@@ -2413,4 +4314,3 @@ a:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
-  
