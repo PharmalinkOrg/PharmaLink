@@ -16,6 +16,9 @@ export function UsersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const usersPerPage = 5
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -55,11 +58,27 @@ export function UsersPage() {
     )
   }, [users, search])
 
+  const totalPages = Math.ceil(
+    filteredUsers.length / usersPerPage
+  )
+
+  const startIndex = (currentPage - 1) * usersPerPage
+
+  const displayedUsers = filteredUsers.slice(
+    startIndex,
+    startIndex + usersPerPage
+  )
+
   const formatRole = (role) => {
     return String(role || '')
       .replaceAll('_', ' ')
       .toLowerCase()
       .replace(/\b\w/g, (letter) => letter.toUpperCase())
+  }
+
+  const handleSearch = (event) => {
+    setSearch(event.target.value)
+    setCurrentPage(1)
   }
 
   return (
@@ -90,7 +109,7 @@ export function UsersPage() {
             type="text"
             placeholder="Search users..."
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={handleSearch}
           />
         </div>
       </div>
@@ -123,7 +142,7 @@ export function UsersPage() {
               </thead>
 
               <tbody>
-                {filteredUsers.map((user) => (
+                {displayedUsers.map((user) => (
                   <tr key={user.user_id}>
                     <td>
                       <div className="user-cell">
@@ -190,11 +209,46 @@ export function UsersPage() {
         )}
       </div>
 
-      {!loading && !error && (
+      {!loading && !error && filteredUsers.length > 0 && (
         <div className="users-footer">
-          Showing {filteredUsers.length} of {users.length} users
+          <span>
+            Showing {startIndex + 1}–
+            {Math.min(
+              startIndex + usersPerPage,
+              filteredUsers.length
+            )}{' '}
+            of {filteredUsers.length} users
+          </span>
+
+          <div className="users-pagination">
+            <button
+              type="button"
+              onClick={() =>
+                setCurrentPage((page) => Math.max(page - 1, 1))
+              }
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+
+            <span>
+              Page {currentPage} of {Math.max(totalPages, 1)}
+            </span>
+
+            <button
+              type="button"
+              onClick={() =>
+                setCurrentPage((page) =>
+                  Math.min(page + 1, totalPages)
+                )
+              }
+              disabled={currentPage >= totalPages}
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
     </section>
   )
-} 
+}

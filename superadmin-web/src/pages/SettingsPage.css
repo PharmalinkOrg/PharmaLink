@@ -1,0 +1,112 @@
+/* File: superadmin-web/src/pages/SettingsPage.css */
+
+.settings-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.settings-page .page-header {
+  margin-bottom: 24px;
+}
+
+.settings-page .page-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-page .page-title-row svg {
+  color: #17634f;
+}
+
+.settings-page .page-title-row h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.settings-page .page-header p {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.settings-section {
+  max-width: 800px;
+  margin-bottom: 20px;
+  padding: 22px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(23, 60, 52, 0.06);
+}
+
+.settings-section h3 {
+  margin: 0 0 6px;
+  color: #1e293b;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.settings-section p {
+  margin: 0 0 18px;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.settings-info {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 14px;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #334155;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.settings-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #17634f;
+  cursor: pointer;
+}
+
+.password-reset-button {
+  padding: 9px 16px;
+  border: 1px solid #17634f;
+  border-radius: 8px;
+  background: #17634f;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.password-reset-button:hover {
+  background: #12503f;
+}
+
+@media (max-width: 768px) {
+  .settings-page {
+    padding: 16px;
+  }
+
+  .settings-section {
+    padding: 18px;
+  }
+}
+
+.password-reset-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
