@@ -105,7 +105,7 @@ export const api = {
   },
 
   register: async (form) => {
-    const response = await apiRequest('/auth/register-customer', {
+    const response = await apiRequest('/auth/register', {
       method: 'POST',
       body: {
         first_name: form.first_name,
