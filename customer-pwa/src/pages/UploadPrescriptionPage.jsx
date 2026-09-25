@@ -1,5 +1,4 @@
 import {
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -14,8 +13,11 @@ import {
   X,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 
+import { usePharmacies } from '../hooks/queries/usePharmacies'
 import { api } from '../lib/api'
+import { queryKeys } from '../lib/queryKeys'
 import { supabase } from '../lib/supabaseClient'
 
 // ============================================================
@@ -86,9 +88,11 @@ function getLocalToday() {
   const now = new Date()
 
   const year = now.getFullYear()
+
   const month = String(
     now.getMonth() + 1,
   ).padStart(2, '0')
+
   const day = String(
     now.getDate(),
   ).padStart(2, '0')
@@ -347,8 +351,10 @@ function formatFileSize(bytes) {
 
 function UploadPrescriptionPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const fileInputRef = useRef(null)
+
   const pharmacySearchRef =
     useRef(null)
 
@@ -392,18 +398,37 @@ function UploadPrescriptionPage() {
   ] = useState('')
 
   // ==========================================================
-  // PHARMACIES
+  // CACHED PARTNER PHARMACIES
   // ==========================================================
 
-  const [
-    pharmacies,
-    setPharmacies,
-  ] = useState([])
+  const {
+    data: cachedPharmacies = [],
+    isLoading: pharmaciesLoading,
+    isError: isPharmaciesError,
+    error: pharmaciesLoadError,
+  } = usePharmacies()
 
-  const [
-    pharmaciesLoading,
-    setPharmaciesLoading,
-  ] = useState(true)
+  /*
+   * The shared query owns the server data.
+   *
+   * This page only controls how the pharmacies
+   * are presented. Keep the alphabetical ordering
+   * used by the original Upload Prescription page.
+   */
+  const pharmacies = useMemo(
+    () =>
+      [...cachedPharmacies].sort(
+        (a, b) =>
+          String(
+            a?.name || '',
+          ).localeCompare(
+            String(
+              b?.name || '',
+            ),
+          ),
+      ),
+    [cachedPharmacies],
+  )
 
   const [
     pharmacySearch,
@@ -425,6 +450,12 @@ function UploadPrescriptionPage() {
     setPharmacySearchError,
   ] = useState('')
 
+  const pharmacyLoadingError =
+    isPharmaciesError
+      ? pharmaciesLoadError?.message ||
+        'Unable to load partner pharmacies.'
+      : ''
+
   // ==========================================================
   // SUBMISSION
   // ==========================================================
@@ -443,102 +474,6 @@ function UploadPrescriptionPage() {
     success,
     setSuccess,
   ] = useState('')
-
-  // ==========================================================
-  // LOAD PARTNER PHARMACIES
-  // ==========================================================
-
-  useEffect(() => {
-    let mounted = true
-
-    async function loadPharmacies() {
-      try {
-        setPharmaciesLoading(true)
-
-        const response =
-          await api.getPharmacies()
-
-        if (!mounted) {
-          return
-        }
-
-        const rows = Array.isArray(
-          response?.data,
-        )
-          ? response.data
-          : Array.isArray(response)
-            ? response
-            : []
-
-        const activePharmacies =
-          rows
-            .filter(
-              (pharmacy) => {
-                if (!pharmacy) {
-                  return false
-                }
-
-                /*
-                 * Preserve the row when
-                 * the public endpoint does
-                 * not expose status.
-                 */
-                if (
-                  !pharmacy.status
-                ) {
-                  return true
-                }
-
-                return (
-                  String(
-                    pharmacy.status,
-                  ).toUpperCase() ===
-                  'ACTIVE'
-                )
-              },
-            )
-            .sort((a, b) =>
-              String(
-                a?.name || '',
-              ).localeCompare(
-                String(
-                  b?.name || '',
-                ),
-              ),
-            )
-
-        setPharmacies(
-          activePharmacies,
-        )
-      } catch (loadError) {
-        console.error(
-          'Load pharmacies error:',
-          loadError,
-        )
-
-        if (mounted) {
-          setPharmacies([])
-
-          setError(
-            loadError?.message ||
-              'Unable to load partner pharmacies.',
-          )
-        }
-      } finally {
-        if (mounted) {
-          setPharmaciesLoading(
-            false,
-          )
-        }
-      }
-    }
-
-    loadPharmacies()
-
-    return () => {
-      mounted = false
-    }
-  }, [])
 
   // ==========================================================
   // PHARMACY SEARCH
@@ -583,6 +518,7 @@ function UploadPrescriptionPage() {
 
   const shouldShowNoPharmacyMatch =
     !pharmaciesLoading &&
+    !isPharmaciesError &&
     !selectedPharmacy &&
     normalizeText(
       pharmacySearch,
@@ -834,6 +770,7 @@ function UploadPrescriptionPage() {
 
     if (validationError) {
       setSelectedFile(null)
+
       setError(
         validationError,
       )
@@ -1192,6 +1129,22 @@ function UploadPrescriptionPage() {
         )
       }
 
+      // ------------------------------------------------------
+      // INVALIDATE PRESCRIPTION CACHE
+      // ------------------------------------------------------
+
+      /*
+       * A new prescription now exists.
+       *
+       * Mark any cached customer prescription
+       * list as stale so the next screen that
+       * uses it can retrieve the new record.
+       */
+      await queryClient.invalidateQueries({
+        queryKey:
+          queryKeys.prescriptions,
+      })
+
       setSuccess(
         'Prescription uploaded successfully. The selected pharmacy can now review it.',
       )
@@ -1219,7 +1172,9 @@ function UploadPrescriptionPage() {
       )
 
       setSelectedPharmacy(null)
+
       setPharmacySearch('')
+
       setPharmacySearchError(
         '',
       )
@@ -1255,6 +1210,7 @@ function UploadPrescriptionPage() {
 
   return (
     <section className="upload-page">
+
       {/* ====================================================
           HEADER
       ==================================================== */}
@@ -1305,6 +1261,7 @@ function UploadPrescriptionPage() {
         }
         noValidate
       >
+
         {/* ==================================================
             FILE UPLOAD
         ================================================== */}
@@ -1421,6 +1378,7 @@ function UploadPrescriptionPage() {
         ================================================== */}
 
         <div className="form-fields">
+
           {/* Patient */}
 
           <div className="form-group">
@@ -1596,12 +1554,15 @@ function UploadPrescriptionPage() {
                   placeholder={
                     pharmaciesLoading
                       ? 'Loading partner pharmacies...'
-                      : 'Type a pharmacy name'
+                      : isPharmaciesError
+                        ? 'Unable to load partner pharmacies'
+                        : 'Type a pharmacy name'
                   }
                   autoComplete="off"
                   disabled={
                     submitting ||
-                    pharmaciesLoading
+                    pharmaciesLoading ||
+                    isPharmaciesError
                   }
                   aria-autocomplete="list"
                   aria-expanded={
@@ -1630,10 +1591,31 @@ function UploadPrescriptionPage() {
                 )}
               </div>
 
+              {/* Pharmacy loading error */}
+
+              {pharmacyLoadingError && (
+                <div className="upload-pharmacy-no-match">
+                  <Building2
+                    size={19}
+                  />
+
+                  <div>
+                    <strong>
+                      Unable to load pharmacies
+                    </strong>
+
+                    <p>
+                      {pharmacyLoadingError}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Suggestions */}
 
               {showPharmacySuggestions &&
                 !selectedPharmacy &&
+                !isPharmaciesError &&
                 pharmacySuggestions.length >
                   0 && (
                   <div
@@ -1831,7 +1813,8 @@ function UploadPrescriptionPage() {
           className="submit-btn"
           disabled={
             submitting ||
-            pharmaciesLoading
+            pharmaciesLoading ||
+            isPharmaciesError
           }
         >
           <Check

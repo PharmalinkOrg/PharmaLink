@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../components/auth/useAuth'
 import { useAppSettings } from '../context/AppSettingsContext'
@@ -22,7 +23,10 @@ import {
   X,
   CheckCircle2,
 } from 'lucide-react'
-import { apiRequest } from '../lib/api'
+import { api, apiRequest } from '../lib/api'
+import { queryKeys } from '../lib/queryKeys'
+import { useProfile } from '../hooks/queries/useProfile'
+import { usePharmacies } from '../hooks/queries/usePharmacies'
 import { supabase } from '../lib/supabaseClient'
 
 const SESSION_KEY = 'pharmalink-customer-session'
@@ -43,6 +47,7 @@ const getInitials = (firstName, lastName) => {
 
 function ProfilePage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const { signOut, accessToken } = useAuth()
 
@@ -55,7 +60,18 @@ function ProfilePage() {
     setTextSize,
   } = useAppSettings()
 
-  const [profile, setProfile] = useState(null)
+  // ------------------------------------------------------------
+  // Profile query
+  // ------------------------------------------------------------
+
+  const {
+    data: profile = null,
+    isLoading,
+    isError: isProfileError,
+    error: profileError,
+  } = useProfile({
+    enabled: Boolean(accessToken),
+  })
 
   const [form, setForm] = useState({
     first_name: '',
@@ -72,11 +88,6 @@ function ProfilePage() {
         }
   )
 
-  const [isLoading, setIsLoading] = useState(() =>
-    Boolean(getStoredSession()?.accessToken)
-  )
-
-  const [isSaving, setIsSaving] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
 
@@ -111,8 +122,12 @@ function ProfilePage() {
 
   const [isReporting, setIsReporting] = useState(false)
 
-  const [pharmacies, setPharmacies] = useState([])
-  const [isLoadingPharmacies, setIsLoadingPharmacies] = useState(false)
+  const {
+    data: pharmacies = [],
+    isLoading: isLoadingPharmacies,
+    isError: isPharmaciesError,
+    error: pharmaciesError,
+  } = usePharmacies()
 
   const [pharmacySearch, setPharmacySearch] = useState('')
   const [selectedPharmacy, setSelectedPharmacy] = useState(null)
@@ -132,117 +147,50 @@ function ProfilePage() {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false)
 
   // ------------------------------------------------------------
-  // Load profile
+  // Synchronize editable form with profile query
   // ------------------------------------------------------------
 
   useEffect(() => {
-    if (!accessToken) {
-      setProfile(null)
-      setIsLoading(false)
+    if (!profile) {
       return
     }
 
-    let cancelled = false
-
-    setIsLoading(true)
-
-    apiRequest('/users/me/profile', {
-      token: accessToken,
+    setForm({
+      first_name: profile.first_name || '',
+      last_name: profile.last_name || '',
+      phone: profile.phone || '',
     })
-      .then((response) => {
-        if (cancelled) return
-
-        const nextProfile = response.data
-
-        setProfile(nextProfile)
-
-        setForm({
-          first_name: nextProfile.first_name || '',
-          last_name: nextProfile.last_name || '',
-          phone: nextProfile.phone || '',
-        })
-      })
-      .catch((error) => {
-        if (cancelled) return
-
-        setProfile(null)
-
-        setStatus({
-          type: 'error',
-          message: error.message,
-        })
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsLoading(false)
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [accessToken])
-
-  // ------------------------------------------------------------
-  // Load pharmacies when Report form opens
-  // ------------------------------------------------------------
+  }, [profile])
 
   useEffect(() => {
-    if (!isReporting || pharmacies.length > 0) {
+    if (!isProfileError) {
       return
     }
 
-    let cancelled = false
+    setStatus({
+      type: 'error',
+      message:
+        profileError?.message ||
+        'Unable to load your profile.',
+    })
+  }, [isProfileError, profileError])
 
-    const loadPharmacies = async () => {
-      setIsLoadingPharmacies(true)
+  // ------------------------------------------------------------
+  // Surface pharmacy query errors when Report form is open
+  // ------------------------------------------------------------
 
-      try {
-        const session = getStoredSession()
-
-        const response = await apiRequest('/pharmacies', {
-          token: session?.accessToken,
-        })
-
-        if (cancelled) return
-
-        const pharmacyData = Array.isArray(response?.data)
-          ? response.data
-          : Array.isArray(response?.data?.pharmacies)
-            ? response.data.pharmacies
-            : Array.isArray(response?.pharmacies)
-              ? response.pharmacies
-              : []
-
-        setPharmacies(
-          pharmacyData.filter(
-            (pharmacy) =>
-              !pharmacy.status ||
-              pharmacy.status === 'ACTIVE'
-          )
-        )
-      } catch (error) {
-        if (cancelled) return
-
-        setReportStatus({
-          type: 'error',
-          message:
-            error.message ||
-            'Unable to load partner pharmacies.',
-        })
-      } finally {
-        if (!cancelled) {
-          setIsLoadingPharmacies(false)
-        }
-      }
+  useEffect(() => {
+    if (!isReporting || !isPharmaciesError) {
+      return
     }
 
-    loadPharmacies()
-
-    return () => {
-      cancelled = true
-    }
-  }, [isReporting, pharmacies.length])
+    setReportStatus({
+      type: 'error',
+      message:
+        pharmaciesError?.message ||
+        'Unable to load partner pharmacies.',
+    })
+  }, [isReporting, isPharmaciesError, pharmaciesError])
 
   // ------------------------------------------------------------
   // Filter pharmacy autocomplete
@@ -286,12 +234,23 @@ function ProfilePage() {
     })
   }
 
+  const updateProfileMutation = useMutation({
+    mutationFn: async (profileData) => {
+      return api.updateMyProfile(profileData)
+    },
+
+    onSuccess: (updatedProfile) => {
+      queryClient.setQueryData(
+        queryKeys.profile,
+        updatedProfile
+      )
+    },
+  })
+
+  const isSaving = updateProfileMutation.isPending
+
   const handleSubmit = async (event) => {
     event.preventDefault()
-
-    const session = getStoredSession()
-
-    setIsSaving(true)
 
     setStatus({
       type: '',
@@ -299,18 +258,13 @@ function ProfilePage() {
     })
 
     try {
-      const response = await apiRequest('/users/me/profile', {
-        token: session?.accessToken,
-        method: 'PATCH',
-        body: form,
-      })
-
-      setProfile(response.data)
+      const updatedProfile =
+        await updateProfileMutation.mutateAsync(form)
 
       setForm({
-        first_name: response.data.first_name || '',
-        last_name: response.data.last_name || '',
-        phone: response.data.phone || '',
+        first_name: updatedProfile?.first_name || '',
+        last_name: updatedProfile?.last_name || '',
+        phone: updatedProfile?.phone || '',
       })
 
       setStatus({
@@ -322,10 +276,10 @@ function ProfilePage() {
     } catch (error) {
       setStatus({
         type: 'error',
-        message: error.message,
+        message:
+          error.message ||
+          'Unable to save your profile.',
       })
-    } finally {
-      setIsSaving(false)
     }
   }
 
@@ -396,16 +350,15 @@ function ProfilePage() {
           .from('avatars')
           .getPublicUrl(filePath)
 
-      const response = await apiRequest('/users/me/profile', {
-        token: session.accessToken,
-        method: 'PATCH',
-        body: {
-          ...form,
-          avatar_url: publicUrlData.publicUrl,
-        },
+      const updatedProfile = await api.updateMyProfile({
+        ...form,
+        avatar_url: publicUrlData.publicUrl,
       })
 
-      setProfile(response.data)
+      queryClient.setQueryData(
+        queryKeys.profile,
+        updatedProfile
+      )
 
       setStatus({
         type: 'success',
@@ -580,7 +533,8 @@ function ProfilePage() {
   const handleLogout = async () => {
     await signOut()
 
-    setProfile(null)
+    // Remove cached data belonging to the previous customer.
+    queryClient.clear()
 
     setForm({
       first_name: '',

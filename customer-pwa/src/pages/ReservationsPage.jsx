@@ -11,7 +11,10 @@ import {
   ShoppingBag,
 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { apiRequest } from '../lib/api'
+import { useQueryClient } from '@tanstack/react-query'
+
+import { api } from '../lib/api'
+import { queryKeys } from '../lib/queryKeys'
 
 // ============================================================
 // RESERVATION BUSINESS RULES
@@ -209,6 +212,7 @@ function isPickupTimeAllowed(
 function ReservationsPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const queryClient = useQueryClient()
 
   const reservationData = location.state
 
@@ -521,35 +525,29 @@ function ReservationsPage() {
     try {
       setSubmitting(true)
 
-      const response = await apiRequest('/reservations', {
-        method: 'POST',
+      const response =
+      await api.createReservation({
+        pharmacy_id:
+          pharmacyId,
 
-        body: {
-          pharmacy_id: pharmacyId,
+        pickup_date:
+          pickupDate,
 
-          /*
-           * Always same-day.
-           */
-          pickup_date: pickupDate,
+        pickup_time:
+          normalizedPickupTime,
 
-          /*
-           * Already validated against:
-           * - opening time
-           * - current time
-           * - 30-minute preparation buffer
-           * - 8 PM cutoff
-           */
-          pickup_time: normalizedPickupTime,
+        notes:
+          trimmedNotes || null,
 
-          notes: trimmedNotes || null,
+        items: [
+          {
+            medicine_id:
+              medicineId,
 
-          items: [
-            {
-              medicine_id: medicineId,
-              quantity: requestedQuantity,
-            },
-          ],
-        },
+            quantity:
+              requestedQuantity,
+          },
+        ],
       })
 
       if (!response?.success) {
@@ -559,6 +557,18 @@ function ReservationsPage() {
         )
       }
 
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey:
+            queryKeys.reservations,
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey:
+            queryKeys.availableMedicines,
+        }),
+      ])
+      
       const reservation =
         response?.data?.reservation ||
         response?.data ||

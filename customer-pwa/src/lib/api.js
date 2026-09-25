@@ -5,12 +5,7 @@ const API_URL = (
   'http://localhost:5000/api'
 ).replace(/\/$/, '')
 
-const SESSION_KEY =
-  'pharmalink-customer-session'
-
-// ============================================================
-// SHARED BACKEND API REQUEST HELPER
-// ============================================================
+const SESSION_KEY = 'pharmalink-customer-session'
 
 export async function apiRequest(
   path,
@@ -22,23 +17,14 @@ export async function apiRequest(
 ) {
   let accessToken = token
 
-  // ----------------------------------------------------------
-  // Read stored customer access token when one was not
-  // explicitly supplied.
-  // ----------------------------------------------------------
-
   if (!accessToken) {
     try {
       const storedSession =
-        localStorage.getItem(
-          SESSION_KEY,
-        )
+        localStorage.getItem(SESSION_KEY)
 
       if (storedSession) {
         const session =
-          JSON.parse(
-            storedSession,
-          )
+          JSON.parse(storedSession)
 
         accessToken =
           session?.accessToken
@@ -50,10 +36,6 @@ export async function apiRequest(
       )
     }
   }
-
-  // ----------------------------------------------------------
-  // Send request
-  // ----------------------------------------------------------
 
   const response = await fetch(
     `${API_URL}${path}`,
@@ -78,25 +60,16 @@ export async function apiRequest(
 
       ...(body
         ? {
-            body:
-              JSON.stringify(body),
+            body: JSON.stringify(body),
           }
         : {}),
     },
   )
 
-  // ----------------------------------------------------------
-  // Parse backend JSON
-  // ----------------------------------------------------------
-
   const payload =
     await response
       .json()
       .catch(() => ({}))
-
-  // ----------------------------------------------------------
-  // Throw backend message for failed requests
-  // ----------------------------------------------------------
 
   if (!response.ok) {
     throw new Error(
@@ -105,30 +78,11 @@ export async function apiRequest(
     )
   }
 
-  /*
-   * IMPORTANT:
-   *
-   * Return the complete backend payload here.
-   *
-   * Individual API methods can decide whether they need:
-   *
-   * response
-   *
-   * or:
-   *
-   * response.data
-   */
   return payload
 }
 
-// ============================================================
-// API METHODS
-// ============================================================
-
 export const api = {
-  // ==========================================================
-  // PHARMACIES
-  // ==========================================================
+  // Pharmacies
 
   getPharmacies: async () => {
     const response =
@@ -139,14 +93,7 @@ export const api = {
     return response?.data || []
   },
 
-  // ==========================================================
-  // MEDICINES
-  // ==========================================================
-
-  /*
-   * Uses the same customer-facing availability endpoint
-   * used by PharmaLink medicine search.
-   */
+  // Medicines
 
   getAvailableMedicines:
     async () => {
@@ -158,9 +105,40 @@ export const api = {
       return response?.data || []
     },
 
-  // ==========================================================
-  // MEDICINE REQUESTS
-  // ==========================================================
+  getMedicineCategories:
+    async () => {
+      const response =
+        await apiRequest(
+          '/medicine-categories',
+        )
+
+      return response?.data || []
+    },
+
+  // Reservations
+
+  createReservation:
+    async (reservationData) => {
+      return apiRequest(
+        '/reservations',
+        {
+          method: 'POST',
+          body: reservationData,
+        },
+      )
+    },
+
+  getMyReservations:
+    async () => {
+      const response =
+        await apiRequest(
+          '/reservations',
+        )
+
+      return response?.data || []
+    },
+
+  // Medicine Requests
 
   createMedicineRequest:
     async (requestData) => {
@@ -209,48 +187,45 @@ export const api = {
       return response?.data || null
     },
 
-  // ==========================================================
-  // PRESCRIPTIONS
-  // ==========================================================
+  // Prescriptions
 
   createPrescription:
     async (prescriptionData) => {
+      return apiRequest(
+        '/prescriptions',
+        {
+          method: 'POST',
+          body: prescriptionData,
+        },
+      )
+    },
+
+  // Customer Profile
+
+  getMyProfile: async () => {
+    const response =
+      await apiRequest(
+        '/users/me/profile',
+      )
+
+    return response?.data || null
+  },
+
+  updateMyProfile:
+    async (profileData) => {
       const response =
         await apiRequest(
-          '/prescriptions',
+          '/users/me/profile',
           {
-            method: 'POST',
-            body:
-              prescriptionData,
+            method: 'PATCH',
+            body: profileData,
           },
         )
 
-      /*
-       * IMPORTANT:
-       *
-       * Unlike methods above, return the COMPLETE response.
-       *
-       * UploadPrescriptionPage needs:
-       *
-       * response.success
-       * response.message
-       * response.data
-       *
-       * Example:
-       *
-       * {
-       *   success: true,
-       *   message:
-       *     'Prescription uploaded successfully',
-       *   data: {...}
-       * }
-       */
-      return response
+      return response?.data || null
     },
 
-  // ==========================================================
-  // AUTH
-  // ==========================================================
+  // Authentication
 
   signIn: async (
     email,
@@ -314,8 +289,7 @@ export const api = {
           email,
           {
             redirectTo:
-              window.location
-                .origin,
+              window.location.origin,
           },
         )
 

@@ -1,8 +1,12 @@
 import {
-  useCallback,
   useEffect,
   useState,
 } from 'react'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { AlertCircle, X } from 'lucide-react'
 import {
   useLocation,
@@ -14,6 +18,7 @@ import AIConversationList from '../components/ai/AIConversationList'
 import AIMessageList from '../components/ai/AIMessageList'
 import AIMessageInput from '../components/ai/AIMessageInput'
 import AIEmptyState from '../components/ai/AIEmptyState'
+import { queryKeys } from '../lib/queryKeys'
 
 import {
   closeConversation,
@@ -22,9 +27,21 @@ import {
   sendMessage,
 } from '../services/aiService'
 
+const aiQueryKeys = {
+  conversations: [
+    'ai-conversations',
+  ],
+
+  conversation: (conversationId) => [
+    'ai-conversation',
+    Number(conversationId),
+  ],
+}
+
 function AIAssistantPage() {
   const location = useLocation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const suggestedMessage =
     typeof location.state?.suggestedMessage ===
@@ -32,29 +49,20 @@ function AIAssistantPage() {
       ? location.state.suggestedMessage
       : ''
 
-  const [conversationId, setConversationId] =
-    useState(null)
-
-  const [messages, setMessages] = useState([])
-
-  const [isSending, setIsSending] =
-    useState(false)
-
-  const [error, setError] =
-    useState('')
-
-  const [conversations, setConversations] =
-    useState([])
+  const [
+    conversationId,
+    setConversationId,
+  ] = useState(null)
 
   const [
-    isLoadingConversations,
-    setIsLoadingConversations,
-  ] = useState(true)
+    messages,
+    setMessages,
+  ] = useState([])
 
   const [
-    isLoadingConversation,
-    setIsLoadingConversation,
-  ] = useState(false)
+    error,
+    setError,
+  ] = useState('')
 
   const [
     conversationStatus,
@@ -62,117 +70,211 @@ function AIAssistantPage() {
   ] = useState('ACTIVE')
 
   const [
-    isClosingConversation,
-    setIsClosingConversation,
-  ] = useState(false)
-
-  const [
     isHistoryOpen,
     setIsHistoryOpen,
   ] = useState(false)
+
+  // ==========================================================
+  // CONVERSATION HISTORY QUERY
+  // ==========================================================
+
+  const {
+    data: conversations = [],
+    isLoading:
+      isLoadingConversations,
+    isError:
+      isConversationsError,
+    error:
+      conversationsError,
+  } = useQuery({
+    queryKey:
+      queryKeys.aiConversations,
+
+    queryFn: async () => {
+      const data =
+        await getConversations()
+
+      return Array.isArray(data)
+        ? data
+        : []
+    },
+
+    staleTime:
+      60 * 1000,
+  })
+
+  // ==========================================================
+  // ACTIVE CONVERSATION QUERY
+  // ==========================================================
+
+  const {
+    data: activeConversation,
+    isFetching:
+      isLoadingConversation,
+    isError:
+      isConversationError,
+    error:
+      conversationError,
+  } = useQuery({
+    queryKey:
+      aiQueryKeys.conversation(
+        conversationId,
+      ),
+
+    queryFn: async () => {
+      const conversation =
+        await getConversation(
+          conversationId,
+        )
+
+      if (!conversation) {
+        throw new Error(
+          'Conversation could not be found.',
+        )
+      }
+
+      return conversation
+    },
+
+    enabled:
+      Boolean(conversationId),
+
+    staleTime:
+      60 * 1000,
+  })
+
+  // ==========================================================
+  // SEND MESSAGE MUTATION
+  // ==========================================================
+
+  const sendMessageMutation =
+    useMutation({
+      mutationFn: async ({
+        message,
+        activeConversationId,
+      }) => {
+        return sendMessage(
+          message,
+          activeConversationId,
+        )
+      },
+    })
+
+  // ==========================================================
+  // CLOSE CONVERSATION MUTATION
+  // ==========================================================
+
+  const closeConversationMutation =
+    useMutation({
+      mutationFn:
+        async (
+          selectedConversationId,
+        ) => {
+          return closeConversation(
+            selectedConversationId,
+          )
+        },
+    })
+
+  const isSending =
+    sendMessageMutation.isPending
+
+  const isClosingConversation =
+    closeConversationMutation.isPending
+
+  // ==========================================================
+  // SUGGESTED MESSAGE
+  // ==========================================================
 
   useEffect(() => {
     if (!suggestedMessage) {
       return
     }
 
-    navigate(location.pathname, {
-      replace: true,
-      state: null,
-    })
+    navigate(
+      location.pathname,
+      {
+        replace: true,
+        state: null,
+      },
+    )
   }, [
     suggestedMessage,
     navigate,
     location.pathname,
   ])
 
-  const loadConversations =
-    useCallback(async () => {
-      try {
-        setIsLoadingConversations(true)
-
-        const data = await getConversations()
-
-        setConversations(
-          Array.isArray(data) ? data : []
-        )
-      } catch (requestError) {
-        console.error(
-          'Load AI conversations error:',
-          requestError
-        )
-
-        setError(
-          requestError.message ||
-            'Conversation history could not be loaded.'
-        )
-      } finally {
-        setIsLoadingConversations(false)
-      }
-    }, [])
+  // ==========================================================
+  // SYNCHRONIZE ACTIVE CONVERSATION WITH LOCAL CHAT UI
+  // ==========================================================
 
   useEffect(() => {
-    loadConversations()
-  }, [loadConversations])
-
-  const handleSelectConversation = async (
-    selectedConversationId
-  ) => {
-    if (
-      !selectedConversationId ||
-      isSending ||
-      isLoadingConversation
-    ) {
+    if (!activeConversation) {
       return
     }
 
-    try {
-      setError('')
-      setIsLoadingConversation(true)
+    setConversationStatus(
+      activeConversation.status ||
+        'ACTIVE',
+    )
 
-      const conversation =
-        await getConversation(
-          selectedConversationId
-        )
-
-      if (!conversation) {
-        throw new Error(
-          'Conversation could not be found.'
-        )
-      }
-
-      setConversationId(
-        conversation.conversation_id
+    setMessages(
+      Array.isArray(
+        activeConversation.messages,
       )
+        ? activeConversation.messages
+        : [],
+    )
+  }, [activeConversation])
 
-      setConversationStatus(
-        conversation.status || 'ACTIVE'
-      )
+  // ==========================================================
+  // QUERY ERRORS
+  // ==========================================================
 
-      setMessages(
-        Array.isArray(conversation.messages)
-          ? conversation.messages
-          : []
-      )
-
-      setIsHistoryOpen(false)
-    } catch (requestError) {
-      console.error(
-        'Load AI conversation error:',
-        requestError
-      )
-
-      setError(
-        requestError.message ||
-          'Conversation could not be loaded.'
-      )
-    } finally {
-      setIsLoadingConversation(false)
+  useEffect(() => {
+    if (!isConversationsError) {
+      return
     }
-  }
 
-  const handleCloseConversation = async (
-    selectedConversationId
+    console.error(
+      'Load AI conversations error:',
+      conversationsError,
+    )
+
+    setError(
+      conversationsError?.message ||
+        'Conversation history could not be loaded.',
+    )
+  }, [
+    isConversationsError,
+    conversationsError,
+  ])
+
+  useEffect(() => {
+    if (!isConversationError) {
+      return
+    }
+
+    console.error(
+      'Load AI conversation error:',
+      conversationError,
+    )
+
+    setError(
+      conversationError?.message ||
+        'Conversation could not be loaded.',
+    )
+  }, [
+    isConversationError,
+    conversationError,
+  ])
+
+  // ==========================================================
+  // SELECT CONVERSATION
+  // ==========================================================
+
+  const handleSelectConversation = (
+    selectedConversationId,
   ) => {
     if (
       !selectedConversationId ||
@@ -183,168 +285,338 @@ function AIAssistantPage() {
       return
     }
 
-    try {
-      setError('')
-      setIsClosingConversation(true)
+    setError('')
 
-      const closedConversation =
-        await closeConversation(
-          selectedConversationId
-        )
+    setConversationId(
+      selectedConversationId,
+    )
 
-      /*
-       * If the customer closed the conversation that is
-       * currently displayed, immediately mark the chat as
-       * closed so the input becomes unavailable.
-       */
-      if (
-        Number(conversationId) ===
-        Number(selectedConversationId)
-      ) {
-        setConversationStatus(
-          closedConversation?.status ||
-            'CLOSED'
-        )
-      }
-
-      /*
-       * Refresh the sidebar so the conversation now displays
-       * its CLOSED status.
-       */
-      await loadConversations()
-    } catch (requestError) {
-      console.error(
-        'Close AI conversation error:',
-        requestError
-      )
-
-      setError(
-        requestError.message ||
-          'Conversation could not be closed.'
-      )
-    } finally {
-      setIsClosingConversation(false)
-    }
+    setIsHistoryOpen(false)
   }
 
-  /* ============================================================
-     SEND MESSAGE
-  ============================================================ */
+  // ==========================================================
+  // CLOSE CONVERSATION
+  // ==========================================================
 
-  const handleSendMessage = async (message) => {
-    const trimmedMessage = message.trim()
+  const handleCloseConversation =
+    async (
+      selectedConversationId,
+    ) => {
+      if (
+        !selectedConversationId ||
+        isSending ||
+        isLoadingConversation ||
+        isClosingConversation
+      ) {
+        return
+      }
 
-    if (!trimmedMessage || isSending) {
-      return
+      try {
+        setError('')
+
+        const closedConversation =
+          await closeConversationMutation
+            .mutateAsync(
+              selectedConversationId,
+            )
+
+        if (
+          Number(conversationId) ===
+          Number(
+            selectedConversationId,
+          )
+        ) {
+          const nextStatus =
+            closedConversation?.status ||
+            'CLOSED'
+
+          setConversationStatus(
+            nextStatus,
+          )
+
+          queryClient.setQueryData(
+            aiQueryKeys.conversation(
+              selectedConversationId,
+            ),
+            (current) => {
+              if (!current) {
+                return current
+              }
+
+              return {
+                ...current,
+                status:
+                  nextStatus,
+              }
+            },
+          )
+        }
+
+        queryClient.setQueryData(
+          aiQueryKeys.conversations,
+          (current = []) => {
+            if (!Array.isArray(current)) {
+              return current
+            }
+
+            return current.map(
+              (conversation) => {
+                if (
+                  Number(
+                    conversation
+                      ?.conversation_id,
+                  ) !==
+                  Number(
+                    selectedConversationId,
+                  )
+                ) {
+                  return conversation
+                }
+
+                return {
+                  ...conversation,
+
+                  status:
+                    closedConversation
+                      ?.status ||
+                    'CLOSED',
+                }
+              },
+            )
+          },
+        )
+
+        await queryClient
+          .invalidateQueries({
+            queryKey:
+              aiQueryKeys
+                .conversations,
+          })
+      } catch (requestError) {
+        console.error(
+          'Close AI conversation error:',
+          requestError,
+        )
+
+        setError(
+          requestError.message ||
+            'Conversation could not be closed.',
+        )
+      }
     }
 
-    setError('')
-    setIsSending(true)
+  // ==========================================================
+  // SEND MESSAGE
+  // ==========================================================
 
-    /*
-     * Optimistically show the customer's message immediately.
-     *
-     * This object is frontend-only. The backend remains the
-     * source of truth for persisted conversation messages.
-     */
-    const temporaryCustomerMessage = {
-      id: `customer-${Date.now()}`,
-      sender: 'CUSTOMER',
-      message: trimmedMessage,
-    }
+  const handleSendMessage =
+    async (message) => {
+      const trimmedMessage =
+        message.trim()
 
-    setMessages((current) => [
-      ...current,
-      temporaryCustomerMessage,
-    ])
+      if (
+        !trimmedMessage ||
+        isSending
+      ) {
+        return
+      }
 
-    try {
-      const result = await sendMessage(
-        trimmedMessage,
-        conversationId
+      setError('')
+
+      const temporaryCustomerMessage = {
+        id:
+          `customer-${Date.now()}`,
+
+        sender:
+          'CUSTOMER',
+
+        message:
+          trimmedMessage,
+      }
+
+      setMessages(
+        (current) => [
+          ...current,
+          temporaryCustomerMessage,
+        ],
       )
 
-      if (!result?.reply) {
-        throw new Error(
-          'The assistant returned an empty response'
-        )
-      }
+      try {
+        const currentConversationId =
+          conversationId
 
-      /*
-       * The backend creates the conversation when the first
-       * message is sent and returns its ID.
-       */
-      if (
-        !conversationId &&
-        result.conversationId
-      ) {
-        setConversationId(
-          result.conversationId
-        )
-      }
+        const result =
+          await sendMessageMutation
+            .mutateAsync({
+              message:
+                trimmedMessage,
 
-      const assistantMessage = {
-        id: `assistant-${Date.now()}`,
-        sender: 'ASSISTANT',
-        message: result.reply,
+              activeConversationId:
+                currentConversationId,
+            })
+
+        if (!result?.reply) {
+          throw new Error(
+            'The assistant returned an empty response',
+          )
+        }
+
+        const resolvedConversationId =
+          currentConversationId ||
+          result.conversationId ||
+          null
+
+        if (
+          !currentConversationId &&
+          resolvedConversationId
+        ) {
+          setConversationId(
+            resolvedConversationId,
+          )
+
+          setConversationStatus(
+            'ACTIVE',
+          )
+        }
+
+        const assistantMessage = {
+          id:
+            `assistant-${Date.now()}`,
+
+          sender:
+            'ASSISTANT',
+
+          message:
+            result.reply,
+
+          action:
+            result.action ??
+            null,
+        }
+
+        setMessages(
+          (current) => [
+            ...current,
+            assistantMessage,
+          ],
+        )
+
+        if (
+          resolvedConversationId
+        ) {
+          queryClient.setQueryData(
+            aiQueryKeys.conversation(
+              resolvedConversationId,
+            ),
+            (current) => {
+              const persistedMessages =
+                Array.isArray(
+                  current?.messages,
+                )
+                  ? current.messages
+                  : []
+
+              const customerMessage = {
+                sender:
+                  'CUSTOMER',
+
+                message:
+                  trimmedMessage,
+              }
+
+              const responseMessage = {
+                sender:
+                  'ASSISTANT',
+
+                message:
+                  result.reply,
+
+                action:
+                  result.action ??
+                  null,
+              }
+
+              if (!current) {
+                return {
+                  conversation_id:
+                    resolvedConversationId,
+
+                  status:
+                    'ACTIVE',
+
+                  messages: [
+                    customerMessage,
+                    responseMessage,
+                  ],
+                }
+              }
+
+              return {
+                ...current,
+
+                messages: [
+                  ...persistedMessages,
+                  customerMessage,
+                  responseMessage,
+                ],
+              }
+            },
+          )
+        }
+
+        await queryClient
+          .invalidateQueries({
+            queryKey:
+              aiQueryKeys
+                .conversations,
+          })
 
         /*
-         * Ephemeral UI action returned by the backend.
-         *
-         * AIMessageBubble will independently validate this against
-         * the frontend navigation allowlist before displaying it.
+         * Refresh the authoritative conversation
+         * after the backend has persisted the new
+         * customer and assistant messages.
          */
-        action: result.action ?? null,
-      }
+        if (
+          resolvedConversationId
+        ) {
+          await queryClient
+            .invalidateQueries({
+              queryKey:
+                aiQueryKeys
+                  .conversation(
+                    resolvedConversationId,
+                  ),
+            })
+        }
 
-      setMessages((current) => [
-        ...current,
-        assistantMessage,
-      ])
-
-      /*
-       * Refresh conversation history after a successful
-       * exchange so newly created conversations and their
-       * latest activity appear immediately in the sidebar.
-       */
-      await loadConversations()
-
-      return result
-    } catch (requestError) {
-      console.error(
-        'AI Assistant message error:',
-        requestError
-      )
-
-      /*
-       * Remove the optimistic customer message because the
-       * backend did not successfully complete the request.
-       *
-       * AIMessageInput will restore the text into the textarea
-       * because this function rethrows the error.
-       */
-      setMessages((current) =>
-        current.filter(
-          (item) =>
-            item.id !==
-            temporaryCustomerMessage.id
+        return result
+      } catch (requestError) {
+        console.error(
+          'AI Assistant message error:',
+          requestError,
         )
-      )
 
-      setError(
-        requestError.message ||
-          'The assistant could not respond. Please try again.'
-      )
+        setMessages(
+          (current) =>
+            current.filter(
+              (item) =>
+                item.id !==
+                temporaryCustomerMessage.id,
+            ),
+        )
 
-      throw requestError
-    } finally {
-      setIsSending(false)
+        setError(
+          requestError.message ||
+            'The assistant could not respond. Please try again.',
+        )
+
+        throw requestError
+      }
     }
-  }
 
-  /* ============================================================
-     NEW CONVERSATION
-  ============================================================ */
+  // ==========================================================
+  // NEW CONVERSATION
+  // ==========================================================
 
   const handleNewConversation = () => {
     if (
@@ -356,54 +628,67 @@ function AIAssistantPage() {
     }
 
     setConversationId(null)
-    setConversationStatus('ACTIVE')
+
+    setConversationStatus(
+      'ACTIVE',
+    )
+
     setMessages([])
+
     setError('')
+
     setIsHistoryOpen(false)
   }
 
-  /* ============================================================
-     SUGGESTED PROMPT
-  ============================================================ */
+  // ==========================================================
+  // SUGGESTED PROMPT
+  // ==========================================================
 
-  const handleSuggestion = async (prompt) => {
-    try {
-      await handleSendMessage(prompt)
-    } catch {
-      /*
-       * handleSendMessage already handles the visible error.
-       * No additional UI action is required here.
-       */
+  const handleSuggestion =
+    async (prompt) => {
+      try {
+        await handleSendMessage(
+          prompt,
+        )
+      } catch {
+        // Visible error is handled by handleSendMessage.
+      }
     }
-  }
 
-  /* ============================================================
-     CONTROLLED AI NAVIGATION
-  ============================================================ */
+  // ==========================================================
+  // CONTROLLED AI NAVIGATION
+  // ==========================================================
 
-  const handleAINavigation = (route) => {
-    if (typeof route !== 'string' || !route) {
+  const handleAINavigation = (
+    route,
+  ) => {
+    if (
+      typeof route !==
+        'string' ||
+      !route
+    ) {
       return
     }
 
-    /*
-     * The route reaching this function has already been resolved
-     * from the frontend-owned AI navigation allowlist.
-     */
     navigate(route)
   }
 
-  /* ============================================================
-     RENDER
-  ============================================================ */
+  // ==========================================================
+  // RENDER
+  // ==========================================================
 
   return (
     <section className="ai-assistant-page mx-auto w-full max-w-5xl px-3 py-4 sm:px-4 sm:py-6">
       <div className="ai-assistant-shell overflow-hidden rounded-2xl">
         <div className="grid min-h-[calc(100vh-13rem)] grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)]">
+
+          {/* Desktop conversation history */}
+
           <div className="hidden md:block">
             <AIConversationList
-              conversations={conversations}
+              conversations={
+                conversations
+              }
               activeConversationId={
                 conversationId
               }
@@ -427,13 +712,17 @@ function AIAssistantPage() {
             />
           </div>
 
+          {/* Chat */}
+
           <div className="flex min-h-0 flex-col">
             <AIChatHeader
               onNewConversation={
                 handleNewConversation
               }
               onOpenHistory={() =>
-                setIsHistoryOpen(true)
+                setIsHistoryOpen(
+                  true,
+                )
               }
               disabled={
                 isSending ||
@@ -441,6 +730,8 @@ function AIAssistantPage() {
                 isClosingConversation
               }
             />
+
+            {/* Error */}
 
             {error && (
               <div className="mx-4 mt-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:mx-5">
@@ -455,7 +746,9 @@ function AIAssistantPage() {
 
                 <button
                   type="button"
-                  onClick={() => setError('')}
+                  onClick={() =>
+                    setError('')
+                  }
                   aria-label="Dismiss error"
                   className="shrink-0 rounded-md p-1 transition hover:bg-red-100"
                 >
@@ -463,6 +756,8 @@ function AIAssistantPage() {
                 </button>
               </div>
             )}
+
+            {/* Conversation */}
 
             {isLoadingConversation ? (
               <div className="ai-loading-state flex flex-1 items-center justify-center p-8">
@@ -474,36 +769,52 @@ function AIAssistantPage() {
                   </p>
                 </div>
               </div>
-            ) : messages.length === 0 ? (
+            ) : messages.length ===
+              0 ? (
               <AIEmptyState
                 onSuggestion={
                   handleSuggestion
                 }
-                disabled={isSending}
+                disabled={
+                  isSending
+                }
               />
             ) : (
               <AIMessageList
-                messages={messages}
-                isSending={isSending}
-                onNavigate={handleAINavigation}
+                messages={
+                  messages
+                }
+                isSending={
+                  isSending
+                }
+                onNavigate={
+                  handleAINavigation
+                }
               />
             )}
 
             <AIMessageInput
-              onSend={handleSendMessage}
+              onSend={
+                handleSendMessage
+              }
               disabled={
                 isSending ||
                 isLoadingConversation ||
                 isClosingConversation
               }
               conversationClosed={
-                conversationStatus === 'CLOSED'
+                conversationStatus ===
+                'CLOSED'
               }
-              initialMessage={suggestedMessage}
+              initialMessage={
+                suggestedMessage
+              }
             />
           </div>
         </div>
       </div>
+
+      {/* Mobile conversation history */}
 
       {isHistoryOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
@@ -511,7 +822,9 @@ function AIAssistantPage() {
             type="button"
             aria-label="Close conversation history"
             onClick={() =>
-              setIsHistoryOpen(false)
+              setIsHistoryOpen(
+                false,
+              )
             }
             className="ai-history-overlay absolute inset-0"
           />
@@ -531,7 +844,9 @@ function AIAssistantPage() {
               <button
                 type="button"
                 onClick={() =>
-                  setIsHistoryOpen(false)
+                  setIsHistoryOpen(
+                    false,
+                  )
                 }
                 aria-label="Close history"
                 className="ai-icon-button flex h-9 w-9 items-center justify-center rounded-lg transition"
@@ -542,7 +857,9 @@ function AIAssistantPage() {
 
             <div className="min-h-0 flex-1">
               <AIConversationList
-                conversations={conversations}
+                conversations={
+                  conversations
+                }
                 activeConversationId={
                   conversationId
                 }

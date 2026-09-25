@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   ArrowRight,
   MapPin,
@@ -6,70 +6,53 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { apiRequest } from '../lib/api'
+
+import { useAvailableMedicines } from '../hooks/queries/useAvailableMedicines'
+import { useMedicineCategories } from '../hooks/queries/useMedicineCategories'
 
 function SearchPage() {
   const navigate = useNavigate()
-
-  const [medicines, setMedicines] = useState([])
-  const [categories, setCategories] = useState([])
 
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] =
     useState(null)
 
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  // ============================================================
+  // CACHED SEARCH DATA
+  // ============================================================
 
-  useEffect(() => {
-    const fetchSearchData = async () => {
-      try {
-        setLoading(true)
-        setError('')
+  const {
+    data: medicines = [],
+    isLoading: medicinesLoading,
+    isError: isMedicinesError,
+    error: medicinesError,
+    refetch: refetchMedicines,
+  } = useAvailableMedicines()
 
-        const [
-          medicinesResponse,
-          categoriesResponse,
-        ] = await Promise.all([
-          apiRequest(
-            '/pharmacies/available-medicines'
-          ),
-          apiRequest('/medicine-categories'),
-        ])
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    isError: isCategoriesError,
+    error: categoriesError,
+    refetch: refetchCategories,
+  } = useMedicineCategories()
 
-        if (!medicinesResponse.success) {
-          throw new Error(
-            medicinesResponse.message ||
-              'Failed to retrieve medicines'
-          )
-        }
+  const loading =
+    medicinesLoading ||
+    categoriesLoading
 
-        if (!categoriesResponse.success) {
-          throw new Error(
-            categoriesResponse.message ||
-              'Failed to retrieve medicine categories'
-          )
-        }
+  const hasError =
+    isMedicinesError ||
+    isCategoriesError
 
-        setMedicines(medicinesResponse.data || [])
-        setCategories(categoriesResponse.data || [])
-      } catch (error) {
-        console.error(
-          'Fetch medicine search data error:',
-          error
-        )
+  const errorMessage =
+    medicinesError?.message ||
+    categoriesError?.message ||
+    'Failed to load medicine search'
 
-        setError(
-          error.message ||
-            'Failed to load medicine search'
-        )
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchSearchData()
-  }, [])
+  // ============================================================
+  // FILTER MEDICINES
+  // ============================================================
 
   const filteredMedicines = useMemo(() => {
     const normalizedSearch = searchTerm
@@ -94,7 +77,7 @@ function SearchPage() {
         searchableValues.some((value) =>
           String(value ?? '')
             .toLowerCase()
-            .includes(normalizedSearch)
+            .includes(normalizedSearch),
         )
 
       return matchesCategory && matchesSearch
@@ -105,6 +88,28 @@ function SearchPage() {
     selectedCategoryId,
   ])
 
+  // ============================================================
+  // RETRY
+  // ============================================================
+
+  const handleRetry = async () => {
+    const requests = []
+
+    if (isMedicinesError) {
+      requests.push(refetchMedicines())
+    }
+
+    if (isCategoriesError) {
+      requests.push(refetchCategories())
+    }
+
+    await Promise.all(requests)
+  }
+
+  // ============================================================
+  // MEDICINE NAVIGATION
+  // ============================================================
+
   const handleMedicineClick = (medicine) => {
     const representativeOffering =
       medicine.offerings?.[0]
@@ -112,8 +117,9 @@ function SearchPage() {
     if (!representativeOffering?.medicine_id) {
       console.error(
         'Medicine has no available offering:',
-        medicine
+        medicine,
       )
+
       return
     }
 
@@ -123,9 +129,13 @@ function SearchPage() {
         state: {
           groupedMedicine: medicine,
         },
-      }
+      },
     )
   }
+
+  // ============================================================
+  // AI ASSISTANT
+  // ============================================================
 
   const handleAskAssistant = () => {
     const trimmedSearch = searchTerm.trim()
@@ -236,7 +246,7 @@ function SearchPage() {
                 type="button"
                 onClick={() =>
                   setSelectedCategoryId(
-                    category.category_id
+                    category.category_id,
                   )
                 }
                 className={`search-category ${
@@ -261,7 +271,7 @@ function SearchPage() {
               : 'Available medicines'}
           </h2>
 
-          {!loading && !error && (
+          {!loading && !hasError && (
             <span className="search-result-count">
               {filteredMedicines.length} found
             </span>
@@ -278,17 +288,15 @@ function SearchPage() {
         )}
 
         {/* Error */}
-        {!loading && error && (
+        {!loading && hasError && (
           <div className="search-error-card">
             <h3>Unable to load medicines</h3>
 
-            <p>{error}</p>
+            <p>{errorMessage}</p>
 
             <button
               type="button"
-              onClick={() =>
-                window.location.reload()
-              }
+              onClick={handleRetry}
             >
               Try again
             </button>
@@ -297,7 +305,7 @@ function SearchPage() {
 
         {/* Results */}
         {!loading &&
-          !error &&
+          !hasError &&
           filteredMedicines.length > 0 && (
             <div className="medicine-result-list">
               {filteredMedicines.map(
@@ -311,7 +319,7 @@ function SearchPage() {
                       type="button"
                       onClick={() =>
                         handleMedicineClick(
-                          medicine
+                          medicine,
                         )
                       }
                       className="medicine-result-card"
@@ -380,14 +388,14 @@ function SearchPage() {
                       </div>
                     </button>
                   )
-                }
+                },
               )}
             </div>
           )}
 
         {/* Empty */}
         {!loading &&
-          !error &&
+          !hasError &&
           filteredMedicines.length === 0 && (
             <div className="search-empty-card">
               <div className="search-empty-icon">

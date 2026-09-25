@@ -1,8 +1,3 @@
-// Centralized TanStack Query keys for PharmaLink Customer PWA.
-//
-// Keep query keys here so pages and hooks use the same cache entries.
-// This makes invalidation, refetching, and cache updates predictable.
-
 export const queryKeys = {
   // Customer account
   profile: ['customer-profile'],
@@ -10,8 +5,21 @@ export const queryKeys = {
   // Partner pharmacies
   pharmacies: ['pharmacies'],
 
-  // Medicines and search
+  // Medicines
   medicines: ['medicines'],
+  availableMedicines: ['available-medicines'],
+  medicineCategories: ['medicine-categories'],
+
+    aiConversations: [
+  'ai-conversations',
+],
+
+aiConversation: (
+  conversationId,
+) => [
+  'ai-conversation',
+  Number(conversationId),
+],
 
   // Customer reservations
   reservations: ['customer-reservations'],
