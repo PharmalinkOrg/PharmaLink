@@ -1,5 +1,3 @@
-// src/lib/api.js
-
 import { supabase } from './supabaseClient'
 
 const API_URL = (
@@ -8,13 +6,13 @@ const API_URL = (
 
 const SESSION_KEY = 'pharmalink-customer-session'
 
-// --------------------------------------------------
-// Shared backend API request helper
-// --------------------------------------------------
+// ============================================================
+// SHARED BACKEND API REQUEST HELPER
+// ============================================================
 
 export async function apiRequest(
   path,
-  { token, method = 'GET', body } = {}
+  { token, method = 'GET', body } = {},
 ) {
   let accessToken = token
 
@@ -34,35 +32,40 @@ export async function apiRequest(
   const response = await fetch(`${API_URL}${path}`, {
     method,
     headers: {
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(body
+        ? { 'Content-Type': 'application/json' }
+        : {}),
       ...(accessToken
         ? { Authorization: `Bearer ${accessToken}` }
         : {}),
     },
-    ...(body ? { body: JSON.stringify(body) } : {}),
+    ...(body
+      ? { body: JSON.stringify(body) }
+      : {}),
   })
 
-  const payload = await response.json().catch(() => ({}))
+  const payload = await response
+    .json()
+    .catch(() => ({}))
 
   if (!response.ok) {
     throw new Error(
-      payload.message || 'The request could not be completed'
+      payload.message ||
+        'The request could not be completed',
     )
   }
 
   return payload
 }
 
-// --------------------------------------------------
-// API methods
-// --------------------------------------------------
+// ============================================================
+// API METHODS
+// ============================================================
 
 export const api = {
-  // --------------------------------------------------
+  // ==========================================================
   // PHARMACIES
-  // Uses the PharmaLink backend
-  // GET /api/pharmacies
-  // --------------------------------------------------
+  // ==========================================================
 
   getPharmacies: async () => {
     const response = await apiRequest('/pharmacies')
@@ -70,27 +73,72 @@ export const api = {
     return response?.data || []
   },
 
-  // --------------------------------------------------
-  // PRESCRIPTIONS
-  // Uses the PharmaLink backend
-  // POST /api/prescriptions
-  // --------------------------------------------------
+  // ==========================================================
+  // MEDICINES
+  //
+  // Uses the same customer-facing availability endpoint used
+  // by PharmaLink search.
+  // ==========================================================
 
-  createPrescription: async (prescriptionData) => {
-    const response = await apiRequest('/prescriptions', {
-      method: 'POST',
-      body: prescriptionData,
-    })
+  getAvailableMedicines: async () => {
+    const response = await apiRequest(
+      '/pharmacies/available-medicines',
+    )
+
+    return response?.data || []
+  },
+
+  // ==========================================================
+  // MEDICINE REQUESTS
+  // ==========================================================
+
+  createMedicineRequest: async (requestData) => {
+    const response = await apiRequest(
+      '/medicine-requests',
+      {
+        method: 'POST',
+        body: requestData,
+      },
+    )
 
     return response?.data || null
   },
 
-  // --------------------------------------------------
-  // --------------------------------------------------
+  getMyMedicineRequests: async () => {
+    const response = await apiRequest(
+      '/medicine-requests',
+    )
+
+    return response?.data || []
+  },
+
+  getMedicineRequestById: async (requestId) => {
+    const response = await apiRequest(
+      `/medicine-requests/${requestId}`,
+    )
+
+    return response?.data || null
+  },
+
+  // ==========================================================
+  // PRESCRIPTIONS
+  // ==========================================================
+
+  createPrescription: async (prescriptionData) => {
+    const response = await apiRequest(
+      '/prescriptions',
+      {
+        method: 'POST',
+        body: prescriptionData,
+      },
+    )
+
+    return response?.data || null
+  },
+
+  // ==========================================================
   // AUTH
-  // Login/reset use Supabase Auth directly.
-  // Customer registration uses the PharmaLink backend.
-  // --------------------------------------------------
+  // ==========================================================
 
   signIn: async (email, password) => {
     const { data, error } =
@@ -99,33 +147,43 @@ export const api = {
         password,
       })
 
-    if (error) throw error
+    if (error) {
+      throw error
+    }
 
     return data
   },
 
   register: async (form) => {
-    const response = await apiRequest('/auth/register', {
-      method: 'POST',
-      body: {
-        first_name: form.first_name,
-        last_name: form.last_name,
-        phone: form.phone,
-        email: form.email,
-        password: form.password,
+    const response = await apiRequest(
+      '/auth/register',
+      {
+        method: 'POST',
+        body: {
+          first_name: form.first_name,
+          last_name: form.last_name,
+          phone: form.phone,
+          email: form.email,
+          password: form.password,
+        },
       },
-    })
+    )
 
     return response?.data
   },
 
   resetPassword: async (email) => {
     const { data, error } =
-      await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin,
-      })
+      await supabase.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo: window.location.origin,
+        },
+      )
 
-    if (error) throw error
+    if (error) {
+      throw error
+    }
 
     return data
   },
