@@ -14,31 +14,20 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
 
 // ============================================================
-// SAME-DAY PICKUP RULES
+// RESERVATION BUSINESS RULES
 // ============================================================
 
 const PICKUP_START_TIME = '08:00'
 const PICKUP_END_TIME = '20:00'
 
-/*
- * Give the pharmacy time to prepare the reservation
- * before the customer arrives.
- */
 const PREPARATION_BUFFER_MINUTES = 30
-
-/*
- * Pickup times are rounded upward to a clean
- * 15-minute interval.
- */
 const PICKUP_INTERVAL_MINUTES = 15
 
 // ============================================================
 // DATE / TIME HELPERS
 // ============================================================
 
-function getLocalDateString() {
-  const date = new Date()
-
+function getLocalDateString(date = new Date()) {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
@@ -60,9 +49,7 @@ function timeStringToMinutes(timeString) {
     return null
   }
 
-  const [hours, minutes] = timeString
-    .split(':')
-    .map(Number)
+  const [hours, minutes] = timeString.split(':').map(Number)
 
   if (
     !Number.isInteger(hours) ||
@@ -78,18 +65,21 @@ function timeStringToMinutes(timeString) {
   return hours * 60 + minutes
 }
 
-/*
- * Calculate the earliest pickup time available right now.
+/**
+ * Calculate the earliest valid pickup time.
  *
  * Rules:
- * - Never before 8:00 AM.
- * - At least 30 minutes from the current time.
- * - Round upward to the next 15-minute interval.
- * - Never later than 8:00 PM.
+ * - Same-day pickup only.
+ * - Pickup cannot be before 8:00 AM.
+ * - Pharmacy gets at least 30 minutes preparation time.
+ * - Earliest pickup is rounded UP to a 15-minute interval.
+ * - Pickup cannot be later than 8:00 PM.
+ *
+ * Returns:
+ * "HH:mm" when a pickup time remains.
+ * null when reservations are closed for today.
  */
-function getEarliestPickupTime() {
-  const now = new Date()
-
+function getEarliestPickupTime(now = new Date()) {
   const currentMinutes =
     now.getHours() * 60 + now.getMinutes()
 
@@ -99,18 +89,15 @@ function getEarliestPickupTime() {
   const closingMinutes =
     timeStringToMinutes(PICKUP_END_TIME)
 
-  /*
-   * Add preparation buffer.
-   */
   let earliestMinutes =
     currentMinutes + PREPARATION_BUFFER_MINUTES
 
   /*
-   * Round upward to the next 15-minute interval.
-   *
    * Example:
-   * 10:43 + 30 minutes = 11:13
-   * rounded up = 11:15
+   *
+   * Current time: 6:42 PM
+   * + 30 minutes: 7:12 PM
+   * Rounded upward: 7:15 PM
    */
   earliestMinutes =
     Math.ceil(
@@ -118,7 +105,8 @@ function getEarliestPickupTime() {
     ) * PICKUP_INTERVAL_MINUTES
 
   /*
-   * Before opening hours, the earliest pickup is 8 AM.
+   * Before opening, the earliest possible pickup
+   * remains 8:00 AM.
    */
   earliestMinutes = Math.max(
     earliestMinutes,
@@ -126,7 +114,7 @@ function getEarliestPickupTime() {
   )
 
   /*
-   * There is no valid pickup time remaining today.
+   * No valid same-day pickup remains.
    */
   if (earliestMinutes > closingMinutes) {
     return null
@@ -140,9 +128,7 @@ function formatPickupDate(dateString) {
     return ''
   }
 
-  const [year, month, day] = dateString
-    .split('-')
-    .map(Number)
+  const [year, month, day] = dateString.split('-').map(Number)
 
   const date = new Date(year, month - 1, day)
 
@@ -162,9 +148,7 @@ function formatPickupTime(timeString) {
     return ''
   }
 
-  const [hours, minutes] = timeString
-    .split(':')
-    .map(Number)
+  const [hours, minutes] = timeString.split(':').map(Number)
 
   if (
     !Number.isInteger(hours) ||
@@ -183,12 +167,8 @@ function formatPickupTime(timeString) {
   })
 }
 
-/*
- * Validate the selected pickup time against:
- *
- * 1. Pharmacy pickup hours.
- * 2. Current time.
- * 3. 30-minute preparation buffer.
+/**
+ * Validate a customer's selected pickup time.
  */
 function isPickupTimeAllowed(
   timeString,
@@ -208,11 +188,10 @@ function isPickupTimeAllowed(
       ? timeStringToMinutes(earliestPickupTime)
       : null
 
-  if (selectedMinutes === null) {
-    return false
-  }
-
-  if (earliestMinutes === null) {
+  if (
+    selectedMinutes === null ||
+    earliestMinutes === null
+  ) {
     return false
   }
 
@@ -224,7 +203,7 @@ function isPickupTimeAllowed(
 }
 
 // ============================================================
-// PAGE
+// RESERVATIONS PAGE
 // ============================================================
 
 function ReservationsPage() {
@@ -238,13 +217,9 @@ function ReservationsPage() {
   const inventory = reservationData?.inventory
 
   // ==========================================================
-  // RESERVATION STATE
+  // STATE
   // ==========================================================
 
-  /*
-   * We keep a small clock state so the reservation window can
-   * update while the customer remains on this page.
-   */
   const [currentTime, setCurrentTime] = useState(
     () => new Date(),
   )
@@ -261,15 +236,14 @@ function ReservationsPage() {
     useState(null)
 
   /*
-   * Same-day pickup date.
+   * Reservation pickup date is fixed to today.
+   *
+   * There is intentionally NO editable date input.
    */
-  const pickupDate = getLocalDateString()
+  const pickupDate = getLocalDateString(currentTime)
 
   /*
-   * Recalculate the current time every 30 seconds.
-   *
-   * This prevents a customer from opening the page at
-   * 7:20 PM and keeping an outdated reservation window.
+   * Update reservation availability every 30 seconds.
    */
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -282,28 +256,23 @@ function ReservationsPage() {
   }, [])
 
   /*
-   * Calculate the earliest valid pickup time.
-   *
-   * currentTime is included as a dependency so this value
-   * automatically refreshes as time passes.
+   * Calculate the earliest pickup using the current
+   * clock state.
    */
   const earliestPickupTime = useMemo(() => {
-    return getEarliestPickupTime()
+    return getEarliestPickupTime(currentTime)
   }, [currentTime])
 
   /*
-   * If null, there is no longer enough time today to:
-   *
-   * current time
-   * + preparation buffer
-   * <= 8:00 PM
+   * null means there is no valid same-day pickup time
+   * remaining before the 8:00 PM cutoff.
    */
   const reservationWindowClosed =
     earliestPickupTime === null
 
   /*
-   * If the user selected a time and then remained on the page
-   * long enough for that time to become invalid, clear it.
+   * Clear a previously selected pickup time when it
+   * becomes invalid while the page remains open.
    */
   useEffect(() => {
     if (!pickupTime) {
@@ -320,15 +289,14 @@ function ReservationsPage() {
       setPickupTime('')
     }
   }, [
-    currentTime,
     earliestPickupTime,
     pickupTime,
     reservationWindowClosed,
   ])
 
   /*
-   * Redirect if the page was opened directly
-   * without selecting a medicine, pharmacy, and inventory.
+   * This page expects the medicine/pharmacy/inventory
+   * selection to come from the medicine details flow.
    */
   useEffect(() => {
     if (!medicine || !pharmacy || !inventory) {
@@ -341,13 +309,10 @@ function ReservationsPage() {
     navigate,
   ])
 
-  /*
-   * The inventory quantity is only used for the UI.
-   *
-   * The backend remains the final authority for stock
-   * availability because inventory can change after this
-   * page was opened.
-   */
+  // ==========================================================
+  // INVENTORY / PRICE
+  // ==========================================================
+
   const availableStock = useMemo(() => {
     const stock = Number(inventory?.quantity)
 
@@ -400,25 +365,11 @@ function ReservationsPage() {
 
   const handlePickupTimeChange = (event) => {
     setError('')
-
-    const selectedTime = event.target.value
-
-    if (!selectedTime) {
-      setPickupTime('')
-      return
-    }
-
-    /*
-     * Don't immediately reject the input here.
-     *
-     * Native time inputs behave slightly differently across
-     * browsers. Final validation still occurs on submission.
-     */
-    setPickupTime(selectedTime)
+    setPickupTime(event.target.value)
   }
 
   // ==========================================================
-  // SUBMIT
+  // CREATE RESERVATION
   // ==========================================================
 
   const handleSubmit = async (event) => {
@@ -431,7 +382,7 @@ function ReservationsPage() {
     setError('')
 
     // --------------------------------------------------------
-    // Reservation source
+    // Source data
     // --------------------------------------------------------
 
     if (!medicine || !pharmacy || !inventory) {
@@ -442,54 +393,46 @@ function ReservationsPage() {
     }
 
     // --------------------------------------------------------
-    // Reservation window
+    // Re-check the reservation window at submission time
     // --------------------------------------------------------
 
-    /*
-     * Recalculate immediately instead of relying only on the
-     * 30-second UI timer.
-     */
+    const submissionTime = new Date()
+
     const latestEarliestPickupTime =
-      getEarliestPickupTime()
+      getEarliestPickupTime(submissionTime)
 
     if (!latestEarliestPickupTime) {
       setError(
-        'Reservations are closed for today because there is no longer enough time for same-day preparation and pickup before 8:00 PM.',
+        'Reservations are closed for today because there is no longer enough time for the pharmacy to prepare your order before the 8:00 PM pickup cutoff.',
       )
       return
     }
 
     // --------------------------------------------------------
-    // Pharmacy ID
+    // Pharmacy
     // --------------------------------------------------------
 
-    const pharmacyId =
-      Number(pharmacy.pharmacy_id)
+    const pharmacyId = Number(pharmacy.pharmacy_id)
 
     if (
       !Number.isInteger(pharmacyId) ||
       pharmacyId <= 0
     ) {
-      setError(
-        'The selected pharmacy is invalid.',
-      )
+      setError('The selected pharmacy is invalid.')
       return
     }
 
     // --------------------------------------------------------
-    // Medicine ID
+    // Medicine
     // --------------------------------------------------------
 
-    const medicineId =
-      Number(medicine.medicine_id)
+    const medicineId = Number(medicine.medicine_id)
 
     if (
       !Number.isInteger(medicineId) ||
       medicineId <= 0
     ) {
-      setError(
-        'The selected medicine is invalid.',
-      )
+      setError('The selected medicine is invalid.')
       return
     }
 
@@ -503,9 +446,7 @@ function ReservationsPage() {
       !Number.isInteger(requestedQuantity) ||
       requestedQuantity < 1
     ) {
-      setError(
-        'Quantity must be at least 1.',
-      )
+      setError('Quantity must be at least 1.')
       return
     }
 
@@ -520,11 +461,12 @@ function ReservationsPage() {
     // Same-day pickup
     // --------------------------------------------------------
 
-    if (
-      pickupDate !== getLocalDateString()
-    ) {
+    const submissionDate =
+      getLocalDateString(submissionTime)
+
+    if (pickupDate !== submissionDate) {
       setError(
-        'Reservations must be picked up on the same day.',
+        'The reservation date has changed. Please refresh the page and try again.',
       )
       return
     }
@@ -534,33 +476,19 @@ function ReservationsPage() {
     // --------------------------------------------------------
 
     if (!pickupTime) {
-      setError(
-        'Please select a pickup time.',
-      )
+      setError('Please select a pickup time.')
       return
     }
 
-    const normalizedPickupTime =
-      pickupTime.trim()
+    const normalizedPickupTime = pickupTime.trim()
 
     if (
-      !/^\d{2}:\d{2}$/.test(
-        normalizedPickupTime,
-      )
+      !/^\d{2}:\d{2}$/.test(normalizedPickupTime)
     ) {
-      setError(
-        'Please select a valid pickup time.',
-      )
+      setError('Please select a valid pickup time.')
       return
     }
 
-    /*
-     * IMPORTANT:
-     *
-     * Validate against a freshly calculated earliest time.
-     * This prevents the customer from submitting a pickup
-     * time that became invalid while filling out the form.
-     */
     if (
       !isPickupTimeAllowed(
         normalizedPickupTime,
@@ -582,43 +510,47 @@ function ReservationsPage() {
     const trimmedNotes = notes.trim()
 
     if (trimmedNotes.length > 500) {
-      setError(
-        'Notes cannot exceed 500 characters.',
-      )
+      setError('Notes cannot exceed 500 characters.')
       return
     }
 
     // --------------------------------------------------------
-    // Create reservation
+    // API request
     // --------------------------------------------------------
 
     try {
       setSubmitting(true)
 
-      const response =
-        await apiRequest('/reservations', {
-          method: 'POST',
+      const response = await apiRequest('/reservations', {
+        method: 'POST',
 
-          body: {
-            pharmacy_id: pharmacyId,
+        body: {
+          pharmacy_id: pharmacyId,
 
-            pickup_date: pickupDate,
+          /*
+           * Always same-day.
+           */
+          pickup_date: pickupDate,
 
-            pickup_time:
-              normalizedPickupTime,
+          /*
+           * Already validated against:
+           * - opening time
+           * - current time
+           * - 30-minute preparation buffer
+           * - 8 PM cutoff
+           */
+          pickup_time: normalizedPickupTime,
 
-            notes:
-              trimmedNotes || null,
+          notes: trimmedNotes || null,
 
-            items: [
-              {
-                medicine_id: medicineId,
-                quantity:
-                  requestedQuantity,
-              },
-            ],
-          },
-        })
+          items: [
+            {
+              medicine_id: medicineId,
+              quantity: requestedQuantity,
+            },
+          ],
+        },
+      })
 
       if (!response?.success) {
         throw new Error(
@@ -627,11 +559,6 @@ function ReservationsPage() {
         )
       }
 
-      /*
-       * Your backend may return the reservation directly
-       * in data or under data.reservation depending on the
-       * response shape.
-       */
       const reservation =
         response?.data?.reservation ||
         response?.data ||
@@ -655,7 +582,7 @@ function ReservationsPage() {
   }
 
   // ==========================================================
-  // SUCCESS
+  // SUCCESS VIEW
   // ==========================================================
 
   if (success) {
@@ -756,9 +683,7 @@ function ReservationsPage() {
 
                   <p className="mt-1 text-sm font-bold text-[var(--text-primary)]">
                     Today ·{' '}
-                    {formatPickupDate(
-                      pickupDate,
-                    )}
+                    {formatPickupDate(pickupDate)}
                   </p>
 
                 </div>
@@ -778,9 +703,7 @@ function ReservationsPage() {
                   </p>
 
                   <p className="mt-1 text-sm font-bold text-[var(--text-primary)]">
-                    {formatPickupTime(
-                      pickupTime,
-                    )}
+                    {formatPickupTime(pickupTime)}
                   </p>
 
                 </div>
@@ -825,7 +748,7 @@ function ReservationsPage() {
   }
 
   // ==========================================================
-  // PAGE
+  // MAIN VIEW
   // ==========================================================
 
   return (
@@ -882,8 +805,7 @@ function ReservationsPage() {
             )}
 
             <p className="mt-1 text-xs font-semibold text-[var(--text-secondary)]">
-              {medicine.dosage} •{' '}
-              {medicine.dosage_form}
+              {medicine.dosage} • {medicine.dosage_form}
             </p>
 
           </div>
@@ -897,9 +819,8 @@ function ReservationsPage() {
             </p>
 
             <p className="mt-1 text-[11px] leading-relaxed text-amber-600">
-              You may need to present a valid
-              prescription when picking up this
-              medicine.
+              You may need to present a valid prescription
+              when picking up this medicine.
             </p>
 
           </div>
@@ -1034,7 +955,7 @@ function ReservationsPage() {
           </div>
         </div>
 
-        {/* Closed state */}
+        {/* Reservation closed */}
         {reservationWindowClosed && (
           <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-5">
 
@@ -1054,9 +975,9 @@ function ReservationsPage() {
                 <p className="mt-1 text-xs leading-relaxed text-amber-700">
                   There is no longer enough time for the
                   pharmacy to prepare your reservation
-                  before the 8:00 PM pickup cutoff. You
-                  can continue browsing and return
-                  tomorrow to make a reservation.
+                  before the 8:00 PM pickup cutoff. You can
+                  continue browsing and return tomorrow to
+                  make a reservation.
                 </p>
 
               </div>
@@ -1064,7 +985,11 @@ function ReservationsPage() {
           </div>
         )}
 
-        {/* Pickup date */}
+        {/* ==================================================
+            PICKUP DATE
+            FIXED TO TODAY - NO DATE INPUT
+        ================================================== */}
+
         <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
 
           <div className="flex items-center gap-2 text-sm font-extrabold text-[var(--text-primary)]">
@@ -1091,9 +1016,7 @@ function ReservationsPage() {
               </p>
 
               <p className="mt-1 text-sm font-extrabold text-[var(--text-primary)]">
-                {formatPickupDate(
-                  pickupDate,
-                )}
+                {formatPickupDate(pickupDate)}
               </p>
 
             </div>
@@ -1106,7 +1029,10 @@ function ReservationsPage() {
           </div>
         </div>
 
-        {/* Pickup time */}
+        {/* ==================================================
+            PICKUP TIME
+        ================================================== */}
+
         <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
 
           <label
@@ -1125,6 +1051,7 @@ function ReservationsPage() {
 
           {!reservationWindowClosed ? (
             <>
+
               <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
                 Select a pickup time from{' '}
                 <strong>
@@ -1143,8 +1070,7 @@ function ReservationsPage() {
                 max={PICKUP_END_TIME}
 
                 step={
-                  PICKUP_INTERVAL_MINUTES *
-                  60
+                  PICKUP_INTERVAL_MINUTES * 60
                 }
 
                 value={pickupTime}
@@ -1175,6 +1101,7 @@ function ReservationsPage() {
                 </p>
 
               </div>
+
             </>
           ) : (
             <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
@@ -1206,8 +1133,7 @@ function ReservationsPage() {
           </label>
 
           <p className="mt-1 text-xs text-[var(--text-secondary)]">
-            Add any additional information for the
-            pharmacy.
+            Add any additional information for the pharmacy.
           </p>
 
           <textarea
@@ -1250,7 +1176,7 @@ function ReservationsPage() {
           </div>
         )}
 
-        {/* Submit */}
+        {/* Confirmation */}
         <div className="reservation-confirm-card">
 
           <div className="reservation-confirm-header">
