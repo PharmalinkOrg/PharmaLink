@@ -7,17 +7,17 @@ const {
   markAllNotificationsAsRead,
 } = require('../controllers/notificationController')
 
-const {
-  authenticateUser,
-} = require('../middleware/authMiddleware')
-
-const {
-  loadPharmaUser,
-} = require('../middleware/userMiddleware')
+// These middleware files use:
+// module.exports = authenticateUser
+// module.exports = loadPharmaUser
+//
+// Therefore, DO NOT destructure these imports.
+const authenticateUser = require('../middleware/authMiddleware')
+const loadPharmaUser = require('../middleware/userMiddleware')
 
 const router = express.Router()
 
-/*
+/**
  * Every notification endpoint requires:
  *
  * 1. Valid Supabase authentication
@@ -25,10 +25,10 @@ const router = express.Router()
  */
 router.use(
   authenticateUser,
-  loadPharmaUser,
+  loadPharmaUser
 )
 
-/*
+/**
  * IMPORTANT:
  * Static routes must come before
  * /:notificationId/read.
@@ -36,22 +36,22 @@ router.use(
 
 router.get(
   '/',
-  getMyNotifications,
+  getMyNotifications
 )
 
 router.get(
   '/unread-count',
-  getUnreadCount,
+  getUnreadCount
 )
 
 router.patch(
   '/read-all',
-  markAllNotificationsAsRead,
+  markAllNotificationsAsRead
 )
 
 router.patch(
   '/:notificationId/read',
-  markNotificationAsRead,
+  markNotificationAsRead
 )
 
 module.exports = router
