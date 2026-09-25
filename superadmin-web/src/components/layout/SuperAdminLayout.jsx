@@ -1,19 +1,30 @@
 // File: superadmin-web/src/components/layout/SuperAdminLayout.jsx
 
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LogOut } from 'lucide-react'
+import { 
+  LogOut, 
+  LayoutGrid, 
+  Store, 
+  UserCog, 
+  Users, 
+  UserCheck, 
+  BarChart3, 
+  ScrollText, 
+  Bell, 
+  Settings 
+} from 'lucide-react'
 import '../../App.css'
 
 const navigation = [
-  { label: 'Dashboard', to: '/' },
-  { label: 'Pharmacies', to: '/pharmacies' },
-  { label: 'Pharmacy Admins', to: '/pharmacy-admins' },
-  { label: 'Customers', to: '/customers' },
-  { label: 'Users', to: '/users' },
-  { label: 'Reports', to: '/reports' },
-  { label: 'Audit Logs', to: '/audit-logs' },
-  { label: 'Notifications', to: '/notifications' },
-  { label: 'Settings', to: '/settings' },
+  { label: 'Dashboard', to: '/', icon: LayoutGrid },
+  { label: 'Pharmacies', to: '/pharmacies', icon: Store },
+  { label: 'Pharmacy Admins', to: '/pharmacy-admins', icon: UserCog },
+  { label: 'Customers', to: '/customers', icon: Users },
+  { label: 'Users', to: '/users', icon: UserCheck },
+  { label: 'Reports', to: '/reports', icon: BarChart3 },
+  { label: 'Audit Logs', to: '/audit-logs', icon: ScrollText },
+  { label: 'Notifications', to: '/notifications', icon: Bell },
+  { label: 'Settings', to: '/settings', icon: Settings },
 ]
 
 function SuperAdminLayout() {
@@ -30,21 +41,25 @@ function SuperAdminLayout() {
   return (
     <div className="superadmin-layout">
       <aside className="sidebar">
-        <h1 className="brand">
-          PharmaLink
+        <div className="brand">
+          <img src="/FinalLogo.png" alt="PharmaLink" className="brand-logo" />
           <span>Super Admin</span>
-        </h1>
+        </div>
 
         <nav aria-label="Main navigation">
-          {navigation.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/'}
-            >
-              {item.label}
-            </NavLink>
-          ))}
+          {navigation.map((item) => {
+            const Icon = item.icon
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/'}
+              >
+                <Icon size={20} />
+                <span>{item.label}</span>
+              </NavLink>
+            )
+          })}
         </nav>
 
         {/* Logout */}

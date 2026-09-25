@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Pill, Search, ChevronDown, ChevronUp, Check } from 'lucide-react'
 
 function MedicineDropdown({
   medicines = [],
@@ -99,7 +100,7 @@ function MedicineDropdown({
         {selectedMedicine ? (
           <div className="medicine-selected">
             <div className="medicine-icon">
-              <span>+</span>
+              <Pill size={18} />
             </div>
 
             <div className="medicine-selected-info">
@@ -122,7 +123,7 @@ function MedicineDropdown({
         )}
 
         <span className="medicine-chevron">
-          {open ? '⌃' : '⌄'}
+          {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </span>
       </button>
 
@@ -135,7 +136,7 @@ function MedicineDropdown({
 
           <div className="medicine-dropdown-search">
             <span className="medicine-search-icon">
-              ⌕
+              <Search size={16} />
             </span>
 
             <input
@@ -188,7 +189,7 @@ function MedicineDropdown({
                     }
                   >
                     <div className="medicine-option-icon">
-                      +
+                      <Pill size={16} />
                     </div>
 
                     <div className="medicine-option-content">
@@ -200,7 +201,7 @@ function MedicineDropdown({
 
                         {isSelected && (
                           <span className="medicine-check">
-                            ✓
+                            <Check size={14} />
                           </span>
                         )}
                       </div>

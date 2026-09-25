@@ -54,12 +54,12 @@
 }
 
 .prescription-table thead th {
-  background: #e0f2fe;
+  background: #e8f4f8;
   color: #1e293b;
   font-size: 0.8125rem;
   font-weight: 600;
   padding: 1rem;
-  border-bottom: 1px solid #bae6fd;
+  border-bottom: 1px solid #c5e3f0;
   white-space: nowrap;
 }
 
@@ -108,8 +108,8 @@
 }
 
 .badge-verified {
-  background: #dbeafe;
-  color: #2563eb;
+  background: #e8f4f8;
+  color: #74B3CE;
 }
 
 .badge-rejected {
@@ -262,7 +262,7 @@
 
 .prescription-download {
   font-size: 0.8125rem;
-  color: #2563eb;
+  color: #74B3CE;
   text-decoration: none;
 }
 

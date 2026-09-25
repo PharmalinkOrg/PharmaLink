@@ -17,7 +17,7 @@
 }
 
 .settings-page .page-title-row svg {
-  color: #17634f;
+  color: #172A3A;
 }
 
 .settings-page .page-title-row h1 {
@@ -76,15 +76,15 @@
 .settings-toggle input {
   width: 16px;
   height: 16px;
-  accent-color: #17634f;
+  accent-color: #172A3A;
   cursor: pointer;
 }
 
 .password-reset-button {
   padding: 9px 16px;
-  border: 1px solid #17634f;
+  border: 1px solid #172A3A;
   border-radius: 8px;
-  background: #17634f;
+  background: #172A3A;
   color: #fff;
   font-size: 14px;
   font-weight: 600;
@@ -92,7 +92,7 @@
 }
 
 .password-reset-button:hover {
-  background: #12503f;
+  background: #508991;
 }
 
 @media (max-width: 768px) {
