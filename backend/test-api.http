@@ -675,3 +675,5 @@ Content-Type: application/json
   "conversationId": 2,
   "message": "What if it requires a prescription?"
 }
+###
+http://localhost:5000/api/health

@@ -14,141 +14,160 @@ function MedicineDetailsPage() {
   const { medicineId } = useParams()
 
   const [medicine, setMedicine] = useState(null)
-  const [pharmacies, setPharmacies] = useState([])
-  const [selectedPharmacy, setSelectedPharmacy] = useState(null)
+  const [offerings, setOfferings] = useState([])
+  const [pharmacyCount, setPharmacyCount] = useState(0)
 
-  const [loadingMedicine, setLoadingMedicine] = useState(true)
-  const [loadingPharmacies, setLoadingPharmacies] = useState(true)
+  const [selectedOffering, setSelectedOffering] =
+    useState(null)
+
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  /*
-   * Load medicine information
-   */
+  /* ==========================================================
+     LOAD MEDICINE + EQUIVALENT PHARMACY OFFERINGS
+  ========================================================== */
+
   useEffect(() => {
-    const loadMedicine = async () => {
+    const loadMedicineAvailability = async () => {
       try {
-        setLoadingMedicine(true)
+        setLoading(true)
         setError('')
-
-        const response = await apiRequest(
-          `/medicines/${medicineId}`
-        )
-
-        if (!response.success || !response.data) {
-          throw new Error(
-            'Medicine information could not be loaded.'
-          )
-        }
-
-        setMedicine(response.data)
-      } catch (error) {
-        console.error('Load medicine error:', error)
-
-        setError(
-          error.message || 'Failed to load medicine.'
-        )
-      } finally {
-        setLoadingMedicine(false)
-      }
-    }
-
-    if (medicineId) {
-      loadMedicine()
-    }
-  }, [medicineId])
-
-  /*
-   * Load pharmacies where this medicine is available
-   */
-  useEffect(() => {
-    const loadPharmacies = async () => {
-      try {
-        setLoadingPharmacies(true)
+        setSelectedOffering(null)
 
         const response = await apiRequest(
           `/pharmacies/medicine/${medicineId}/pharmacies`
         )
 
-        if (!response.success) {
+        if (!response.success || !response.data) {
           throw new Error(
-            'Pharmacy availability could not be loaded.'
+            response.message ||
+              'Medicine information could not be loaded.'
           )
         }
 
-        setPharmacies(response.data || [])
+        const data = response.data
+
+        if (!data.medicine) {
+          throw new Error(
+            'Medicine information could not be loaded.'
+          )
+        }
+
+        setMedicine(data.medicine)
+        setOfferings(data.offerings || [])
+        setPharmacyCount(
+          Number(data.pharmacy_count) || 0
+        )
       } catch (error) {
         console.error(
-          'Load pharmacy availability error:',
+          'Load medicine availability error:',
           error
         )
 
         setError(
           error.message ||
-            'Failed to load pharmacy availability.'
+            'Failed to load medicine availability.'
         )
       } finally {
-        setLoadingPharmacies(false)
+        setLoading(false)
       }
     }
 
     if (medicineId) {
-      loadPharmacies()
+      loadMedicineAvailability()
     }
   }, [medicineId])
 
-  /*
-   * Continue to reservation page
-   */
+  /* ==========================================================
+     SELECT PHARMACY
+  ========================================================== */
+
+  const handleSelectOffering = (offering) => {
+    setSelectedOffering(offering)
+  }
+
+  /* ==========================================================
+     CONTINUE TO RESERVATION
+  ========================================================== */
+
   const handleReserve = () => {
-    if (!selectedPharmacy || !medicine) {
+    if (!selectedOffering || !medicine) {
       return
     }
 
-    const selectedInventory = pharmacies.find(
-      (inventory) =>
-        Number(inventory.pharmacy_id) ===
-        Number(selectedPharmacy)
-    )
-
-    if (!selectedInventory) {
-      return
-    }
-
+    /*
+     * IMPORTANT:
+     *
+     * medicine.medicine_id is only the representative medicine
+     * used to open this page.
+     *
+     * selectedOffering.medicine_id is the actual medicine
+     * record owned by the pharmacy selected by the customer.
+     *
+     * The reservation must use the pharmacy-owned medicine ID.
+     */
     navigate('/reservations', {
       state: {
         medicine: {
-          medicine_id: medicine.medicine_id,
-          generic_name: medicine.generic_name,
-          brand_name: medicine.brand_name,
-          dosage: medicine.dosage,
-          dosage_form: medicine.dosage_form,
+          medicine_id:
+            selectedOffering.medicine_id,
+
+          generic_name:
+            medicine.generic_name,
+
+          brand_name:
+            medicine.brand_name,
+
+          dosage:
+            medicine.dosage,
+
+          dosage_form:
+            medicine.dosage_form,
+
           requires_prescription:
             medicine.requires_prescription,
         },
 
         pharmacy: {
-          pharmacy_id: selectedInventory.pharmacy_id,
+          pharmacy_id:
+            selectedOffering.pharmacy_id,
+
           name:
-            selectedInventory.pharmacies?.name ||
+            selectedOffering.pharmacy?.name ||
             'Pharmacy',
+
           address:
-            selectedInventory.pharmacies?.address ||
+            selectedOffering.pharmacy?.address ||
             'Address unavailable',
         },
 
+        /*
+         * ReservationsPage currently expects inventory-like
+         * information for stock/price display.
+         *
+         * The backend reservation creation remains authoritative
+         * for actual stock validation.
+         */
         inventory: {
-          inventory_id: selectedInventory.inventory_id,
-          quantity: selectedInventory.quantity,
-          unit_price: selectedInventory.unit_price,
+          inventory_id:
+            selectedOffering.batches?.[0]
+              ?.inventory_id || null,
+
+          quantity:
+            selectedOffering.quantity,
+
+          unit_price:
+            selectedOffering.lowest_price,
         },
       },
     })
   }
 
-  /*
-   * Loading state
-   */
-  if (loadingMedicine) {
+  /* ==========================================================
+     LOADING
+  ========================================================== */
+
+  if (loading) {
     return (
       <section className="medicine-details-page mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
         <button
@@ -162,17 +181,18 @@ function MedicineDetailsPage() {
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 text-center shadow-sm">
           <p className="text-sm font-semibold text-[var(--text-secondary)]">
-            Loading medicine...
+            Loading medicine availability...
           </p>
         </div>
       </section>
     )
   }
 
-  /*
-   * Error / medicine not found
-   */
-  if (error && !medicine) {
+  /* ==========================================================
+     ERROR
+  ========================================================== */
+
+  if (error || !medicine) {
     return (
       <section className="medicine-details-page mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
         <button
@@ -190,7 +210,8 @@ function MedicineDetailsPage() {
           </h1>
 
           <p className="mt-2 text-xs leading-relaxed text-red-600">
-            {error}
+            {error ||
+              'Medicine information could not be loaded.'}
           </p>
 
           <button
@@ -206,7 +227,11 @@ function MedicineDetailsPage() {
   }
 
   const prescriptionRequired =
-    medicine?.requires_prescription === true
+    medicine.requires_prescription === true
+
+  /* ==========================================================
+     PAGE
+  ========================================================== */
 
   return (
     <section className="medicine-details-page mx-auto w-full max-w-2xl px-4 pb-28 pt-5">
@@ -220,7 +245,10 @@ function MedicineDetailsPage() {
         Back
       </button>
 
-      {/* Medicine information */}
+      {/* ======================================================
+          MEDICINE INFORMATION
+      ====================================================== */}
+
       <div className="medicine-detail-card rounded-2xl p-5">
         <div className="flex items-start gap-4">
           {/* Medicine icon */}
@@ -230,18 +258,15 @@ function MedicineDetailsPage() {
 
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-3">
-              <div>
-                {/* Category */}
+              <div className="min-w-0">
                 <p className="text-xs font-semibold text-[var(--primary)]">
                   Medicine
                 </p>
 
-                {/* Generic name */}
                 <h1 className="mt-1 text-xl font-extrabold text-[var(--text-primary)]">
                   {medicine.generic_name}
                 </h1>
 
-                {/* Brand */}
                 {medicine.brand_name && (
                   <p className="mt-1 text-sm text-[var(--text-secondary)]">
                     {medicine.brand_name}
@@ -249,7 +274,7 @@ function MedicineDetailsPage() {
                 )}
               </div>
 
-              {/* Prescription status */}
+              {/* Prescription */}
               {prescriptionRequired ? (
                 <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">
                   Prescription required
@@ -261,9 +286,11 @@ function MedicineDetailsPage() {
               )}
             </div>
 
-            {/* Dosage */}
             <p className="mt-3 text-sm font-semibold text-[var(--text-secondary)]">
-              {medicine.dosage} • {medicine.dosage_form}
+              {medicine.dosage || 'Dosage not specified'}
+
+              {medicine.dosage_form &&
+                ` • ${medicine.dosage_form}`}
             </p>
           </div>
         </div>
@@ -281,48 +308,66 @@ function MedicineDetailsPage() {
         </div>
       </div>
 
-      {/* Pharmacy availability */}
+      {/* ======================================================
+          PHARMACY AVAILABILITY
+      ====================================================== */}
+
       <div className="mt-7">
         <div className="mb-3">
-          <h2 className="text-base font-extrabold text-[var(--text-primary)]">
-            Available nearby
-          </h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-extrabold text-[var(--text-primary)]">
+              Available at pharmacies
+            </h2>
+
+            {pharmacyCount > 0 && (
+              <span className="text-xs font-semibold text-[var(--text-secondary)]">
+                {pharmacyCount}{' '}
+                {pharmacyCount === 1
+                  ? 'pharmacy'
+                  : 'pharmacies'}
+              </span>
+            )}
+          </div>
 
           <p className="mt-1 text-xs text-[var(--text-secondary)]">
-            Select a pharmacy to reserve this medicine for
-            pickup.
+            Select a pharmacy to reserve this medicine
+            for pickup.
           </p>
         </div>
 
-        {/* Loading pharmacies */}
-        {loadingPharmacies ? (
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 text-center">
-            <p className="text-sm font-semibold text-[var(--text-secondary)]">
-              Checking pharmacy availability...
-            </p>
-          </div>
-        ) : pharmacies.length > 0 ? (
+        {offerings.length > 0 ? (
           <div className="space-y-3">
-            {pharmacies.map((inventory) => {
-              const pharmacy = inventory.pharmacies
+            {offerings.map((offering) => {
+              const pharmacy = offering.pharmacy
 
               const isSelected =
-                Number(selectedPharmacy) ===
-                Number(inventory.pharmacy_id)
+                Number(
+                  selectedOffering?.pharmacy_id
+                ) ===
+                  Number(offering.pharmacy_id) &&
+                Number(
+                  selectedOffering?.medicine_id
+                ) ===
+                  Number(offering.medicine_id)
 
               const stock =
-                Number(inventory.quantity) || 0
+                Number(offering.quantity) || 0
 
-              const isLimited = stock <= 3
+              const price =
+                Number(offering.lowest_price)
+
+              const hasPrice =
+                Number.isFinite(price)
+
+              const isLimited =
+                stock <= 3
 
               return (
                 <button
-                  key={inventory.inventory_id}
+                  key={`${offering.pharmacy_id}-${offering.medicine_id}`}
                   type="button"
                   onClick={() =>
-                    setSelectedPharmacy(
-                      inventory.pharmacy_id
-                    )
+                    handleSelectOffering(offering)
                   }
                   className={`w-full rounded-2xl border p-4 text-left transition ${
                     isSelected
@@ -345,19 +390,19 @@ function MedicineDetailsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <h3 className="truncate text-sm font-extrabold text-[var(--text-primary)]">
+                          <h3 className="text-sm font-extrabold text-[var(--text-primary)]">
                             {pharmacy?.name ||
                               'Pharmacy'}
                           </h3>
 
-                          <p className="mt-1 truncate text-xs text-[var(--text-secondary)]">
+                          <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
                             {pharmacy?.address ||
                               'Address unavailable'}
                           </p>
                         </div>
                       </div>
 
-                      {/* Stock and price */}
+                      {/* Stock + price */}
                       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
                         <span
                           className={`flex items-center gap-1 text-xs font-bold ${
@@ -367,18 +412,18 @@ function MedicineDetailsPage() {
                           }`}
                         >
                           <CheckCircle2 size={13} />
+
                           {stock} in stock
                         </span>
 
                         <span className="text-xs font-bold text-[var(--text-secondary)]">
-                          ₱
-                          {Number(
-                            inventory.unit_price || 0
-                          ).toFixed(2)}
+                          {hasPrice
+                            ? `₱${price.toFixed(2)}`
+                            : 'Price unavailable'}
                         </span>
                       </div>
 
-                      {/* Pharmacy status */}
+                      {/* Availability */}
                       <div className="mt-3 flex items-center justify-between border-t border-[var(--border-light)] pt-3">
                         <span
                           className={`text-xs font-semibold ${
@@ -416,43 +461,49 @@ function MedicineDetailsPage() {
             </h3>
 
             <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-[var(--text-secondary)]">
-              This medicine is currently not available at
-              any active pharmacy.
+              This medicine is currently not available
+              at any active pharmacy.
             </p>
           </div>
         )}
       </div>
 
-      {/* Reservation action */}
-      <div className="medicine-reservation-action mt-6 rounded-2xl p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--primary)_25%,transparent)] text-white/80">
-            <ShoppingBag size={17} />
+      {/* ======================================================
+          RESERVATION ACTION
+      ====================================================== */}
+
+      {offerings.length > 0 && (
+        <div className="medicine-reservation-action mt-6 rounded-2xl p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--primary)_25%,transparent)] text-white/80">
+              <ShoppingBag size={17} />
+            </div>
+
+            <div>
+              <h2 className="text-sm font-bold text-white">
+                Reserve for pickup
+              </h2>
+
+              <p className="mt-1 text-xs leading-relaxed text-white/75">
+                Select a pharmacy above, then reserve
+                your medicine and pick it up at the
+                pharmacy.
+              </p>
+            </div>
           </div>
 
-          <div>
-            <h2 className="text-sm font-bold text-white">
-              Reserve for pickup
-            </h2>
-
-            <p className="mt-1 text-xs leading-relaxed text-white/75">
-              Select a pharmacy above, then reserve your
-              medicine and pick it up at the pharmacy.
-            </p>
-          </div>
+          <button
+            type="button"
+            disabled={!selectedOffering}
+            onClick={handleReserve}
+            className="mt-4 w-full rounded-xl bg-[var(--primary)] px-4 py-3 text-xs font-extrabold text-white transition hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {selectedOffering
+              ? 'Continue to reservation'
+              : 'Select a pharmacy first'}
+          </button>
         </div>
-
-        <button
-          type="button"
-          disabled={!selectedPharmacy}
-          onClick={handleReserve}
-          className="mt-4 w-full rounded-xl bg-[var(--primary-light)]0 px-4 py-3 text-xs font-extrabold text-white transition hover:bg-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {selectedPharmacy
-            ? 'Continue to reservation'
-            : 'Select a pharmacy first'}
-        </button>
-      </div>
+      )}
     </section>
   )
 }
