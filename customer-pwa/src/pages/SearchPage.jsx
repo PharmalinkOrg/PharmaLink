@@ -1,70 +1,131 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, MapPin, Search, Sparkles } from 'lucide-react'
+import {
+  ArrowRight,
+  MapPin,
+  Search,
+  Sparkles,
+} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
-
-const categories = [
-  'All',
-  'Pain Relief',
-  'Cold & Flu',
-  'Vitamins',
-  'Allergy',
-  'Digestive',
-]
 
 function SearchPage() {
   const navigate = useNavigate()
 
   const [medicines, setMedicines] = useState([])
+  const [categories, setCategories] = useState([])
+
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [selectedCategoryId, setSelectedCategoryId] =
+    useState(null)
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const fetchMedicines = async () => {
+    const fetchSearchData = async () => {
       try {
         setLoading(true)
         setError('')
 
-        const response = await apiRequest('/medicines')
+        const [
+          medicinesResponse,
+          categoriesResponse,
+        ] = await Promise.all([
+          apiRequest(
+            '/pharmacies/available-medicines'
+          ),
+          apiRequest('/medicine-categories'),
+        ])
 
-        if (!response.success) {
+        if (!medicinesResponse.success) {
           throw new Error(
-            response.message || 'Failed to retrieve medicines',
+            medicinesResponse.message ||
+              'Failed to retrieve medicines'
           )
         }
 
-        setMedicines(response.data || [])
+        if (!categoriesResponse.success) {
+          throw new Error(
+            categoriesResponse.message ||
+              'Failed to retrieve medicine categories'
+          )
+        }
+
+        setMedicines(medicinesResponse.data || [])
+        setCategories(categoriesResponse.data || [])
       } catch (error) {
-        console.error('Fetch medicines error:', error)
-        setError(error.message || 'Failed to load medicines')
+        console.error(
+          'Fetch medicine search data error:',
+          error
+        )
+
+        setError(
+          error.message ||
+            'Failed to load medicine search'
+        )
       } finally {
         setLoading(false)
       }
     }
 
-    fetchMedicines()
+    fetchSearchData()
   }, [])
 
   const filteredMedicines = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase()
+    const normalizedSearch = searchTerm
+      .trim()
+      .toLowerCase()
 
     return medicines.filter((medicine) => {
       const matchesCategory =
-        selectedCategory === 'All' ||
-        medicine.category_name === selectedCategory
+        selectedCategoryId === null ||
+        Number(medicine.category_id) ===
+          Number(selectedCategoryId)
+
+      const searchableValues = [
+        medicine.generic_name,
+        medicine.brand_name,
+        medicine.dosage,
+        medicine.dosage_form,
+      ]
 
       const matchesSearch =
         !normalizedSearch ||
-        medicine.generic_name?.toLowerCase().includes(normalizedSearch) ||
-        medicine.brand_name?.toLowerCase().includes(normalizedSearch) ||
-        medicine.dosage?.toLowerCase().includes(normalizedSearch) ||
-        medicine.dosage_form?.toLowerCase().includes(normalizedSearch)
+        searchableValues.some((value) =>
+          String(value ?? '')
+            .toLowerCase()
+            .includes(normalizedSearch)
+        )
 
       return matchesCategory && matchesSearch
     })
-  }, [medicines, searchTerm, selectedCategory])
+  }, [
+    medicines,
+    searchTerm,
+    selectedCategoryId,
+  ])
+
+  const handleMedicineClick = (medicine) => {
+    const representativeOffering =
+      medicine.offerings?.[0]
+
+    if (!representativeOffering?.medicine_id) {
+      console.error(
+        'Medicine has no available offering:',
+        medicine
+      )
+      return
+    }
+
+    navigate(
+      `/medicine/${representativeOffering.medicine_id}`,
+      {
+        state: {
+          groupedMedicine: medicine,
+        },
+      }
+    )
+  }
 
   const handleAskAssistant = () => {
     const trimmedSearch = searchTerm.trim()
@@ -72,7 +133,8 @@ function SearchPage() {
     if (trimmedSearch) {
       navigate('/assistant', {
         state: {
-          suggestedMessage: `Help me find ${trimmedSearch}.`,
+          suggestedMessage:
+            `Help me find ${trimmedSearch}.`,
         },
       })
 
@@ -93,8 +155,8 @@ function SearchPage() {
         <h1>Find your medicine</h1>
 
         <p className="search-description">
-          Search medicines and see which nearby pharmacies
-          have them available.
+          Search medicines and see which pharmacies
+          currently have them available.
         </p>
       </header>
 
@@ -109,7 +171,9 @@ function SearchPage() {
         <input
           type="search"
           value={searchTerm}
-          onChange={(event) => setSearchTerm(event.target.value)}
+          onChange={(event) =>
+            setSearchTerm(event.target.value)
+          }
           placeholder="Search medicine or brand..."
           aria-label="Search medicines"
         />
@@ -127,8 +191,10 @@ function SearchPage() {
 
         <span className="search-ai-text">
           <strong>Ask PharmaLink AI</strong>
+
           <span>
-            Need help understanding or finding a medicine?
+            Need help using PharmaLink or finding
+            medicine information?
           </span>
         </span>
 
@@ -145,19 +211,41 @@ function SearchPage() {
         </div>
 
         <div className="search-categories">
+          <button
+            type="button"
+            onClick={() =>
+              setSelectedCategoryId(null)
+            }
+            className={`search-category ${
+              selectedCategoryId === null
+                ? 'search-category-active'
+                : ''
+            }`}
+          >
+            All
+          </button>
+
           {categories.map((category) => {
-            const isActive = selectedCategory === category
+            const isActive =
+              Number(selectedCategoryId) ===
+              Number(category.category_id)
 
             return (
               <button
-                key={category}
+                key={category.category_id}
                 type="button"
-                onClick={() => setSelectedCategory(category)}
+                onClick={() =>
+                  setSelectedCategoryId(
+                    category.category_id
+                  )
+                }
                 className={`search-category ${
-                  isActive ? 'search-category-active' : ''
+                  isActive
+                    ? 'search-category-active'
+                    : ''
                 }`}
               >
-                {category}
+                {category.name}
               </button>
             )
           })}
@@ -198,7 +286,9 @@ function SearchPage() {
 
             <button
               type="button"
-              onClick={() => window.location.reload()}
+              onClick={() =>
+                window.location.reload()
+              }
             >
               Try again
             </button>
@@ -210,59 +300,88 @@ function SearchPage() {
           !error &&
           filteredMedicines.length > 0 && (
             <div className="medicine-result-list">
-              {filteredMedicines.map((medicine) => (
-                <button
-                  key={medicine.medicine_id}
-                  type="button"
-                  onClick={() =>
-                    navigate(
-                      `/medicine/${medicine.medicine_id}`,
-                    )
-                  }
-                  className="medicine-result-card"
-                >
-                  <div className="medicine-result-content">
-                    <div className="medicine-rx-icon">
-                      Rx
-                    </div>
+              {filteredMedicines.map(
+                (medicine) => {
+                  const pharmacyCount =
+                    medicine.pharmacy_count || 0
 
-                    <div className="medicine-result-info">
-                      <div className="medicine-result-heading">
-                        <div>
-                          <h3>
-                            {medicine.generic_name}
-                          </h3>
-
-                          <p>
-                            {medicine.brand_name}
-                          </p>
+                  return (
+                    <button
+                      key={medicine.medicine_key}
+                      type="button"
+                      onClick={() =>
+                        handleMedicineClick(
+                          medicine
+                        )
+                      }
+                      className="medicine-result-card"
+                    >
+                      <div className="medicine-result-content">
+                        <div className="medicine-rx-icon">
+                          Rx
                         </div>
 
-                        <span className="medicine-active-badge">
-                          Active
-                        </span>
+                        <div className="medicine-result-info">
+                          <div className="medicine-result-heading">
+                            <div>
+                              <h3>
+                                {
+                                  medicine.generic_name
+                                }
+                              </h3>
+
+                              {medicine.brand_name && (
+                                <p>
+                                  {
+                                    medicine.brand_name
+                                  }
+                                </p>
+                              )}
+                            </div>
+
+                            <span className="medicine-active-badge">
+                              Available
+                            </span>
+                          </div>
+
+                          <p className="medicine-dosage">
+                            {medicine.dosage ||
+                              'Dosage not specified'}
+
+                            {medicine.dosage_form &&
+                              ` • ${medicine.dosage_form}`}
+                          </p>
+
+                          <p className="medicine-prescription-status">
+                            {medicine.requires_prescription
+                              ? 'Prescription required'
+                              : 'No prescription required'}
+                          </p>
+
+                          <div className="medicine-availability-row">
+                            <span className="medicine-availability-label">
+                              <MapPin size={14} />
+
+                              Available at{' '}
+                              {pharmacyCount}{' '}
+                              {pharmacyCount === 1
+                                ? 'pharmacy'
+                                : 'pharmacies'}
+                            </span>
+
+                            <span className="medicine-view-link">
+                              View
+                              <ArrowRight
+                                size={14}
+                              />
+                            </span>
+                          </div>
+                        </div>
                       </div>
-
-                      <p className="medicine-dosage">
-                        {medicine.dosage} •{' '}
-                        {medicine.dosage_form}
-                      </p>
-
-                      <div className="medicine-availability-row">
-                        <span className="medicine-availability-label">
-                          <MapPin size={14} />
-                          View pharmacy availability
-                        </span>
-
-                        <span className="medicine-view-link">
-                          View
-                          <ArrowRight size={14} />
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              ))}
+                    </button>
+                  )
+                }
+              )}
             </div>
           )}
 
@@ -278,16 +397,15 @@ function SearchPage() {
               <h3>No medicines found</h3>
 
               <p>
-                Try another medicine name, brand, dosage,
-                or form. You can also ask PharmaLink AI
-                for assistance.
+                Try another medicine name, brand,
+                dosage, or form.
               </p>
 
               <button
                 type="button"
                 onClick={() => {
                   setSearchTerm('')
-                  setSelectedCategory('All')
+                  setSelectedCategoryId(null)
                 }}
                 className="search-clear-button"
               >
@@ -297,10 +415,12 @@ function SearchPage() {
           )}
       </section>
 
-      {/* Nearby pharmacies */}
+      {/* Pharmacies */}
       <button
         type="button"
-        onClick={() => navigate('/pharmacies')}
+        onClick={() =>
+          navigate('/pharmacies')
+        }
         className="search-pharmacy-shortcut"
       >
         <span className="search-pharmacy-icon">
@@ -308,8 +428,12 @@ function SearchPage() {
         </span>
 
         <span className="search-pharmacy-text">
-          <strong>Browse nearby pharmacies</strong>
-          <span>See pharmacies near your location.</span>
+          <strong>Browse pharmacies</strong>
+
+          <span>
+            View pharmacies and their available
+            medicines.
+          </span>
         </span>
 
         <ArrowRight

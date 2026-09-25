@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
+
 require('dotenv').config()
 
 const pharmacyRoutes = require('./routes/pharmacyRoutes')
@@ -29,6 +30,9 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
+  'http://localhost:5176',
+  'http://localhost:5177',
+  'http://localhost:5178',
 
   // Production
   process.env.SUPERADMIN_URL,
@@ -49,6 +53,7 @@ app.use(
         callback(new Error('Not allowed by CORS'))
       }
     },
+
     credentials: true,
   })
 )
@@ -79,26 +84,55 @@ app.get('/api/health', (req, res) => {
 // --------------------------------------------------
 
 app.use('/api/auth', authRoutes)
+
 app.use('/api/users', userRoutes)
+
 app.use('/api/medicines', medicineRoutes)
+
 app.use('/api/dashboard', dashboardRoutes)
+
 app.use('/api/superadmin', superadminRoutes)
+
 app.use('/api/reservations', reservationRoutes)
+
 app.use('/api/prescriptions', prescriptionRoutes)
-app.use('/api/pharmacies', pharmacyRoutes)
-app.use('/api/medicine-requests', medicineRequestRoutes)
+
+app.use(
+  '/api/medicine-requests',
+  medicineRequestRoutes
+)
+
 app.use('/api/sales', salesRoutes)
+
 app.use('/api/ai', aiRoutes)
 
-// --------------------------------------------------
-// Inventory Routes
-// --------------------------------------------------
-
-app.use('/api/pharmacies', inventoryRoutes)
-app.use('/api/pharmacies', customerInventoryRoutes)
 app.use(
   '/api/medicine-categories',
   medicineCategoryRoutes
+)
+
+// --------------------------------------------------
+// Pharmacy Routes
+//
+// IMPORTANT:
+// Specific pharmacy sub-routes must be mounted before
+// pharmacyRoutes because pharmacyRoutes has GET /:id.
+// --------------------------------------------------
+
+app.use(
+  '/api/pharmacies',
+  customerInventoryRoutes
+)
+
+app.use(
+  '/api/pharmacies',
+  inventoryRoutes
+)
+
+// Generic /:id pharmacy routes go last
+app.use(
+  '/api/pharmacies',
+  pharmacyRoutes
 )
 
 module.exports = app
