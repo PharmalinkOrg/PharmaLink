@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import {
@@ -13,7 +12,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 
-import { api } from '../lib/api'
+import { usePharmacies } from '../hooks/queries/usePharmacies'
 
 const categories = [
   'All',
@@ -26,66 +25,21 @@ const categories = [
 function HomePage() {
   const navigate = useNavigate()
 
-  const [partnerPharmacies, setPartnerPharmacies] = useState([])
-  const [pharmaciesLoading, setPharmaciesLoading] = useState(true)
-  const [pharmaciesError, setPharmaciesError] = useState('')
+  const {
+    data: partnerPharmacies = [],
+    isLoading: pharmaciesLoading,
+    isError: isPharmaciesError,
+    error: pharmaciesError,
+  } = usePharmacies()
 
-  // ============================================================
-  // LOAD REAL PARTNER PHARMACIES
-  // ============================================================
+  const featuredPharmacies =
+    partnerPharmacies.slice(0, 2)
 
-  useEffect(() => {
-    let cancelled = false
+  const pharmacyErrorMessage =
+    pharmaciesError?.message ||
+    'Unable to load partner pharmacies.'
 
-    const loadPartnerPharmacies = async () => {
-      try {
-        setPharmaciesLoading(true)
-        setPharmaciesError('')
 
-        const pharmacies = await api.getPharmacies()
-
-        if (cancelled) {
-          return
-        }
-
-        const activePharmacies = Array.isArray(pharmacies)
-          ? pharmacies.filter(
-              (pharmacy) =>
-                String(pharmacy?.status || '').toUpperCase() ===
-                'ACTIVE',
-            )
-          : []
-
-        setPartnerPharmacies(activePharmacies)
-      } catch (error) {
-        console.error(
-          'Unable to load partner pharmacies:',
-          error,
-        )
-
-        if (!cancelled) {
-          setPharmaciesError(
-            error?.message ||
-              'Unable to load partner pharmacies.',
-          )
-        }
-      } finally {
-        if (!cancelled) {
-          setPharmaciesLoading(false)
-        }
-      }
-    }
-
-    loadPartnerPharmacies()
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  // Keep the Home page compact.
-  // The full pharmacy list remains available at /pharmacies.
-  const featuredPharmacies = partnerPharmacies.slice(0, 2)
 
   return (
     <section className="home-page">
@@ -262,7 +216,7 @@ function HomePage() {
       </section>
 
       {/* ========================================================
-          REAL PARTNER PHARMACIES
+          CACHED PARTNER PHARMACIES
       ======================================================== */}
 
       <section className="home-section">
@@ -278,7 +232,7 @@ function HomePage() {
           </button>
         </div>
 
-        {/* Loading state */}
+        {/* Initial loading state */}
         {pharmaciesLoading && (
           <div className="home-pharmacy-state">
             <span className="home-pharmacy-state-icon">
@@ -292,21 +246,21 @@ function HomePage() {
         )}
 
         {/* Error state */}
-        {!pharmaciesLoading && pharmaciesError && (
+        {!pharmaciesLoading && isPharmaciesError && (
           <div className="home-pharmacy-state">
             <span className="home-pharmacy-state-icon">
               <Pill size={18} />
             </span>
 
             <span>
-              {pharmaciesError}
+              {pharmacyErrorMessage}
             </span>
           </div>
         )}
 
         {/* Empty state */}
         {!pharmaciesLoading &&
-          !pharmaciesError &&
+          !isPharmaciesError &&
           featuredPharmacies.length === 0 && (
             <div className="home-pharmacy-state">
               <span className="home-pharmacy-state-icon">
@@ -319,9 +273,9 @@ function HomePage() {
             </div>
           )}
 
-        {/* Real pharmacy data */}
+        {/* Cached pharmacy data */}
         {!pharmaciesLoading &&
-          !pharmaciesError &&
+          !isPharmaciesError &&
           featuredPharmacies.length > 0 && (
             <div className="home-pharmacy-list">
               {featuredPharmacies.map((pharmacy) => {
