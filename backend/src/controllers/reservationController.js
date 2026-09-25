@@ -13,13 +13,76 @@ const isValidId = (value) => {
   return Number.isInteger(number) && number > 0
 }
 
+/* ============================================================
+   SAME-DAY RESERVATION RULES
+============================================================ */
+
+const RESERVATION_TIME_ZONE = 'Asia/Manila'
+const PICKUP_START_TIME = '08:00'
+const PICKUP_END_TIME = '20:00'
+
 /**
- * Validate YYYY-MM-DD pickup date.
+ * Return the current calendar date in the PharmaLink
+ * operating timezone.
  *
- * The date must:
- * - Match YYYY-MM-DD
- * - Be a real calendar date
- * - Not be before today's local calendar date
+ * Do not rely on the Vercel/server timezone because it may
+ * run in UTC.
+ */
+const getPharmaLinkDateString = () => {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: RESERVATION_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date())
+
+  const values = {}
+
+  for (const part of parts) {
+    if (part.type !== 'literal') {
+      values[part.type] = part.value
+    }
+  }
+
+  return `${values.year}-${values.month}-${values.day}`
+}
+
+/**
+ * Return the current time in HH:mm using the PharmaLink
+ * operating timezone.
+ */
+const getPharmaLinkTimeString = () => {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: RESERVATION_TIME_ZONE,
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+  }).formatToParts(new Date())
+
+  const values = {}
+
+  for (const part of parts) {
+    if (part.type !== 'literal') {
+      values[part.type] = part.value
+    }
+  }
+
+  /*
+   * Some Intl implementations may represent midnight
+   * as 24:00. Normalize it to 00:00.
+   */
+  const hour =
+    values.hour === '24'
+      ? '00'
+      : values.hour
+
+  return `${hour}:${values.minute}`
+}
+
+/**
+ * Validate YYYY-MM-DD.
+ *
+ * PharmaLink reservations are SAME-DAY ONLY.
  */
 const isValidPickupDate = (dateString) => {
   if (!dateString || typeof dateString !== 'string') {
@@ -32,28 +95,29 @@ const isValidPickupDate = (dateString) => {
     return false
   }
 
-  const [year, month, day] = dateString.split('-').map(Number)
+  const [year, month, day] =
+    dateString.split('-').map(Number)
 
-  const testDate = new Date(year, month - 1, day)
+  const testDate = new Date(
+    Date.UTC(year, month - 1, day),
+  )
 
   if (
-    testDate.getFullYear() !== year ||
-    testDate.getMonth() !== month - 1 ||
-    testDate.getDate() !== day
+    testDate.getUTCFullYear() !== year ||
+    testDate.getUTCMonth() !== month - 1 ||
+    testDate.getUTCDate() !== day
   ) {
     return false
   }
 
-  const today = new Date()
-
-  today.setHours(0, 0, 0, 0)
-  testDate.setHours(0, 0, 0, 0)
-
-  return testDate >= today
+  return dateString === getPharmaLinkDateString()
 }
 
 /**
- * Validate HH:mm pickup time.
+ * Validate HH:mm.
+ *
+ * Valid pickup window:
+ * 8:00 AM through 8:00 PM.
  */
 const isValidPickupTime = (timeString) => {
   if (!timeString || typeof timeString !== 'string') {
@@ -66,16 +130,35 @@ const isValidPickupTime = (timeString) => {
     return false
   }
 
-  const [hours, minutes] = timeString.split(':').map(Number)
+  const [hours, minutes] =
+    timeString.split(':').map(Number)
+
+  if (
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return false
+  }
 
   return (
-    hours >= 0 &&
-    hours <= 23 &&
-    minutes >= 0 &&
-    minutes <= 59
+    timeString >= PICKUP_START_TIME &&
+    timeString <= PICKUP_END_TIME
   )
 }
 
+/**
+ * Determine whether customers are currently allowed
+ * to create same-day reservations.
+ *
+ * Reservations stop at 8:00 PM Philippine time.
+ */
+const isReservationWindowClosed = () => {
+  const currentTime = getPharmaLinkTimeString()
+
+  return currentTime >= PICKUP_END_TIME
+}
 /**
  * Prevent duplicate medicine IDs inside one reservation.
  */
@@ -171,39 +254,61 @@ const createReservation = async (req, res) => {
     const pharmacyId = Number(pharmacy_id)
 
     /* --------------------------------------------------------
-       Pickup date validation
-    -------------------------------------------------------- */
+   Pickup date validation
+-------------------------------------------------------- */
+/* --------------------------------------------------------
+   Same-day reservation window
 
-    if (
-      typeof pickup_date !== 'string' ||
-      !isValidPickupDate(pickup_date.trim())
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          'Pickup date must be a valid YYYY-MM-DD format and cannot be in the past',
-      })
-    }
+   PharmaLink reservations:
+   - must be picked up today
+   - pickup hours are 8:00 AM to 8:00 PM
+   - new reservations close at 8:00 PM
+-------------------------------------------------------- */
 
-    const pickupDate = pickup_date.trim()
+if (isReservationWindowClosed()) {
+  return res.status(400).json({
+    success: false,
+    code: 'RESERVATION_WINDOW_CLOSED',
+    message:
+      'Same-day reservations are unavailable after 8:00 PM. Please return tomorrow to create a new reservation.',
+  })
+}
 
-    /* --------------------------------------------------------
-       Pickup time validation
-    -------------------------------------------------------- */
+/* --------------------------------------------------------
+   Pickup date validation
+-------------------------------------------------------- */
 
-    if (
-      typeof pickup_time !== 'string' ||
-      !isValidPickupTime(pickup_time.trim())
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          'Pickup time must be a valid HH:mm format (e.g., 14:30)',
-      })
-    }
+if (
+  typeof pickup_date !== 'string' ||
+  !isValidPickupDate(pickup_date.trim())
+) {
+  return res.status(400).json({
+    success: false,
+    code: 'INVALID_PICKUP_DATE',
+    message:
+      'Reservations are for same-day pickup only. Pickup date must be today.',
+  })
+}
 
-    const pickupTime = pickup_time.trim()
+const pickupDate = pickup_date.trim()
 
+/* --------------------------------------------------------
+   Pickup time validation
+-------------------------------------------------------- */
+
+if (
+  typeof pickup_time !== 'string' ||
+  !isValidPickupTime(pickup_time.trim())
+) {
+  return res.status(400).json({
+    success: false,
+    code: 'INVALID_PICKUP_TIME',
+    message:
+      'Pickup time must be between 8:00 AM and 8:00 PM.',
+  })
+}
+
+const pickupTime = pickup_time.trim()
     /* --------------------------------------------------------
        Items validation
     -------------------------------------------------------- */
