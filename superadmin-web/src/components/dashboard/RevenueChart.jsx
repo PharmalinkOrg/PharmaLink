@@ -8,18 +8,27 @@ function generateMockRevenueData() {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   const revenues = [5000, 2000, 3900, 1200, 2500, 7800, 4500]
 
+  // Create alternating colors using #508991 and #74B3CE
+  const backgroundColors = revenues.map((_, index) => 
+    index % 2 === 0 ? 'rgba(80, 137, 145, 0.8)' : 'rgba(116, 179, 206, 0.8)'
+  )
+  
+  const hoverColors = revenues.map((_, index) => 
+    index % 2 === 0 ? 'rgba(80, 137, 145, 1)' : 'rgba(116, 179, 206, 1)'
+  )
+
   return {
     labels: days,
     datasets: [
       {
         label: 'Daily Revenue',
         data: revenues,
-        backgroundColor: 'rgba(79, 172, 254, 0.7)',
-        borderColor: 'rgba(79, 172, 254, 1)',
-        borderWidth: 1,
+        backgroundColor: backgroundColors,
+        borderColor: 'transparent',
+        borderWidth: 0,
         borderRadius: 4,
         borderSkipped: false,
-        hoverBackgroundColor: 'rgba(79, 172, 254, 0.9)'
+        hoverBackgroundColor: hoverColors
       }
     ]
   }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../components/auth/useAuth'
 import { apiRequest } from '../lib/api'
 
@@ -12,6 +12,15 @@ function ReservationsPage() {
   const [successMessage, setSuccessMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [updatingReservationId, setUpdatingReservationId] = useState(null)
+
+  // Search and filter state
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('ALL')
+  const [dateFilter, setDateFilter] = useState('ALL')
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
 
   // --------------------------------------------------
   // Load reservations
@@ -397,6 +406,102 @@ function ReservationsPage() {
   }
 
   // --------------------------------------------------
+  // Filtering and search
+  // --------------------------------------------------
+
+  const filteredReservations = useMemo(() => {
+    let filtered = [...reservations]
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter((reservation) => {
+        const id = reservation.reservation_id.toString()
+        const customerName = getCustomerName(reservation).toLowerCase()
+        const customerEmail = getCustomerEmail(reservation).toLowerCase()
+        const status = formatStatus(reservation.status).toLowerCase()
+
+        return (
+          id.includes(term) ||
+          customerName.includes(term) ||
+          customerEmail.includes(term) ||
+          status.includes(term)
+        )
+      })
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'ALL') {
+      filtered = filtered.filter(
+        (reservation) => reservation.status === statusFilter
+      )
+    }
+
+    // Apply date filter
+    if (dateFilter !== 'ALL') {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      filtered = filtered.filter((reservation) => {
+        const pickupDate = new Date(reservation.pickup_date)
+        pickupDate.setHours(0, 0, 0, 0)
+
+        switch (dateFilter) {
+          case 'TODAY':
+            return pickupDate.getTime() === today.getTime()
+          case 'UPCOMING':
+            return pickupDate >= today
+          case 'PAST':
+            return pickupDate < today
+          default:
+            return true
+        }
+      })
+    }
+
+    // Sort by pickup date (upcoming first)
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.pickup_date)
+      const dateB = new Date(b.pickup_date)
+      return dateB - dateA
+    })
+
+    return filtered
+  }, [reservations, searchTerm, statusFilter, dateFilter])
+
+  // --------------------------------------------------
+  // Pagination
+  // --------------------------------------------------
+
+  const totalPages = Math.ceil(filteredReservations.length / itemsPerPage)
+  const paginatedReservations = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return filteredReservations.slice(startIndex, endIndex)
+  }, [filteredReservations, currentPage, itemsPerPage])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, statusFilter, dateFilter])
+
+  const goToPage = (page) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)))
+  }
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1)
+    }
+  }
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
+    }
+  }
+
+  // --------------------------------------------------
   // Summary
   // --------------------------------------------------
 
@@ -504,254 +609,407 @@ function ReservationsPage() {
           </div>
         </div>
 
+        {/* Search and Filters */}
+        <div className="reservation-filters">
+          <div className="reservation-search">
+            <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search by ID, customer name, email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                className="clear-search"
+                onClick={() => setSearchTerm('')}
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          <div className="reservation-filter-group">
+            <label>
+              <span>Status</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="PENDING">Pending</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+                <option value="EXPIRED">Expired</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Pickup Date</span>
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+              >
+                <option value="ALL">All Dates</option>
+                <option value="TODAY">Today</option>
+                <option value="UPCOMING">Upcoming</option>
+                <option value="PAST">Past</option>
+              </select>
+            </label>
+
+            {(searchTerm || statusFilter !== 'ALL' || dateFilter !== 'ALL') && (
+              <button
+                type="button"
+                className="clear-filters-btn"
+                onClick={() => {
+                  setSearchTerm('')
+                  setStatusFilter('ALL')
+                  setDateFilter('ALL')
+                }}
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Results Info */}
+        {!isLoading && (
+          <div className="reservation-results-info">
+            <span>
+              Showing {paginatedReservations.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} -{' '}
+              {Math.min(currentPage * itemsPerPage, filteredReservations.length)} of{' '}
+              {filteredReservations.length} reservation{filteredReservations.length !== 1 ? 's' : ''}
+            </span>
+            {(searchTerm || statusFilter !== 'ALL' || dateFilter !== 'ALL') && (
+              <span className="filtered-indicator">
+                (filtered from {reservations.length} total)
+              </span>
+            )}
+          </div>
+        )}
+
         {isLoading ? (
           <div className="reservation-state">
             <p>
               Loading reservations…
             </p>
           </div>
-        ) : reservations.length === 0 ? (
+        ) : filteredReservations.length === 0 ? (
           <div className="reservation-state">
             <h3>
-              No reservations yet
+              {searchTerm || statusFilter !== 'ALL' || dateFilter !== 'ALL'
+                ? 'No matching reservations'
+                : 'No reservations yet'}
             </h3>
 
             <p>
-              Customer reservations will appear
-              here when they are submitted.
+              {searchTerm || statusFilter !== 'ALL' || dateFilter !== 'ALL'
+                ? 'Try adjusting your search or filters'
+                : 'Customer reservations will appear here when they are submitted.'}
             </p>
           </div>
         ) : (
-          <div className="reservation-table-scroll">
-            <table className="reservation-table">
-              <thead>
-                <tr>
-                  <th>Reservation</th>
-                  <th>Customer</th>
-                  <th>Pickup</th>
-                  <th>Items</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
+          <>
+            <div className="reservation-table-scroll">
+              <table className="reservation-table">
+                <thead>
+                  <tr>
+                    <th>Reservation</th>
+                    <th>Customer</th>
+                    <th>Pickup</th>
+                    <th>Items</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
 
-              <tbody>
-                {reservations.map(
-                  (reservation) => {
-                    const items =
-                      getItems(reservation)
+                <tbody>
+                  {paginatedReservations.map(
+                    (reservation) => {
+                      const items =
+                        getItems(reservation)
 
-                    const isUpdating =
-                      updatingReservationId ===
-                      reservation.reservation_id
+                      const isUpdating =
+                        updatingReservationId ===
+                        reservation.reservation_id
 
-                    return (
-                      <tr
-                        key={
-                          reservation.reservation_id
-                        }
-                      >
-                        {/* Reservation */}
+                      return (
+                        <tr
+                          key={
+                            reservation.reservation_id
+                          }
+                        >
+                          {/* Reservation */}
 
-                        <td>
-                          <strong>
-                            #
-                            {
-                              reservation.reservation_id
-                            }
-                          </strong>
+                          <td>
+                            <strong>
+                              #
+                              {
+                                reservation.reservation_id
+                              }
+                            </strong>
 
-                          <span className="reservation-subtext">
-                            {formatDate(
-                              reservation.reservation_date,
-                            )}
-                          </span>
-                        </td>
-
-                        {/* Customer */}
-
-                        <td>
-                          <strong>
-                            {getCustomerName(
-                              reservation,
-                            )}
-                          </strong>
-
-                          {getCustomerEmail(
-                            reservation,
-                          ) && (
                             <span className="reservation-subtext">
-                              {getCustomerEmail(
-                                reservation,
+                              {formatDate(
+                                reservation.reservation_date,
                               )}
                             </span>
-                          )}
-                        </td>
+                          </td>
 
-                        {/* Pickup */}
+                          {/* Customer */}
 
-                        <td>
-                          <strong>
-                            {formatDate(
-                              reservation.pickup_date,
+                          <td>
+                            <strong>
+                              {getCustomerName(
+                                reservation,
+                              )}
+                            </strong>
+
+                            {getCustomerEmail(
+                              reservation,
+                            ) && (
+                              <span className="reservation-subtext">
+                                {getCustomerEmail(
+                                  reservation,
+                                )}
+                              </span>
                             )}
-                          </strong>
+                          </td>
 
-                          <span className="reservation-subtext">
-                            {formatTime(
-                              reservation.pickup_time,
+                          {/* Pickup */}
+
+                          <td>
+                            <strong>
+                              {formatDate(
+                                reservation.pickup_date,
+                              )}
+                            </strong>
+
+                            <span className="reservation-subtext">
+                              {formatTime(
+                                reservation.pickup_time,
+                              )}
+                            </span>
+                          </td>
+
+                          {/* Items */}
+
+                          <td>
+                            {items.length}{' '}
+                            {items.length === 1
+                              ? 'item'
+                              : 'items'}
+                          </td>
+
+                          {/* Status */}
+
+                          <td>
+                            <span
+                              className={getStatusClass(
+                                reservation.status,
+                              )}
+                            >
+                              {formatStatus(
+                                reservation.status,
+                              )}
+                            </span>
+                          </td>
+
+                          {/* Actions */}
+
+                          <td className="table-actions">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openReservationDetails(
+                                  reservation,
+                                )
+                              }
+                            >
+                              View Details
+                            </button>
+
+                            {reservation.status ===
+                              'PENDING' && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleConfirm(
+                                      reservation.reservation_id,
+                                    )
+                                  }
+                                  disabled={isUpdating}
+                                >
+                                  {isUpdating
+                                    ? 'Updating…'
+                                    : 'Confirm'}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleCancel(
+                                      reservation.reservation_id,
+                                    )
+                                  }
+                                  disabled={isUpdating}
+                                >
+                                  Cancel
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleExpire(
+                                      reservation.reservation_id,
+                                    )
+                                  }
+                                  disabled={isUpdating}
+                                >
+                                  {isUpdating
+                                    ? 'Updating…'
+                                    : 'No-Show'}
+                                </button>
+                              </>
                             )}
-                          </span>
-                        </td>
 
-                        {/* Items */}
+                            {reservation.status ===
+                              'CONFIRMED' && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleComplete(
+                                      reservation.reservation_id,
+                                    )
+                                  }
+                                  disabled={isUpdating}
+                                >
+                                  {isUpdating
+                                    ? 'Updating…'
+                                    : 'Complete'}
+                                </button>
 
-                        <td>
-                          {items.length}{' '}
-                          {items.length === 1
-                            ? 'item'
-                            : 'items'}
-                        </td>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleCancel(
+                                      reservation.reservation_id,
+                                    )
+                                  }
+                                  disabled={isUpdating}
+                                >
+                                  Cancel
+                                </button>
 
-                        {/* Status */}
-
-                        <td>
-                          <span
-                            className={getStatusClass(
-                              reservation.status,
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleExpire(
+                                      reservation.reservation_id,
+                                    )
+                                  }
+                                  disabled={isUpdating}
+                                >
+                                  {isUpdating
+                                    ? 'Updating…'
+                                    : 'No-Show'}
+                                </button>
+                              </>
                             )}
-                          >
-                            {formatStatus(
-                              reservation.status,
+
+                            {reservation.status ===
+                              'COMPLETED' && (
+                              <span className="reservation-action-complete">
+                                Completed
+                              </span>
                             )}
-                          </span>
-                        </td>
 
-                        {/* Actions */}
+                            {reservation.status ===
+                              'CANCELLED' && (
+                              <span className="reservation-action-cancelled">
+                                Cancelled
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    },
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-                        <td className="table-actions">
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="reservation-pagination">
+                <button
+                  type="button"
+                  onClick={goToPreviousPage}
+                  disabled={currentPage === 1}
+                  className="pagination-btn"
+                  aria-label="Previous page"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                  Previous
+                </button>
+
+                <div className="pagination-pages">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((page) => {
+                      // Show first page, last page, current page, and pages around current
+                      return (
+                        page === 1 ||
+                        page === totalPages ||
+                        Math.abs(page - currentPage) <= 1
+                      )
+                    })
+                    .map((page, index, array) => {
+                      // Add ellipsis if there's a gap
+                      const showEllipsis = index > 0 && page - array[index - 1] > 1
+
+                      return (
+                        <span key={page}>
+                          {showEllipsis && <span className="pagination-ellipsis">...</span>}
                           <button
                             type="button"
-                            onClick={() =>
-                              openReservationDetails(
-                                reservation,
-                              )
-                            }
+                            onClick={() => goToPage(page)}
+                            className={`pagination-page ${
+                              currentPage === page ? 'active' : ''
+                            }`}
                           >
-                            View Details
+                            {page}
                           </button>
+                        </span>
+                      )
+                    })}
+                </div>
 
-                          {reservation.status ===
-                            'PENDING' && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleConfirm(
-                                    reservation.reservation_id,
-                                  )
-                                }
-                                disabled={isUpdating}
-                              >
-                                {isUpdating
-                                  ? 'Updating…'
-                                  : 'Confirm'}
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleCancel(
-                                    reservation.reservation_id,
-                                  )
-                                }
-                                disabled={isUpdating}
-                              >
-                                Cancel
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleExpire(
-                                    reservation.reservation_id,
-                                  )
-                                }
-                                disabled={isUpdating}
-                              >
-                                {isUpdating
-                                  ? 'Updating…'
-                                  : 'No-Show'}
-                              </button>
-                            </>
-                          )}
-
-                          {reservation.status ===
-                            'CONFIRMED' && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleComplete(
-                                    reservation.reservation_id,
-                                  )
-                                }
-                                disabled={isUpdating}
-                              >
-                                {isUpdating
-                                  ? 'Updating…'
-                                  : 'Complete'}
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleCancel(
-                                    reservation.reservation_id,
-                                  )
-                                }
-                                disabled={isUpdating}
-                              >
-                                Cancel
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleExpire(
-                                    reservation.reservation_id,
-                                  )
-                                }
-                                disabled={isUpdating}
-                              >
-                                {isUpdating
-                                  ? 'Updating…'
-                                  : 'No-Show'}
-                              </button>
-                            </>
-                          )}
-
-                          {reservation.status ===
-                            'COMPLETED' && (
-                            <span className="reservation-action-complete">
-                              Completed
-                            </span>
-                          )}
-
-                          {reservation.status ===
-                            'CANCELLED' && (
-                            <span className="reservation-action-cancelled">
-                              Cancelled
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  },
-                )}
-              </tbody>
-            </table>
-          </div>
+                <button
+                  type="button"
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages}
+                  className="pagination-btn"
+                  aria-label="Next page"
+                >
+                  Next
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

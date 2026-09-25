@@ -21,7 +21,7 @@
 }
 
 .audit-logs-page .page-title-row svg {
-  color: #17634f;
+  color: #172A3A;
 }
 
 .audit-logs-page .page-title-row h1 {
@@ -133,7 +133,7 @@
 }
 
 .pagination button:hover:not(:disabled) {
-  border-color: #88cab6;
+  border-color: #508991;
   background: #f0fdf4;
 }
 

@@ -113,12 +113,12 @@
 }
 
 .sales-table thead th {
-  background: #e0f2fe;
+  background: #e8f4f8;
   color: #1e293b;
   font-size: 0.8125rem;
   font-weight: 600;
   padding: 1rem;
-  border-bottom: 1px solid #bae6fd;
+  border-bottom: 1px solid #c5e3f0;
   white-space: nowrap;
 }
 
@@ -164,7 +164,7 @@
 
 /* Primary button */
 .btn-primary {
-  background: #0ea5e9;
+  background: #74B3CE;
   border: none;
   color: #ffffff;
   padding: 0.6rem 1.1rem;
@@ -176,7 +176,7 @@
 }
 
 .btn-primary:hover {
-  background: #0284c7;
+  background: #5a9bb8;
 }
 
 .btn-review {
@@ -434,13 +434,13 @@
 }
 
 .sales-modal-footer button[type='submit'] {
-  background: #0ea5e9;
-  border-color: #0ea5e9;
+  background: #74B3CE;
+  border-color: #74B3CE;
   color: #ffffff;
 }
 
 .sales-modal-footer button[type='submit']:hover:not(:disabled) {
-  background: #0284c7;
+  background: #5a9bb8;
 }
 
 .sales-modal-footer button:disabled {

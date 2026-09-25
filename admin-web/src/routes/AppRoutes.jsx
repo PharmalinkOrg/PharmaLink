@@ -5,19 +5,14 @@ import DashboardPage from '../pages/DashboardPage'
 import InventoryPage from '../pages/InventoryPage'
 import LoginPage from '../pages/LoginPage'
 import NotFoundPage from '../pages/NotFoundPage'
-import PlaceholderPage from '../pages/PlaceholderPage'
 import ReservationsPage from '../pages/ReservationsPage'
 import MedicinesPage from '../pages/MedicinesPage'
 import MedicineRequestsPage from '../pages/MedicineRequestsPage'
 import CustomersPage from '../pages/CustomersPage'
 import PrescriptionsPage from '../pages/PrescriptionsPage' 
 import SalesPage from '../pages/SalesPage'
-// 2. Removed 'prescriptions' from the placeholder array
-const placeholderPages = [
-  ['sales', 'Sales'],
-  ['reports', 'Reports'],
-  ['settings', 'Settings'],
-]
+import ReportsPage from '../pages/ReportsPage'
+import SettingsPage from '../pages/SettingsPage'
 
 function AppRoutes() {
   return (
@@ -32,16 +27,14 @@ function AppRoutes() {
           <Route path="sales" element={<SalesPage />} />
           {/* 3. Added the specific route for Prescriptions */}
           <Route path="prescriptions" element={<PrescriptionsPage />} />
+          <Route path="reports" element={<ReportsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
           
           <Route
               path="customers"
               element={<CustomersPage />}
             />
           <Route path="medicine-requests" element={<MedicineRequestsPage />} />
-          
-          {placeholderPages.map(([path, title]) => (
-            <Route key={path} path={path} element={<PlaceholderPage title={title} />} />
-          ))}
           
           <Route path="*" element={<NotFoundPage />} />
         </Route>

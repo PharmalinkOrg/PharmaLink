@@ -19,7 +19,7 @@
 }
 
 .users-title svg {
-  color: #17634f;
+  color: #172A3A;
 }
 
 .users-title h2 {
@@ -87,8 +87,8 @@
 }
 
 .users-search:focus-within {
-  border-color: #88cab6;
-  box-shadow: 0 0 0 3px rgba(136, 202, 182, 0.18);
+  border-color: #508991;
+  box-shadow: 0 0 0 3px rgba(80, 137, 145, 0.18);
 }
 
 /* Table */
@@ -151,7 +151,7 @@
   flex-shrink: 0;
   border-radius: 9px;
   background: #f0fdf4;
-  color: #17634f;
+  color: #172A3A;
   font-size: 12px;
   font-weight: 700;
 }
@@ -200,7 +200,7 @@
   padding: 5px 9px;
   border-radius: 999px;
   background: #eef7f4;
-  color: #17634f;
+  color: #172A3A;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
@@ -287,7 +287,7 @@
 }
 
 .users-pagination button:hover:not(:disabled) {
-  border-color: #88cab6;
+  border-color: #508991;
   background: #f0fdf4;
 }
 

@@ -6,13 +6,24 @@
 
 .sidebar {
   padding: 24px 16px;
-  background: #153c34;
+  background: #172A3A;
   color: #ffffff;
 }
 
 .brand {
   margin: 0 0 32px;
   font-size: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-logo {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  object-fit: contain;
 }
 
 .brand span {
@@ -35,11 +46,22 @@
   border-radius: 8px;
   color: #dce9e5;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar a svg {
+  flex-shrink: 0;
+}
+
+.sidebar a span {
+  flex: 1;
 }
 
 .sidebar a:hover,
 .sidebar a.active {
-  background: #276557;
+  background: #508991;
   color: #ffffff;
 }
 
@@ -116,7 +138,7 @@
 }
 
 .eyebrow {
-  color: #17634f;
+  color: #172A3A;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -151,7 +173,7 @@
 
 .primary-button {
   border: 0;
-  background: #17634f;
+  background: #172A3A;
   color: #ffffff;
   cursor: pointer;
 }
@@ -163,7 +185,7 @@
 
 .secondary-button {
   border: 1px solid #b8cbc4;
-  color: #17634f;
+  color: #172A3A;
 }
 
 .form-error,
@@ -247,7 +269,7 @@
 }
 
 .table-actions button:first-child {
-  color: #17634f;
+  color: #172A3A;
 }
 
 .table-actions button:last-child {
@@ -333,7 +355,7 @@
   color: #166534; /* Confirmed */
 }
 .dashboard-summary-card:nth-child(7) strong {
-  color: #17634f; /* Completed */
+  color: #172A3A; /* Completed */
 }
 
 /* ----- Charts Grid (two columns) ----- */
@@ -529,7 +551,7 @@
 }
 
 .reservation-status.completed {
-  color: #17634f;
+  color: #172A3A;
   background: #dcefe9;
 }
 
@@ -575,7 +597,7 @@
 
 .reservation-table .table-actions button {
   padding: 6px 0;
-  color: #17634f;
+  color: #172A3A;
   font-size: 0.85rem;
   font-weight: 700;
 }
@@ -762,7 +784,7 @@
 }
 
 .reservation-item-price {
-  color: #17634f;
+  color: #172A3A;
   font-size: 0.88rem;
   font-weight: 700;
   white-space: nowrap;
@@ -770,7 +792,7 @@
 
 .reservation-notes {
   padding: 14px;
-  border-left: 3px solid #17634f;
+  border-left: 3px solid #172A3A;
   border-radius: 0 8px 8px 0;
   background: #f0f7f4;
   color: #40534d;
@@ -798,7 +820,7 @@
 .reservation-modal-actions .modal-cancel-button {
   border: 1px solid #b8cbc4;
   background: #ffffff;
-  color: #17634f;
+  color: #172A3A;
 }
 
 .reservation-modal-actions .modal-cancel-button:hover {
@@ -807,22 +829,22 @@
 
 .reservation-modal-actions .modal-confirm-button {
   border: 0;
-  background: #17634f;
+  background: #172A3A;
   color: #ffffff;
 }
 
 .reservation-modal-actions .modal-confirm-button:hover {
-  background: #125341;
+  background: #508991;
 }
 
 .reservation-modal-actions .modal-complete-button {
   border: 0;
-  background: #276557;
+  background: #508991;
   color: #ffffff;
 }
 
 .reservation-modal-actions .modal-complete-button:hover {
-  background: #205549;
+  background: #3d7380;
 }
 
 .reservation-modal-actions .modal-danger-button {
@@ -1092,8 +1114,8 @@ body.modal-open {
 .inventory-form input:focus,
 .inventory-form select:focus,
 .inventory-form textarea:focus {
-  border-color: #16745f;
-  box-shadow: 0 0 0 3px rgba(22, 116, 95, 0.12);
+  border-color: #172A3A;
+  box-shadow: 0 0 0 3px rgba(23, 42, 58, 0.12);
   background: #fbfefd;
 }
 
@@ -1134,7 +1156,7 @@ body.modal-open {
   border: none;
   border-radius: 10px;
 
-  background: #146b58;
+  background: #172A3A;
   color: #ffffff;
 
   font-family: inherit;
@@ -1143,7 +1165,7 @@ body.modal-open {
 
   cursor: pointer;
 
-  box-shadow: 0 4px 10px rgba(20, 107, 88, 0.18);
+  box-shadow: 0 4px 10px rgba(23, 42, 58, 0.18);
 
   transition:
     background-color 0.2s ease,
@@ -1152,8 +1174,8 @@ body.modal-open {
 }
 
 .inventory-form button:hover {
-  background: #0f5b4b;
-  box-shadow: 0 6px 14px rgba(20, 107, 88, 0.24);
+  background: #508991;
+  box-shadow: 0 6px 14px rgba(80, 137, 145, 0.24);
 }
 
 .inventory-form button:active {
@@ -1394,12 +1416,12 @@ body.modal-open {
 }
 
 .inventory-form .medicine-dropdown-trigger.is-open {
-  border-color: #16745f;
+  border-color: #172A3A;
 
   background: #ffffff;
 
   box-shadow:
-    0 0 0 3px rgba(22, 116, 95, 0.10);
+    0 0 0 3px rgba(23, 42, 58, 0.10);
 }
 
 
@@ -1473,7 +1495,7 @@ body.modal-open {
   border-radius: 9px;
 
   background: #e8f4f0;
-  color: #16745f;
+  color: #172A3A;
 
   font-size: 20px;
   font-weight: 700;
@@ -1578,10 +1600,10 @@ body.modal-open {
 }
 
 .medicine-search-input:focus {
-  border-color: #16745f;
+  border-color: #172A3A;
 
   box-shadow:
-    0 0 0 2px rgba(22, 116, 95, 0.09);
+    0 0 0 2px rgba(23, 42, 58, 0.09);
 }
 
 .medicine-search-input::placeholder {
@@ -1676,7 +1698,7 @@ body.modal-open {
   border-radius: 9px;
 
   background: #e8f4f0;
-  color: #16745f;
+  color: #172A3A;
 
   font-size: 18px;
   font-weight: 700;
@@ -1732,7 +1754,7 @@ body.modal-open {
 
   border-radius: 50%;
 
-  background: #16745f;
+  background: #172A3A;
   color: #ffffff;
 
   font-size: 11px;
@@ -1786,7 +1808,7 @@ body.modal-open {
 
 .medicine-prescription-badge.non-prescription {
   background: #e9f5f1;
-  color: #16745f;
+  color: #172A3A;
 }
 
 .medicine-prescription-badge.prescription {
@@ -2044,7 +2066,7 @@ body.modal-open {
   height: 40px;
   border-radius: 50%;
   background: #dcefe9;
-  color: #176556;
+  color: #172A3A;
   font-size: 15px;
   font-weight: 700;
 }
@@ -2092,7 +2114,7 @@ body.modal-open {
   padding: 0 8px;
   border-radius: 8px;
   background: #eef6f3;
-  color: #176556;
+  color: #172A3A;
   font-weight: 700;
 }
 
@@ -2119,7 +2141,7 @@ body.modal-open {
 
 .customer-status-confirmed {
   background: #e2f5ec;
-  color: #16734e;
+  color: #172A3A;
 }
 
 .customer-status-completed {
@@ -2155,7 +2177,7 @@ body.modal-open {
   margin-bottom: 14px;
   border-radius: 50%;
   background: #edf5f2;
-  color: #176556;
+  color: #172A3A;
   font-size: 20px;
   font-weight: 700;
 }
@@ -2184,7 +2206,7 @@ body.modal-open {
   height: 28px;
   margin-bottom: 14px;
   border: 3px solid #dce9e5;
-  border-top-color: #176556;
+  border-top-color: #172A3A;
   border-radius: 50%;
   animation: customers-spin 0.7s linear infinite;
 }
@@ -2215,5 +2237,1259 @@ body.modal-open {
 
   .customers-toolbar select {
     width: 100%;
+  }
+}
+
+
+/* ============================================================
+   RESERVATION SEARCH AND FILTERS
+   ============================================================ */
+
+.reservation-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-bottom: 1px solid #e5ece9;
+}
+
+.reservation-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  width: 20px;
+  height: 20px;
+  color: #6b7b75;
+  pointer-events: none;
+}
+
+.reservation-search input {
+  width: 100%;
+  padding: 0.75rem 2.75rem 0.75rem 3rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  color: #243a34;
+  transition: all 0.15s ease;
+}
+
+.reservation-search input:focus {
+  outline: none;
+  border-color: #172A3A;
+  box-shadow: 0 0 0 3px rgba(23, 42, 58, 0.1);
+}
+
+.reservation-search input::placeholder {
+  color: #94a3b8;
+}
+
+.clear-search {
+  position: absolute;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 50%;
+  color: #64748b;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.clear-search:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.reservation-filter-group {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.reservation-filter-group label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  flex: 1;
+  min-width: 160px;
+}
+
+.reservation-filter-group label span {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #527168;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.reservation-filter-group select {
+  padding: 0.625rem 2.5rem 0.625rem 0.875rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #243a34;
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px;
+  appearance: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.reservation-filter-group select:focus {
+  outline: none;
+  border-color: #172A3A;
+  box-shadow: 0 0 0 3px rgba(23, 42, 58, 0.1);
+}
+
+.clear-filters-btn {
+  padding: 0.625rem 1.25rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.clear-filters-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #334155;
+}
+
+.reservation-results-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.25rem;
+  background: #f8faf9;
+  border-bottom: 1px solid #e5ece9;
+  font-size: 0.875rem;
+  color: #527168;
+}
+
+.reservation-results-info .filtered-indicator {
+  color: #172A3A;
+  font-weight: 600;
+}
+
+/* ============================================================
+   RESERVATION PAGINATION
+   ============================================================ */
+
+.reservation-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-top: 1px solid #e5ece9;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #172A3A;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.pagination-page {
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pagination-page:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #172A3A;
+}
+
+.pagination-page.active {
+  background: #172A3A;
+  border-color: #172A3A;
+  color: #ffffff;
+}
+
+.pagination-ellipsis {
+  padding: 0 0.5rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .reservation-filters {
+    padding: 1rem;
+  }
+
+  .reservation-filter-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .reservation-filter-group label {
+    width: 100%;
+  }
+
+  .clear-filters-btn {
+    width: 100%;
+  }
+
+  .reservation-results-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .reservation-pagination {
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  .pagination-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pagination-pages {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+
+/* ============================================================
+   RESERVATION ACTION STATUS LABELS
+   ============================================================ */
+
+.reservation-action-complete,
+.reservation-action-cancelled {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+  min-width: 90px;
+}
+
+.reservation-action-complete {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.reservation-action-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+
+/* ============================================================
+   DOSAGE FIELD GROUP (Medicines Page)
+   ============================================================ */
+
+.dosage-field-group {
+  margin-bottom: 1rem;
+}
+
+.dosage-field-group label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #243a34;
+}
+
+.dosage-input-wrapper {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.dosage-value-input {
+  padding: 0.75rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  color: #243a34;
+  transition: all 0.15s ease;
+}
+
+.dosage-value-input:focus {
+  outline: none;
+  border-color: #172A3A;
+  box-shadow: 0 0 0 3px rgba(23, 42, 58, 0.1);
+}
+
+.dosage-value-input::placeholder {
+  color: #94a3b8;
+}
+
+.dosage-unit-select {
+  min-width: 120px;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 2px solid #172A3A;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #172A3A;
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23172A3A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  background-size: 18px;
+  appearance: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dosage-unit-select:hover {
+  background-color: #f0fdf4;
+  border-color: #508991;
+}
+
+.dosage-unit-select:focus {
+  outline: none;
+  border-color: #172A3A;
+  box-shadow: 0 0 0 3px rgba(23, 42, 58, 0.15);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .dosage-input-wrapper {
+    grid-template-columns: 1fr;
+  }
+  
+  .dosage-unit-select {
+    width: 100%;
+  }
+}
+
+
+/* ============================================================
+   MEDICINES PAGE - IMPROVED UI
+   ============================================================ */
+
+.medicines-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.medicines-page .page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Compact Form Card */
+.medicine-form-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.medicine-form-compact h3 {
+  margin: 0 0 1.25rem;
+  font-size: 1.125rem;
+  color: #0f172a;
+}
+
+.form-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dosage-field-compact {
+  grid-column: span 1;
+}
+
+.medicine-form-compact label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.medicine-form-compact input,
+.medicine-form-compact select,
+.medicine-form-compact textarea {
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #0f172a;
+  transition: all 0.15s ease;
+}
+
+.medicine-form-compact input:focus,
+.medicine-form-compact select:focus,
+.medicine-form-compact textarea:focus {
+  outline: none;
+  border-color: #172A3A;
+  box-shadow: 0 0 0 3px rgba(23, 42, 58, 0.1);
+}
+
+.medicine-form-compact textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* Table Card */
+.medicines-table-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Search and Filters */
+.medicines-search-filters {
+  padding: 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.medicines-search-filters .search-icon {
+  position: absolute;
+  left: 14px;
+  width: 20px;
+  height: 20px;
+  color: #6b7b75;
+  pointer-events: none;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 0.75rem 2.75rem 0.75rem 3rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  color: #243a34;
+  transition: all 0.15s ease;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #172A3A;
+  box-shadow: 0 0 0 3px rgba(23, 42, 58, 0.1);
+}
+
+.search-bar input::placeholder {
+  color: #94a3b8;
+}
+
+.filter-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  flex: 1;
+  min-width: 150px;
+}
+
+.filter-row label span {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #527168;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filter-row select {
+  padding: 0.625rem 2.5rem 0.625rem 0.875rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #243a34;
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px;
+  appearance: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-row select:focus {
+  outline: none;
+  border-color: #172A3A;
+  box-shadow: 0 0 0 3px rgba(23, 42, 58, 0.1);
+}
+
+/* Results Info */
+.medicines-results-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.25rem;
+  background: #f8faf9;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.875rem;
+  color: #527168;
+}
+
+.medicines-results-info .filtered-indicator {
+  color: #172A3A;
+  font-weight: 600;
+}
+
+/* Table */
+.medicines-table-scroll {
+  overflow-x: auto;
+}
+
+.medicines-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+}
+
+.medicines-table thead {
+  background: #f8faf9;
+}
+
+.medicines-table th {
+  padding: 1rem 1.125rem;
+  text-align: left;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #527168;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.medicines-table td {
+  padding: 1rem 1.125rem;
+  font-size: 0.875rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.medicines-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.medicines-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.medicines-table td strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.medicines-state {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.medicines-state h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  color: #334155;
+}
+
+.medicines-state p {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+/* Pagination */
+.medicines-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Status Pills */
+.status-pill {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-pill.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-pill.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .medicines-page .page-heading {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .medicines-page .page-heading .primary-button {
+    width: 100%;
+  }
+
+  .form-grid-compact {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-row {
+    flex-direction: column;
+  }
+
+  .filter-row label {
+    width: 100%;
+  }
+
+  .clear-filters-btn {
+    width: 100%;
+  }
+
+  .medicines-pagination {
+    flex-direction: column;
+  }
+
+  .pagination-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ============================================================
+   MEDICINES PAGE - SIDE-BY-SIDE LAYOUT
+   ============================================================ */
+
+.medicines-layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Form Panel (Left Side) */
+.medicine-form-panel {
+  position: sticky;
+  top: 24px;
+  background: #ffffff;
+  border: 1px solid #dce8e3;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(22, 61, 51, 0.07);
+  overflow: hidden;
+}
+
+.medicine-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+}
+
+.medicine-form h3 {
+  margin: 0;
+  color: #18332d;
+  font-size: 1.125rem;
+}
+
+.medicine-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #40534d;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Override for dosage field - preserve existing styling */
+.medicine-form .dosage-field-group label {
+  gap: 0.5rem;
+}
+
+.medicine-form input:not(.dosage-value-input),
+.medicine-form select:not(.dosage-unit-select),
+.medicine-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #b8cbc4;
+  border-radius: 8px;
+  color: #1f2933;
+  background: #ffffff;
+  font-size: 0.9rem;
+}
+
+.medicine-form input:not(.dosage-value-input):focus,
+.medicine-form select:not(.dosage-unit-select):focus,
+.medicine-form textarea:focus {
+  outline: none;
+  border-color: #172A3A;
+  box-shadow: 0 0 0 3px rgba(23, 42, 58, 0.1);
+}
+
+.medicine-form textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+.medicine-form .checkbox-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.medicine-form .checkbox-field input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+/* Table Panel (Right Side) */
+.medicines-table-panel {
+  min-width: 0;
+}
+
+.medicines-table-panel .medicines-table-card {
+  background: #ffffff;
+  border: 1px solid #dce8e3;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(22, 61, 51, 0.07);
+  overflow: hidden;
+}
+
+/* Compact Search Bar */
+.medicines-table-panel .medicines-search-filters {
+  padding: 16px;
+  border-bottom: 1px solid #e5ece9;
+}
+
+.medicines-table-panel .search-bar {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.medicines-table-panel .search-bar input {
+  width: 100%;
+  padding: 9px 36px 9px 36px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.medicines-table-panel .filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.medicines-table-panel .filter-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.medicines-table-panel .filter-row label span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #527168;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.medicines-table-panel .filter-row select {
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.medicines-table-panel .clear-filters-btn {
+  padding: 8px 14px;
+  font-size: 0.8125rem;
+  height: fit-content;
+}
+
+/* Compact Results Info */
+.medicines-table-panel .medicines-results-info {
+  padding: 10px 16px;
+  font-size: 0.8125rem;
+}
+
+/* Compact Pagination */
+.medicines-table-panel .medicines-pagination {
+  padding: 14px 16px;
+  gap: 12px;
+}
+
+.medicines-table-panel .pagination-btn {
+  padding: 7px 12px;
+  font-size: 0.8125rem;
+  gap: 6px;
+}
+
+.medicines-table-panel .pagination-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.medicines-table-panel .pagination-page {
+  width: 32px;
+  height: 32px;
+  font-size: 0.8125rem;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .medicines-layout {
+    grid-template-columns: 320px 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .medicines-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .medicine-form-panel {
+    position: relative;
+    top: 0;
+  }
+}
+
+/* ============================================================
+   INVENTORY PAGE - SIDE-BY-SIDE LAYOUT
+   ============================================================ */
+
+.inventory-layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Form Panel (Left Side) */
+.inventory-form-panel {
+  position: sticky;
+  top: 24px;
+  background: #ffffff;
+  border: 1px solid #dce8e3;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(22, 61, 51, 0.07);
+  overflow: hidden;
+}
+
+.inventory-form-panel .inventory-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+}
+
+.inventory-form-panel .inventory-form h3 {
+  margin: 0;
+  color: #18332d;
+  font-size: 1.125rem;
+}
+
+.inventory-form-panel .inventory-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #40534d;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.inventory-form-panel .inventory-form input,
+.inventory-form-panel .inventory-form select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #b8cbc4;
+  border-radius: 8px;
+  color: #1f2933;
+  background: #ffffff;
+  font-size: 0.9rem;
+}
+
+.inventory-form-panel .inventory-form input:focus,
+.inventory-form-panel .inventory-form select:focus {
+  outline: none;
+  border-color: #172A3A;
+  box-shadow: 0 0 0 3px rgba(23, 42, 58, 0.1);
+}
+
+/* Table Panel (Right Side) */
+.inventory-table-panel {
+  min-width: 0;
+}
+
+.inventory-table-card {
+  background: #ffffff;
+  border: 1px solid #dce8e3;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(22, 61, 51, 0.07);
+  overflow: hidden;
+}
+
+/* Search and Filters */
+.inventory-search-filters {
+  padding: 16px;
+  border-bottom: 1px solid #e5ece9;
+}
+
+.inventory-search-filters .search-bar {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.inventory-search-filters .search-bar input {
+  width: 100%;
+  padding: 9px 36px 9px 36px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.15s ease;
+}
+
+.inventory-search-filters .search-bar input:focus {
+  outline: none;
+  border-color: #172A3A;
+  box-shadow: 0 0 0 3px rgba(23, 42, 58, 0.1);
+}
+
+.inventory-search-filters .filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.inventory-search-filters .filter-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inventory-search-filters .filter-row label span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #527168;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.inventory-search-filters .filter-row select {
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.15s ease;
+}
+
+.inventory-search-filters .filter-row select:focus {
+  outline: none;
+  border-color: #172A3A;
+  box-shadow: 0 0 0 3px rgba(23, 42, 58, 0.1);
+}
+
+.inventory-search-filters .clear-filters-btn {
+  padding: 8px 14px;
+  font-size: 0.8125rem;
+  height: fit-content;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #64748b;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.inventory-search-filters .clear-filters-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #334155;
+}
+
+/* Results Info */
+.inventory-results-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 10px 16px;
+  background: #f8faf9;
+  font-size: 0.8125rem;
+  color: #527168;
+  border-bottom: 1px solid #e5ece9;
+}
+
+.inventory-results-info .filtered-indicator {
+  color: #172A3A;
+  font-weight: 600;
+}
+
+/* Table State */
+.inventory-state {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #6b7b75;
+}
+
+.inventory-state h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  color: #243a34;
+}
+
+.inventory-state p {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #6b7b75;
+}
+
+/* Table Scroll */
+.inventory-table-scroll {
+  overflow-x: auto;
+}
+
+.inventory-table-card .inventory-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+}
+
+.inventory-table-card .inventory-table thead {
+  background: #f8faf9;
+}
+
+.inventory-table-card .inventory-table th {
+  padding: 1rem 1.125rem;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #527168;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e5ece9;
+}
+
+.inventory-table-card .inventory-table td {
+  padding: 1rem 1.125rem;
+  font-size: 0.875rem;
+  color: #243a34;
+  border-bottom: 1px solid #e5ece9;
+}
+
+.inventory-table-card .inventory-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.inventory-table-card .inventory-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.inventory-table-card .inventory-table td strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* Pagination */
+.inventory-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  gap: 12px;
+  border-top: 1px solid #e5ece9;
+}
+
+.inventory-pagination .pagination-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #527168;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inventory-pagination .pagination-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.inventory-pagination .pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.inventory-pagination .pagination-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.inventory-pagination .pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inventory-pagination .pagination-page {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #527168;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inventory-pagination .pagination-page:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.inventory-pagination .pagination-page.active {
+  background: #172A3A;
+  border-color: #172A3A;
+  color: #ffffff;
+}
+
+.inventory-pagination .pagination-ellipsis {
+  padding: 0 4px;
+  color: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .inventory-layout {
+    grid-template-columns: 320px 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .inventory-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .inventory-form-panel {
+    position: relative;
+    top: 0;
   }
 }

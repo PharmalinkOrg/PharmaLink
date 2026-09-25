@@ -19,7 +19,7 @@
 }
 
 .page-title-row svg {
-  color: #17634f;
+  color: #172A3A;
 }
 
 .page-title-row h1 {
@@ -98,8 +98,8 @@
 
 .search-box:focus-within,
 .sort-box:focus-within {
-  border-color: #88cab6;
-  box-shadow: 0 0 0 3px rgba(136, 202, 182, 0.18);
+  border-color: #508991;
+  box-shadow: 0 0 0 3px rgba(80, 137, 145, 0.18);
 }
 
 .pharmacy-table-card {
@@ -158,7 +158,7 @@
   flex-shrink: 0;
   border-radius: 9px;
   background: #f0fdf4;
-  color: #17634f;
+  color: #172A3A;
 }
 
 .pharmacy-name-cell strong {
@@ -285,7 +285,7 @@
 }
 
 .pagination button:hover:not(:disabled) {
-  border-color: #88cab6;
+  border-color: #508991;
   background: #f0fdf4;
 }
 

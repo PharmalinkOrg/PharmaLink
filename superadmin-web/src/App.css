@@ -6,13 +6,24 @@
 
 .sidebar {
   padding: 24px 16px;
-  background: #1e293b;
+  background: #172A3A;
   color: #ffffff;
 }
 
 .brand {
   margin: 0 0 32px;
   font-size: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-logo {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  object-fit: contain;
 }
 
 .brand span {
@@ -35,11 +46,22 @@
   border-radius: 8px;
   color: #dbe7fb;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar a svg {
+  flex-shrink: 0;
+}
+
+.sidebar a span {
+  flex: 1;
 }
 
 .sidebar a:hover,
 .sidebar a.active {
-  background: #334a6e;
+  background: #508991;
   color: #ffffff;
 }
 
@@ -72,7 +94,7 @@
   border: none;
   border-radius: 6px;
 
-  background: #548f9a;
+  background: #172A3A;
   color: white;
 
   font-size: 0.95rem;
@@ -83,7 +105,7 @@
 }
 
 .logout-button:hover {
-  background: #467b85;
+  background: #508991;
 }
 
 .logout-button:active {
@@ -91,7 +113,7 @@
 }
 
 .logout-button:focus-visible {
-  outline: 2px solid #88cab6;
+  outline: 2px solid #508991;
   outline-offset: 2px;
 }
 
