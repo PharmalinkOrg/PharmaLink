@@ -1,5 +1,10 @@
 const supabaseAdmin = require('../config/supabaseAdmin')
 
+const {
+  createNotification,
+  createNotifications,
+} = require('../services/notificationService')
+
 /* ============================================================
    HELPERS
 ============================================================ */
@@ -75,6 +80,63 @@ const getPhilippineDateString = () => {
     `${dateParts.month}-` +
     `${dateParts.day}`
   )
+}
+
+/**
+ * Find all ACTIVE PHARMACY_ADMIN users
+ * assigned to a specific pharmacy.
+ *
+ * notifications.user_id references users.user_id,
+ * so notifications must be sent to user IDs rather
+ * than directly to a pharmacy ID.
+ */
+const getActivePharmacyAdminIds = async (
+  pharmacyId
+) => {
+  try {
+    const { data, error } =
+      await supabaseAdmin
+        .from('users')
+        .select('user_id')
+        .eq(
+          'pharmacy_id',
+          Number(pharmacyId)
+        )
+        .eq(
+          'role',
+          'PHARMACY_ADMIN'
+        )
+        .eq(
+          'status',
+          'ACTIVE'
+        )
+
+    if (error) {
+      console.error(
+        'Pharmacy admin notification lookup error:',
+        error
+      )
+
+      return []
+    }
+
+    return (data || [])
+      .map((user) =>
+        Number(user.user_id)
+      )
+      .filter(
+        (userId) =>
+          Number.isInteger(userId) &&
+          userId > 0
+      )
+  } catch (error) {
+    console.error(
+      'Pharmacy admin notification lookup server error:',
+      error
+    )
+
+    return []
+  }
 }
 
 /* ============================================================
@@ -179,6 +241,7 @@ const createPrescription = async (req, res) => {
      *
      * uuid/../another-user/file.jpg
      */
+
     if (imagePath.includes('..')) {
       return res.status(400).json({
         success: false,
@@ -216,18 +279,8 @@ const createPrescription = async (req, res) => {
        *
        * Use the PharmaLink Philippine
        * business date instead of UTC.
-       *
-       * Example:
-       *
-       * Philippines:
-       * 2026-09-26 12:30 AM
-       *
-       * UTC:
-       * 2026-09-25 4:30 PM
-       *
-       * Using toISOString() would
-       * incorrectly return 2026-09-25.
        */
+
       const todayString =
         getPhilippineDateString()
 
@@ -353,7 +406,37 @@ const createPrescription = async (req, res) => {
     }
 
     // --------------------------------------------------
-    // 9. Return success
+    // 9. Notify pharmacy administrators
+    //
+    // Notification failures do NOT fail the
+    // successfully created prescription.
+    // --------------------------------------------------
+
+    const pharmacyAdminIds =
+      await getActivePharmacyAdminIds(
+        pharmacyId
+      )
+
+    if (
+      pharmacyAdminIds.length > 0
+    ) {
+      await createNotifications({
+        userIds:
+          pharmacyAdminIds,
+
+        title:
+          'New prescription submitted',
+
+        message:
+          'A customer submitted a new prescription for review.',
+
+        type:
+          'PRESCRIPTION',
+      })
+    }
+
+    // --------------------------------------------------
+    // 10. Return success
     // --------------------------------------------------
 
     return res.status(201).json({
@@ -677,7 +760,7 @@ const updatePrescriptionStatus =
       const pharmacyId =
         req.pharmaUser?.pharmacy_id
 
-      const staffUserId =
+      const pharmacyAdminUserId =
         req.pharmaUser?.user_id
 
       if (!pharmacyId) {
@@ -688,11 +771,11 @@ const updatePrescriptionStatus =
         })
       }
 
-      if (!staffUserId) {
+      if (!pharmacyAdminUserId) {
         return res.status(401).json({
           success: false,
           message:
-            'Authenticated staff member not found',
+            'Authenticated pharmacy administrator not found',
         })
       }
 
@@ -739,13 +822,20 @@ const updatePrescriptionStatus =
         })
       }
 
+      // --------------------------------------------------
+      // Load the prescription.
+      //
+      // customer_id is included because it is needed
+      // when creating the customer's notification.
+      // --------------------------------------------------
+
       const {
         data: prescription,
         error: lookupError,
       } = await supabaseAdmin
         .from('prescriptions')
         .select(
-          'prescription_id, pharmacy_id, status'
+          'prescription_id, customer_id, pharmacy_id, status'
         )
         .eq(
           'prescription_id',
@@ -789,6 +879,10 @@ const updatePrescriptionStatus =
         })
       }
 
+      // --------------------------------------------------
+      // Update prescription status
+      // --------------------------------------------------
+
       const {
         data: updated,
         error: updateError,
@@ -798,7 +892,9 @@ const updatePrescriptionStatus =
           status,
 
           verified_by:
-            Number(staffUserId),
+            Number(
+              pharmacyAdminUserId
+            ),
 
           verified_at:
             new Date().toISOString(),
@@ -838,6 +934,51 @@ const updatePrescriptionStatus =
             'Failed to update prescription status',
         })
       }
+
+      // --------------------------------------------------
+      // Notify customer
+      //
+      // This happens only after the prescription status
+      // has been successfully updated.
+      //
+      // Notification failure does NOT undo the
+      // prescription status change.
+      // --------------------------------------------------
+
+      const customerNotification =
+        status === 'VERIFIED'
+          ? {
+              title:
+                'Prescription verified',
+
+              message:
+                'Your prescription has been verified by the pharmacy.',
+            }
+          : {
+              title:
+                'Prescription rejected',
+
+              message:
+                'Your prescription was not approved by the pharmacy. Please review the prescription details or contact the pharmacy for assistance.',
+            }
+
+      await createNotification({
+        userId:
+          prescription.customer_id,
+
+        title:
+          customerNotification.title,
+
+        message:
+          customerNotification.message,
+
+        type:
+          'PRESCRIPTION',
+      })
+
+      // --------------------------------------------------
+      // Return success
+      // --------------------------------------------------
 
       return res.status(200).json({
         success: true,

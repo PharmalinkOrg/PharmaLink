@@ -1,5 +1,10 @@
 const supabaseAdmin = require('../config/supabaseAdmin')
 
+const {
+  createNotification,
+  createNotifications,
+} = require('../services/notificationService')
+
 // ============================================================
 // SELECTS
 // ============================================================
@@ -167,6 +172,138 @@ const normalizeRequestedItem = (item) => {
     },
   }
 }
+
+/**
+ * Find all ACTIVE PHARMACY_ADMIN users assigned
+ * to a specific pharmacy.
+ *
+ * notifications.user_id references users.user_id,
+ * so notifications must target user IDs rather than
+ * pharmacy IDs.
+ */
+const getActivePharmacyAdminIds = async (
+  pharmacyId
+) => {
+  try {
+    const { data, error } =
+      await supabaseAdmin
+        .from('users')
+        .select('user_id')
+        .eq(
+          'pharmacy_id',
+          Number(pharmacyId)
+        )
+        .eq(
+          'role',
+          'PHARMACY_ADMIN'
+        )
+        .eq(
+          'status',
+          'ACTIVE'
+        )
+
+    if (error) {
+      console.error(
+        'Pharmacy admin notification lookup error:',
+        error
+      )
+
+      return []
+    }
+
+    return (data || [])
+      .map((user) =>
+        Number(user.user_id)
+      )
+      .filter(
+        (userId) =>
+          Number.isInteger(userId) &&
+          userId > 0
+      )
+  } catch (error) {
+    console.error(
+      'Pharmacy admin notification lookup server error:',
+      error
+    )
+
+    return []
+  }
+}
+
+/**
+ * Find all ACTIVE pharmacy IDs.
+ *
+ * Used to broadcast "new medicine request" notifications
+ * to every active partner pharmacy.
+ */
+const getActivePharmacyIds = async () => {
+  try {
+    const { data, error } =
+      await supabaseAdmin
+        .from('pharmacies')
+        .select('pharmacy_id')
+        .eq('status', 'ACTIVE')
+
+    if (error) {
+      console.error(
+        'Active pharmacy notification lookup error:',
+        error
+      )
+
+      return []
+    }
+
+    return (data || [])
+      .map((pharmacy) =>
+        Number(pharmacy.pharmacy_id)
+      )
+      .filter(
+        (pharmacyId) =>
+          Number.isInteger(pharmacyId) &&
+          pharmacyId > 0
+      )
+  } catch (error) {
+    console.error(
+      'Active pharmacy notification lookup server error:',
+      error
+    )
+
+    return []
+  }
+}
+
+/**
+ * Collect ACTIVE pharmacy admin user IDs for
+ * every ACTIVE partner pharmacy.
+ */
+const getActivePartnerPharmacyAdminIds =
+  async () => {
+    const pharmacyIds =
+      await getActivePharmacyIds()
+
+    if (pharmacyIds.length === 0) {
+      return []
+    }
+
+    const adminIdSets =
+      await Promise.all(
+        pharmacyIds.map((pharmacyId) =>
+          getActivePharmacyAdminIds(
+            pharmacyId
+          )
+        )
+      )
+
+    const uniqueAdminIds = new Set()
+
+    for (const adminIds of adminIdSets) {
+      for (const adminId of adminIds) {
+        uniqueAdminIds.add(adminId)
+      }
+    }
+
+    return Array.from(uniqueAdminIds)
+  }
 
 // ============================================================
 // CUSTOMER
@@ -435,6 +572,32 @@ const createMedicineRequest = async (req, res) => {
         message:
           'Failed to create medicine request items',
         error: itemsError.message,
+      })
+    }
+
+    // --------------------------------------------------------
+    // Notify all ACTIVE partner pharmacy administrators
+    //
+    // This is a broadcast request, so every active partner
+    // pharmacy should be informed.
+    //
+    // Notification failures do NOT fail the successfully
+    // created medicine request.
+    // --------------------------------------------------------
+
+    const pharmacyAdminIds =
+      await getActivePartnerPharmacyAdminIds()
+
+    if (pharmacyAdminIds.length > 0) {
+      await createNotifications({
+        userIds: pharmacyAdminIds,
+
+        title: 'New medicine request',
+
+        message:
+          'A customer submitted a new medicine request. Open PharmaLink to review and respond.',
+
+        type: 'MEDICINE_REQUEST',
       })
     }
 
@@ -1179,6 +1342,7 @@ const respondToMedicineRequest = async (
       .from('pharmacies')
       .select(`
         pharmacy_id,
+        name,
         status
       `)
       .eq(
@@ -1372,6 +1536,23 @@ const respondToMedicineRequest = async (
       })
     }
 
+    // --------------------------------------------------------
+    // Notify the customer
+    //
+    // The pharmacy response has already been saved.
+    // Notification failures do NOT undo the response.
+    // --------------------------------------------------------
+
+    await createNotification({
+      userId: request.customer_id,
+
+      title: 'Pharmacy responded to your request',
+
+      message: `${pharmacy.name} has responded to your medicine request. Open PharmaLink to view availability and pricing.`,
+
+      type: 'MEDICINE_REQUEST',
+    })
+
     return res.status(200).json({
       success: true,
       message:
@@ -1500,6 +1681,81 @@ const cancelMedicineRequest = async (
       })
     }
 
+    // --------------------------------------------------------
+    // Notify pharmacy administrators who responded
+    //
+    // Only notify pharmacies that already submitted a response,
+    // since they may have reserved stock or prepared an offer.
+    // --------------------------------------------------------
+
+    const {
+      data: respondedPharmacies,
+      error: respondedPharmaciesError,
+    } = await supabaseAdmin
+      .from('medicine_request_responses')
+      .select('pharmacy_id')
+      .eq(
+        'medicine_request_id',
+        requestId
+      )
+
+    if (respondedPharmaciesError) {
+      console.error(
+        'Responded pharmacies lookup error:',
+        respondedPharmaciesError
+      )
+    } else {
+      const pharmacyIds = [
+        ...new Set(
+          (respondedPharmacies || []).map(
+            (response) =>
+              Number(response.pharmacy_id)
+          )
+        ),
+      ].filter(
+        (pharmacyId) =>
+          Number.isInteger(pharmacyId) &&
+          pharmacyId > 0
+      )
+
+      if (pharmacyIds.length > 0) {
+        const adminIdSets =
+          await Promise.all(
+            pharmacyIds.map((pharmacyId) =>
+              getActivePharmacyAdminIds(
+                pharmacyId
+              )
+            )
+          )
+
+        const uniqueAdminIds = new Set()
+
+        for (const adminIds of adminIdSets) {
+          for (const adminId of adminIds) {
+            uniqueAdminIds.add(adminId)
+          }
+        }
+
+        const adminIds = Array.from(
+          uniqueAdminIds
+        )
+
+        if (adminIds.length > 0) {
+          await createNotifications({
+            userIds: adminIds,
+
+            title:
+              'Medicine request cancelled by customer',
+
+            message:
+              'A customer cancelled a medicine request you responded to.',
+
+            type: 'MEDICINE_REQUEST',
+          })
+        }
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message:
@@ -1594,6 +1850,45 @@ const updateMedicineRequestStatus = async (
           'Failed to update medicine request status',
         error: error.message,
       })
+    }
+
+    // --------------------------------------------------------
+    // Notify the customer when their request is fulfilled,
+    // cancelled, or expired by a super administrator.
+    //
+    // Do not notify for the "OPEN" status because that is
+    // the normal creation state.
+    // --------------------------------------------------------
+
+    if (status !== 'OPEN') {
+      let title
+      let message
+
+      if (status === 'FULFILLED') {
+        title = 'Medicine request fulfilled'
+        message =
+          'Your medicine request has been fulfilled. Please check PharmaLink for details.'
+      } else if (status === 'CANCELLED') {
+        title = 'Medicine request cancelled'
+        message =
+          'Your medicine request has been cancelled. Please check PharmaLink for details.'
+      } else if (status === 'EXPIRED') {
+        title = 'Medicine request expired'
+        message =
+          'Your medicine request has expired. Please submit a new request if you still need the medicine.'
+      }
+
+      if (title && message) {
+        await createNotification({
+          userId: data.customer_id,
+
+          title,
+
+          message,
+
+          type: 'MEDICINE_REQUEST',
+        })
+      }
     }
 
     return res.status(200).json({

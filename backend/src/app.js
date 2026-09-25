@@ -4,6 +4,10 @@ const cookieParser = require('cookie-parser')
 
 require('dotenv').config()
 
+// ============================================================
+// ROUTES
+// ============================================================
+
 const pharmacyRoutes = require('./routes/pharmacyRoutes')
 const authRoutes = require('./routes/authRoutes')
 const inventoryRoutes = require('./routes/inventoryRoutes')
@@ -18,6 +22,7 @@ const medicineRequestRoutes = require('./routes/medicineRequestRoutes')
 const prescriptionRoutes = require('./routes/prescriptionRoutes')
 const salesRoutes = require('./routes/salesRoutes')
 const aiRoutes = require('./routes/aiRoutes')
+const notificationRoutes = require('./routes/notificationRoutes')
 
 const app = express()
 
@@ -52,8 +57,11 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin(origin, callback) {
-    // Requests such as Postman, curl, server-to-server requests,
-    // and some same-origin requests may not include Origin.
+    /*
+     * Requests such as Postman, curl,
+     * server-to-server requests, and some
+     * same-origin requests may not include Origin.
+     */
     if (!origin) {
       return callback(null, true)
     }
@@ -62,10 +70,14 @@ const corsOptions = {
       return callback(null, true)
     }
 
-    console.warn(`CORS blocked origin: ${origin}`)
+    console.warn(
+      `CORS blocked origin: ${origin}`,
+    )
 
     return callback(
-      new Error(`Origin ${origin} is not allowed by CORS`)
+      new Error(
+        `Origin ${origin} is not allowed by CORS`,
+      ),
     )
   },
 
@@ -91,9 +103,7 @@ const corsOptions = {
 // ============================================================
 
 app.use(cors(corsOptions))
-
 app.use(express.json())
-
 app.use(cookieParser())
 
 // ============================================================
@@ -118,58 +128,93 @@ app.get('/api/health', (req, res) => {
 // API ROUTES
 // ============================================================
 
-app.use('/api/auth', authRoutes)
+app.use(
+  '/api/auth',
+  authRoutes,
+)
 
-app.use('/api/users', userRoutes)
+app.use(
+  '/api/users',
+  userRoutes,
+)
 
-app.use('/api/medicines', medicineRoutes)
+app.use(
+  '/api/medicines',
+  medicineRoutes,
+)
 
-app.use('/api/dashboard', dashboardRoutes)
+app.use(
+  '/api/dashboard',
+  dashboardRoutes,
+)
 
-app.use('/api/superadmin', superadminRoutes)
+app.use(
+  '/api/superadmin',
+  superadminRoutes,
+)
 
-app.use('/api/reservations', reservationRoutes)
+app.use(
+  '/api/reservations',
+  reservationRoutes,
+)
 
-app.use('/api/prescriptions', prescriptionRoutes)
+app.use(
+  '/api/prescriptions',
+  prescriptionRoutes,
+)
 
 app.use(
   '/api/medicine-requests',
-  medicineRequestRoutes
+  medicineRequestRoutes,
 )
 
-app.use('/api/sales', salesRoutes)
+app.use(
+  '/api/sales',
+  salesRoutes,
+)
 
-app.use('/api/ai', aiRoutes)
+app.use(
+  '/api/ai',
+  aiRoutes,
+)
+
+app.use(
+  '/api/notifications',
+  notificationRoutes,
+)
 
 app.use(
   '/api/medicine-categories',
-  medicineCategoryRoutes
+  medicineCategoryRoutes,
 )
 
 // ============================================================
 // PHARMACY ROUTES
 // ============================================================
-//
-// IMPORTANT:
-// Specific pharmacy sub-routes must be mounted BEFORE
-// pharmacyRoutes because pharmacyRoutes contains GET /:id.
-//
-// ============================================================
+
+/*
+ * IMPORTANT:
+ *
+ * Specific pharmacy sub-routes must be mounted BEFORE
+ * pharmacyRoutes because pharmacyRoutes contains GET /:id.
+ */
 
 app.use(
   '/api/pharmacies',
-  customerInventoryRoutes
+  customerInventoryRoutes,
 )
 
 app.use(
   '/api/pharmacies',
-  inventoryRoutes
+  inventoryRoutes,
 )
 
-// Generic /:id pharmacy routes go last.
+/*
+ * Generic /:id pharmacy routes go last.
+ */
 app.use(
   '/api/pharmacies',
-  pharmacyRoutes
+  pharmacyRoutes,
 )
 
 // ============================================================
@@ -179,7 +224,8 @@ app.use(
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: `Route not found: ${req.method} ${req.originalUrl}`,
+    message:
+      `Route not found: ${req.method} ${req.originalUrl}`,
   })
 })
 
@@ -187,24 +233,31 @@ app.use((req, res) => {
 // ERROR HANDLER
 // ============================================================
 
-app.use((error, req, res, next) => {
-  console.error('Unhandled server error:', error)
-
-  if (
-    error.message?.includes(
-      'is not allowed by CORS'
+app.use(
+  (error, req, res, next) => {
+    console.error(
+      'Unhandled server error:',
+      error,
     )
-  ) {
-    return res.status(403).json({
-      success: false,
-      message: 'Request origin is not allowed',
-    })
-  }
 
-  return res.status(500).json({
-    success: false,
-    message: 'Internal server error',
-  })
-})
+    if (
+      error.message?.includes(
+        'is not allowed by CORS',
+      )
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          'Request origin is not allowed',
+      })
+    }
+
+    return res.status(500).json({
+      success: false,
+      message:
+        'Internal server error',
+    })
+  },
+)
 
 module.exports = app
