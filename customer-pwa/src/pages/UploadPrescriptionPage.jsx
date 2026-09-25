@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+
 import { api } from '../lib/api'
 import { supabase } from '../lib/supabaseClient'
 
@@ -85,13 +86,21 @@ function getLocalToday() {
   const now = new Date()
 
   const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
+  const month = String(
+    now.getMonth() + 1,
+  ).padStart(2, '0')
+  const day = String(
+    now.getDate(),
+  ).padStart(2, '0')
 
   return `${year}-${month}-${day}`
 }
 
-function isValidCalendarDate(year, month, day) {
+function isValidCalendarDate(
+  year,
+  month,
+  day,
+) {
   if (
     !Number.isInteger(year) ||
     !Number.isInteger(month) ||
@@ -111,7 +120,11 @@ function isValidCalendarDate(year, month, day) {
     return false
   }
 
-  const date = new Date(year, month - 1, day)
+  const date = new Date(
+    year,
+    month - 1,
+    day,
+  )
 
   return (
     date.getFullYear() === year &&
@@ -120,13 +133,30 @@ function isValidCalendarDate(year, month, day) {
   )
 }
 
-function createDateResult(year, month, day) {
-  if (!isValidCalendarDate(year, month, day)) {
+function createDateResult(
+  year,
+  month,
+  day,
+) {
+  if (
+    !isValidCalendarDate(
+      year,
+      month,
+      day,
+    )
+  ) {
     return null
   }
 
-  const mm = String(month).padStart(2, '0')
-  const dd = String(day).padStart(2, '0')
+  const mm = String(month).padStart(
+    2,
+    '0',
+  )
+
+  const dd = String(day).padStart(
+    2,
+    '0',
+  )
 
   return {
     display: `${mm}-${dd}-${year}`,
@@ -138,8 +168,8 @@ function createDateResult(year, month, day) {
 // PRESCRIPTION DATE PARSING
 // ============================================================
 
-/**
- * Supported examples:
+/*
+ * Supported:
  *
  * September 29 2026
  * September 29, 2026
@@ -151,16 +181,24 @@ function createDateResult(year, month, day) {
  *
  * 2026-09-29
  *
- * Per the requested input behavior:
- * 2026 29 09
- * means YEAR DAY MONTH
- * and becomes 09-29-2026.
+ * Requested special input:
  *
- * Ambiguous purely numeric input is intentionally handled
- * conservatively instead of guessing arbitrary dates.
+ * 2026 29 09
+ *
+ * means:
+ * YEAR DAY MONTH
+ *
+ * and becomes:
+ * 09-29-2026
  */
-function parsePrescriptionDate(rawValue) {
-  if (!rawValue || typeof rawValue !== 'string') {
+
+function parsePrescriptionDate(
+  rawValue,
+) {
+  if (
+    !rawValue ||
+    typeof rawValue !== 'string'
+  ) {
     return null
   }
 
@@ -176,20 +214,26 @@ function parsePrescriptionDate(rawValue) {
 
   // ----------------------------------------------------------
   // Month-name format
-  // September 29 2026
-  // Sep 29 2026
   // ----------------------------------------------------------
 
-  const monthNameMatch = cleaned.match(
-    /^([a-z]+)\s+(\d{1,2})\s+(\d{4})$/,
-  )
+  const monthNameMatch =
+    cleaned.match(
+      /^([a-z]+)\s+(\d{1,2})\s+(\d{4})$/,
+    )
 
   if (monthNameMatch) {
     const month =
-      MONTH_NAMES[monthNameMatch[1]]
+      MONTH_NAMES[
+        monthNameMatch[1]
+      ]
 
-    const day = Number(monthNameMatch[2])
-    const year = Number(monthNameMatch[3])
+    const day = Number(
+      monthNameMatch[2],
+    )
+
+    const year = Number(
+      monthNameMatch[3],
+    )
 
     if (!month) {
       return null
@@ -223,18 +267,19 @@ function parsePrescriptionDate(rawValue) {
     return null
   }
 
-  const first = Number(numericParts[0])
-  const second = Number(numericParts[1])
-  const third = Number(numericParts[2])
+  const first = Number(
+    numericParts[0],
+  )
 
-  // ----------------------------------------------------------
-  // YYYY-MM-DD
-  //
-  // Hyphen/slash forms use the conventional year-month-day.
-  //
-  // Example:
-  // 2026-09-29
-  // ----------------------------------------------------------
+  const second = Number(
+    numericParts[1],
+  )
+
+  const third = Number(
+    numericParts[2],
+  )
+
+  // YYYY-MM-DD / YYYY/MM/DD
 
   if (
     numericParts[0].length === 4 &&
@@ -247,14 +292,12 @@ function parsePrescriptionDate(rawValue) {
     )
   }
 
-  // ----------------------------------------------------------
   // YYYY DD MM
-  //
-  // Requested free-space format:
-  // 2026 29 09 -> 09-29-2026
-  // ----------------------------------------------------------
+  // Example: 2026 29 09
 
-  if (numericParts[0].length === 4) {
+  if (
+    numericParts[0].length === 4
+  ) {
     return createDateResult(
       first,
       third,
@@ -262,13 +305,11 @@ function parsePrescriptionDate(rawValue) {
     )
   }
 
-  // ----------------------------------------------------------
-  // MM-DD-YYYY
-  // MM/DD/YYYY
-  // MM DD YYYY
-  // ----------------------------------------------------------
+  // MM-DD-YYYY / MM DD YYYY
 
-  if (numericParts[2].length === 4) {
+  if (
+    numericParts[2].length === 4
+  ) {
     return createDateResult(
       third,
       first,
@@ -289,7 +330,9 @@ function formatFileSize(bytes) {
   }
 
   if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(
+      bytes / 1024
+    ).toFixed(1)} KB`
   }
 
   return `${(
@@ -306,23 +349,31 @@ function UploadPrescriptionPage() {
   const navigate = useNavigate()
 
   const fileInputRef = useRef(null)
-  const pharmacySearchRef = useRef(null)
+  const pharmacySearchRef =
+    useRef(null)
 
   // ==========================================================
   // FILE
   // ==========================================================
 
-  const [selectedFile, setSelectedFile] =
-    useState(null)
+  const [
+    selectedFile,
+    setSelectedFile,
+  ] = useState(null)
 
-  const [dragActive, setDragActive] =
-    useState(false)
+  const [
+    dragActive,
+    setDragActive,
+  ] = useState(false)
 
   // ==========================================================
   // FORM
   // ==========================================================
 
-  const [formData, setFormData] = useState({
+  const [
+    formData,
+    setFormData,
+  ] = useState({
     patientName: '',
     doctorName: '',
     prescriptionDate: '',
@@ -330,15 +381,6 @@ function UploadPrescriptionPage() {
     notes: '',
   })
 
-  /*
-   * Separate display value from API value.
-   *
-   * Display:
-   * 09-29-2026
-   *
-   * API:
-   * 2026-09-29
-   */
   const [
     prescriptionDateDisplay,
     setPrescriptionDateDisplay,
@@ -353,8 +395,10 @@ function UploadPrescriptionPage() {
   // PHARMACIES
   // ==========================================================
 
-  const [pharmacies, setPharmacies] =
-    useState([])
+  const [
+    pharmacies,
+    setPharmacies,
+  ] = useState([])
 
   const [
     pharmaciesLoading,
@@ -385,11 +429,20 @@ function UploadPrescriptionPage() {
   // SUBMISSION
   // ==========================================================
 
-  const [submitting, setSubmitting] =
-    useState(false)
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false)
 
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [
+    error,
+    setError,
+  ] = useState('')
+
+  const [
+    success,
+    setSuccess,
+  ] = useState('')
 
   // ==========================================================
   // LOAD PARTNER PHARMACIES
@@ -409,43 +462,54 @@ function UploadPrescriptionPage() {
           return
         }
 
-        const rows = Array.isArray(response?.data)
+        const rows = Array.isArray(
+          response?.data,
+        )
           ? response.data
           : Array.isArray(response)
             ? response
             : []
 
-        /*
-         * Only active PharmaLink partner pharmacies
-         * should be selectable.
-         */
-        const activePharmacies = rows
-          .filter((pharmacy) => {
-            if (!pharmacy) {
-              return false
-            }
+        const activePharmacies =
+          rows
+            .filter(
+              (pharmacy) => {
+                if (!pharmacy) {
+                  return false
+                }
 
-            /*
-             * If the endpoint doesn't return status,
-             * preserve the row rather than incorrectly
-             * removing all pharmacies.
-             */
-            if (!pharmacy.status) {
-              return true
-            }
+                /*
+                 * Preserve the row when
+                 * the public endpoint does
+                 * not expose status.
+                 */
+                if (
+                  !pharmacy.status
+                ) {
+                  return true
+                }
 
-            return (
-              String(pharmacy.status)
-                .toUpperCase() === 'ACTIVE'
+                return (
+                  String(
+                    pharmacy.status,
+                  ).toUpperCase() ===
+                  'ACTIVE'
+                )
+              },
             )
-          })
-          .sort((a, b) =>
-            String(a?.name || '').localeCompare(
-              String(b?.name || ''),
-            ),
-          )
+            .sort((a, b) =>
+              String(
+                a?.name || '',
+              ).localeCompare(
+                String(
+                  b?.name || '',
+                ),
+              ),
+            )
 
-        setPharmacies(activePharmacies)
+        setPharmacies(
+          activePharmacies,
+        )
       } catch (loadError) {
         console.error(
           'Load pharmacies error:',
@@ -462,7 +526,9 @@ function UploadPrescriptionPage() {
         }
       } finally {
         if (mounted) {
-          setPharmaciesLoading(false)
+          setPharmaciesLoading(
+            false,
+          )
         }
       }
     }
@@ -478,52 +544,56 @@ function UploadPrescriptionPage() {
   // PHARMACY SEARCH
   // ==========================================================
 
-  const pharmacySuggestions = useMemo(() => {
-    const query = normalizeText(pharmacySearch)
-
-    /*
-     * Do not dump the full pharmacy list.
-     *
-     * Suggestions only start after 2 characters.
-     */
-    if (query.length < 2) {
-      return []
-    }
-
-    return pharmacies
-      .filter((pharmacy) => {
-        const name = normalizeText(
-          pharmacy?.name,
+  const pharmacySuggestions =
+    useMemo(() => {
+      const query =
+        normalizeText(
+          pharmacySearch,
         )
 
-        const address = normalizeText(
-          pharmacy?.address,
-        )
+      if (query.length < 2) {
+        return []
+      }
 
-        return (
-          name.includes(query) ||
-          address.includes(query)
+      return pharmacies
+        .filter((pharmacy) => {
+          const name =
+            normalizeText(
+              pharmacy?.name,
+            )
+
+          const address =
+            normalizeText(
+              pharmacy?.address,
+            )
+
+          return (
+            name.includes(query) ||
+            address.includes(query)
+          )
+        })
+        .slice(
+          0,
+          PHARMACY_SUGGESTION_LIMIT,
         )
-      })
-      .slice(
-        0,
-        PHARMACY_SUGGESTION_LIMIT,
-      )
-  }, [
-    pharmacies,
-    pharmacySearch,
-  ])
+    }, [
+      pharmacies,
+      pharmacySearch,
+    ])
 
   const shouldShowNoPharmacyMatch =
     !pharmaciesLoading &&
     !selectedPharmacy &&
-    normalizeText(pharmacySearch).length >= 2 &&
+    normalizeText(
+      pharmacySearch,
+    ).length >= 2 &&
     pharmacySuggestions.length === 0
 
   const handlePharmacySearchChange = (
     event,
   ) => {
-    const value = event.target.value
+    const value =
+      event.target.value
 
     setPharmacySearch(value)
     setPharmacySearchError('')
@@ -531,11 +601,9 @@ function UploadPrescriptionPage() {
     setSuccess('')
 
     /*
-     * If the user edits the field after selecting a
-     * pharmacy, clear the stored pharmacy ID.
-     *
-     * This prevents submitting an old pharmacy ID with
-     * a newly typed pharmacy name.
+     * If the customer edits the
+     * selected pharmacy name, clear
+     * the previously stored ID.
      */
     if (selectedPharmacy) {
       setSelectedPharmacy(null)
@@ -554,11 +622,14 @@ function UploadPrescriptionPage() {
   const handleSelectPharmacy = (
     pharmacy,
   ) => {
-    const pharmacyId =
-      Number(pharmacy?.pharmacy_id)
+    const pharmacyId = Number(
+      pharmacy?.pharmacy_id,
+    )
 
     if (
-      !Number.isInteger(pharmacyId) ||
+      !Number.isInteger(
+        pharmacyId,
+      ) ||
       pharmacyId <= 0
     ) {
       setPharmacySearchError(
@@ -568,123 +639,163 @@ function UploadPrescriptionPage() {
       return
     }
 
-    setSelectedPharmacy(pharmacy)
+    setSelectedPharmacy(
+      pharmacy,
+    )
 
     setPharmacySearch(
       pharmacy.name || '',
     )
 
-    setFormData((current) => ({
-      ...current,
-      pharmacyId: String(pharmacyId),
-    }))
+    setFormData(
+      (current) => ({
+        ...current,
+        pharmacyId:
+          String(pharmacyId),
+      }),
+    )
 
-    setShowPharmacySuggestions(false)
+    setShowPharmacySuggestions(
+      false,
+    )
+
     setPharmacySearchError('')
     setError('')
   }
 
-  const clearSelectedPharmacy = () => {
-    setSelectedPharmacy(null)
-    setPharmacySearch('')
-    setPharmacySearchError('')
+  const clearSelectedPharmacy =
+    () => {
+      setSelectedPharmacy(null)
+      setPharmacySearch('')
+      setPharmacySearchError('')
 
-    setFormData((current) => ({
-      ...current,
-      pharmacyId: '',
-    }))
+      setFormData(
+        (current) => ({
+          ...current,
+          pharmacyId: '',
+        }),
+      )
 
-    window.setTimeout(() => {
-      pharmacySearchRef.current?.focus()
-    }, 0)
-  }
+      window.setTimeout(() => {
+        pharmacySearchRef.current?.focus()
+      }, 0)
+    }
 
   // ==========================================================
   // PRESCRIPTION DATE
   // ==========================================================
 
-  const handlePrescriptionDateChange = (
-    event,
-  ) => {
-    const value = event.target.value
+  const handlePrescriptionDateChange =
+    (event) => {
+      const value =
+        event.target.value
 
-    setPrescriptionDateDisplay(value)
-    setPrescriptionDateError('')
-    setError('')
-    setSuccess('')
-
-    /*
-     * Clear the stored API date until the new text
-     * has been parsed successfully.
-     */
-    setFormData((current) => ({
-      ...current,
-      prescriptionDate: '',
-    }))
-  }
-
-  const normalizePrescriptionDate = () => {
-    const rawValue =
-      prescriptionDateDisplay.trim()
-
-    if (!rawValue) {
-      setPrescriptionDateError('')
-      return null
-    }
-
-    const parsed =
-      parsePrescriptionDate(rawValue)
-
-    if (!parsed) {
-      setPrescriptionDateError(
-        'Enter a valid date, for example: September 29 2026, 09-29-2026, or 2026 29 09.',
+      setPrescriptionDateDisplay(
+        value,
       )
 
-      return null
-    }
-
-    /*
-     * A prescription cannot be dated in the future.
-     *
-     * YYYY-MM-DD is lexicographically sortable.
-     */
-    if (parsed.api > getLocalToday()) {
       setPrescriptionDateError(
-        'Prescription date cannot be in the future.',
+        '',
       )
 
-      return null
+      setError('')
+      setSuccess('')
+
+      /*
+       * Clear API value until
+       * parsing succeeds again.
+       */
+      setFormData(
+        (current) => ({
+          ...current,
+          prescriptionDate: '',
+        }),
+      )
     }
 
-    setPrescriptionDateDisplay(
-      parsed.display,
-    )
+  const normalizePrescriptionDate =
+    () => {
+      const rawValue =
+        prescriptionDateDisplay.trim()
 
-    setFormData((current) => ({
-      ...current,
-      prescriptionDate: parsed.api,
-    }))
+      if (!rawValue) {
+        setPrescriptionDateError(
+          '',
+        )
 
-    setPrescriptionDateError('')
+        return null
+      }
 
-    return parsed
-  }
+      const parsed =
+        parsePrescriptionDate(
+          rawValue,
+        )
 
-  const handlePrescriptionDateBlur = () => {
-    normalizePrescriptionDate()
-  }
+      if (!parsed) {
+        setPrescriptionDateError(
+          'Enter a valid date, for example: September 29 2026, 09-29-2026, or 2026 29 09.',
+        )
+
+        return null
+      }
+
+      /*
+       * Prescription date cannot
+       * be later than today.
+       */
+      if (
+        parsed.api >
+        getLocalToday()
+      ) {
+        setPrescriptionDateError(
+          'Prescription date cannot be in the future.',
+        )
+
+        return null
+      }
+
+      setPrescriptionDateDisplay(
+        parsed.display,
+      )
+
+      setFormData(
+        (current) => ({
+          ...current,
+          prescriptionDate:
+            parsed.api,
+        }),
+      )
+
+      setPrescriptionDateError(
+        '',
+      )
+
+      return parsed
+    }
+
+  const handlePrescriptionDateBlur =
+    () => {
+      normalizePrescriptionDate()
+    }
 
   // ==========================================================
   // NORMAL FORM FIELDS
   // ==========================================================
 
-  const handleInputChange = (event) => {
-    const { name, value } = event.target
+  const handleInputChange = (
+    event,
+  ) => {
+    const {
+      name,
+      value,
+    } = event.target
 
-    setFormData((current) => ({
-      ...current,
-      [name]: value,
-    }))
+    setFormData(
+      (current) => ({
+        ...current,
+        [name]: value,
+      }),
+    )
 
     setError('')
     setSuccess('')
@@ -707,7 +818,10 @@ function UploadPrescriptionPage() {
       return 'Only JPEG, PNG, WEBP, and PDF files are allowed.'
     }
 
-    if (file.size > MAX_FILE_SIZE) {
+    if (
+      file.size >
+      MAX_FILE_SIZE
+    ) {
       return 'The prescription file must be 10 MB or smaller.'
     }
 
@@ -720,10 +834,15 @@ function UploadPrescriptionPage() {
 
     if (validationError) {
       setSelectedFile(null)
-      setError(validationError)
+      setError(
+        validationError,
+      )
 
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
+      if (
+        fileInputRef.current
+      ) {
+        fileInputRef.current.value =
+          ''
       }
 
       return
@@ -734,7 +853,9 @@ function UploadPrescriptionPage() {
     setSuccess('')
   }
 
-  const handleFileChange = (event) => {
+  const handleFileChange = (
+    event,
+  ) => {
     const file =
       event.target.files?.[0]
 
@@ -743,35 +864,44 @@ function UploadPrescriptionPage() {
     }
   }
 
-  const handleDragEnter = (event) => {
+  const handleDragEnter = (
+    event,
+  ) => {
     event.preventDefault()
     event.stopPropagation()
 
     setDragActive(true)
   }
 
-  const handleDragOver = (event) => {
+  const handleDragOver = (
+    event,
+  ) => {
     event.preventDefault()
     event.stopPropagation()
 
     setDragActive(true)
   }
 
-  const handleDragLeave = (event) => {
+  const handleDragLeave = (
+    event,
+  ) => {
     event.preventDefault()
     event.stopPropagation()
 
     setDragActive(false)
   }
 
-  const handleDrop = (event) => {
+  const handleDrop = (
+    event,
+  ) => {
     event.preventDefault()
     event.stopPropagation()
 
     setDragActive(false)
 
     const file =
-      event.dataTransfer.files?.[0]
+      event.dataTransfer
+        .files?.[0]
 
     if (file) {
       chooseFile(file)
@@ -782,85 +912,115 @@ function UploadPrescriptionPage() {
     setSelectedFile(null)
     setError('')
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+    if (
+      fileInputRef.current
+    ) {
+      fileInputRef.current.value =
+        ''
     }
   }
 
   // ==========================================================
-  // UPLOAD FILE TO SUPABASE STORAGE
+  // UPLOAD TO SUPABASE STORAGE
   // ==========================================================
 
-  const uploadPrescriptionFile = async (file) => {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
+  const uploadPrescriptionFile =
+    async (file) => {
+      const {
+        data: {
+          user,
+        },
+        error: userError,
+      } =
+        await supabase.auth.getUser()
 
-  if (userError || !user) {
-    throw new Error(
-      'Your session has expired. Please log in again.',
-    )
-  }
+      if (
+        userError ||
+        !user
+      ) {
+        throw new Error(
+          'Your session has expired. Please log in again.',
+        )
+      }
 
-  const extension =
-    file.name
-      .split('.')
-      .pop()
-      ?.toLowerCase() || 'file'
+      const extension =
+        file.name
+          .split('.')
+          .pop()
+          ?.toLowerCase() ||
+        'file'
 
-  const safeUserId = String(user.id).replace(
-    /[^a-zA-Z0-9_-]/g,
-    '',
-  )
+      /*
+       * Backend requires:
+       *
+       * <auth-user-uuid>/<filename>
+       */
+      const safeUserId =
+        String(
+          user.id,
+        ).replace(
+          /[^a-zA-Z0-9_-]/g,
+          '',
+        )
 
-  const uniqueName =
-    `${Date.now()}-${crypto.randomUUID()}.${extension}`
+      const uniqueName =
+        `${Date.now()}-${crypto.randomUUID()}.${extension}`
 
-  const storagePath =
-    `${safeUserId}/${uniqueName}`
+      const storagePath =
+        `${safeUserId}/${uniqueName}`
 
-  const {
-    data: uploadData,
-    error: uploadError,
-  } = await supabase.storage
-    .from('prescriptions')
-    .upload(
-      storagePath,
-      file,
-      {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type,
-      },
-    )
+      const {
+        data: uploadData,
+        error: uploadError,
+      } =
+        await supabase.storage
+          .from(
+            'prescriptions',
+          )
+          .upload(
+            storagePath,
+            file,
+            {
+              cacheControl:
+                '3600',
+              upsert: false,
+              contentType:
+                file.type,
+            },
+          )
 
-  if (uploadError) {
-    throw new Error(
-      uploadError.message ||
-        'Unable to upload prescription file.',
-    )
-  }
+      if (uploadError) {
+        throw new Error(
+          uploadError.message ||
+            'Unable to upload prescription file.',
+        )
+      }
 
-  /*
-   
-   Do NOT convert this into a public URL.
+      /*
+       * IMPORTANT:
+       *
+       * Return the private Storage
+       * object path.
+       *
+       * Do NOT convert this into a
+       * public URL.
+       */
+      if (!uploadData?.path) {
+        throw new Error(
+          'Prescription file was uploaded, but its storage path could not be determined.',
+        )
+      }
 
-   */
-  if (!uploadData?.path) {
-    throw new Error(
-      'Prescription file was uploaded, but its storage path could not be determined.',
-    )
-  }
-
-  return uploadData.path
-}
+      return uploadData.path
+    }
 
   // ==========================================================
   // SUBMIT
   // ==========================================================
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (
+    event,
+  ) => {
     event.preventDefault()
 
     if (submitting) {
@@ -875,7 +1035,9 @@ function UploadPrescriptionPage() {
     // --------------------------------------------------------
 
     const fileError =
-      validateFile(selectedFile)
+      validateFile(
+        selectedFile,
+      )
 
     if (fileError) {
       setError(fileError)
@@ -893,6 +1055,7 @@ function UploadPrescriptionPage() {
       setError(
         'Please enter the patient name.',
       )
+
       return
     }
 
@@ -907,6 +1070,7 @@ function UploadPrescriptionPage() {
       setError(
         'Please enter the doctor name.',
       )
+
       return
     }
 
@@ -921,6 +1085,7 @@ function UploadPrescriptionPage() {
       setError(
         'Please enter a valid prescription date.',
       )
+
       return
     }
 
@@ -929,11 +1094,15 @@ function UploadPrescriptionPage() {
     // --------------------------------------------------------
 
     const pharmacyId =
-      Number(formData.pharmacyId)
+      Number(
+        formData.pharmacyId,
+      )
 
     if (
       !selectedPharmacy ||
-      !Number.isInteger(pharmacyId) ||
+      !Number.isInteger(
+        pharmacyId,
+      ) ||
       pharmacyId <= 0
     ) {
       setPharmacySearchError(
@@ -954,10 +1123,13 @@ function UploadPrescriptionPage() {
     const notes =
       formData.notes.trim()
 
-    if (notes.length > 500) {
+    if (
+      notes.length > 500
+    ) {
       setError(
         'Additional notes cannot exceed 500 characters.',
       )
+
       return
     }
 
@@ -968,15 +1140,35 @@ function UploadPrescriptionPage() {
     try {
       setSubmitting(true)
 
+      /*
+       * Returns:
+       *
+       * <auth-user-uuid>/<filename>
+       *
+       * NOT a public URL.
+       */
       const storagePath =
         await uploadPrescriptionFile(
           selectedFile,
         )
-      
+
+      /*
+       * IMPORTANT:
+       *
+       * There is intentionally NO
+       * `imageUrl` variable here.
+       *
+       * The backend's image_url
+       * field receives the private
+       * Storage object path.
+       */
       const response =
         await api.createPrescription({
-          pharmacy_id: pharmacyId,
-          image_url: imageUrl,
+          pharmacy_id:
+            pharmacyId,
+
+          image_url:
+            storagePath,
 
           patient_name:
             patientName,
@@ -991,7 +1183,9 @@ function UploadPrescriptionPage() {
             notes || null,
         })
 
-      if (!response?.success) {
+      if (
+        !response?.success
+      ) {
         throw new Error(
           response?.message ||
             'Unable to submit prescription.',
@@ -1001,6 +1195,10 @@ function UploadPrescriptionPage() {
       setSuccess(
         'Prescription uploaded successfully. The selected pharmacy can now review it.',
       )
+
+      // ------------------------------------------------------
+      // Reset form after success
+      // ------------------------------------------------------
 
       setSelectedFile(null)
 
@@ -1012,15 +1210,29 @@ function UploadPrescriptionPage() {
         notes: '',
       })
 
-      setPrescriptionDateDisplay('')
-      setPrescriptionDateError('')
+      setPrescriptionDateDisplay(
+        '',
+      )
+
+      setPrescriptionDateError(
+        '',
+      )
 
       setSelectedPharmacy(null)
       setPharmacySearch('')
-      setPharmacySearchError('')
+      setPharmacySearchError(
+        '',
+      )
 
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
+      setShowPharmacySuggestions(
+        false,
+      )
+
+      if (
+        fileInputRef.current
+      ) {
+        fileInputRef.current.value =
+          ''
       }
     } catch (submitError) {
       console.error(
@@ -1043,25 +1255,26 @@ function UploadPrescriptionPage() {
 
   return (
     <section className="upload-page">
-
       {/* ====================================================
           HEADER
       ==================================================== */}
 
       <div className="upload-page-header">
-
         <button
           type="button"
           className="upload-back-button"
-          onClick={() => navigate(-1)}
+          onClick={() =>
+            navigate(-1)
+          }
           disabled={submitting}
         >
-          <ChevronLeft size={17} />
+          <ChevronLeft
+            size={17}
+          />
           Back
         </button>
 
         <div className="upload-page-heading">
-
           <p className="upload-page-eyebrow">
             Prescription
           </p>
@@ -1071,11 +1284,13 @@ function UploadPrescriptionPage() {
           </h1>
 
           <p>
-            Upload a photo or PDF of your prescription.
-            We&apos;ll send it to your selected PharmaLink
-            partner pharmacy for verification.
+            Upload a photo or PDF
+            of your prescription.
+            We&apos;ll send it to
+            your selected PharmaLink
+            partner pharmacy for
+            verification.
           </p>
-
         </div>
       </div>
 
@@ -1085,10 +1300,11 @@ function UploadPrescriptionPage() {
 
       <form
         className="upload-prescription-form"
-        onSubmit={handleSubmit}
+        onSubmit={
+          handleSubmit
+        }
         noValidate
       >
-
         {/* ==================================================
             FILE UPLOAD
         ================================================== */}
@@ -1096,28 +1312,43 @@ function UploadPrescriptionPage() {
         <div
           className={[
             'upload-dropzone',
+
             dragActive
               ? 'upload-dropzone-active'
               : '',
+
             selectedFile
               ? 'upload-dropzone-has-file'
               : '',
           ]
             .filter(Boolean)
             .join(' ')}
-          onDragEnter={handleDragEnter}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
+          onDragEnter={
+            handleDragEnter
+          }
+          onDragOver={
+            handleDragOver
+          }
+          onDragLeave={
+            handleDragLeave
+          }
+          onDrop={
+            handleDrop
+          }
         >
-
           <input
-            ref={fileInputRef}
+            ref={
+              fileInputRef
+            }
             id="prescription-file"
             type="file"
             accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
-            onChange={handleFileChange}
-            disabled={submitting}
+            onChange={
+              handleFileChange
+            }
+            disabled={
+              submitting
+            }
             className="upload-file-input"
           />
 
@@ -1126,9 +1357,10 @@ function UploadPrescriptionPage() {
               htmlFor="prescription-file"
               className="upload-dropzone-label"
             >
-
               <div className="upload-dropzone-icon">
-                <Upload size={38} />
+                <Upload
+                  size={38}
+                />
               </div>
 
               <p className="upload-dropzone-title">
@@ -1139,22 +1371,23 @@ function UploadPrescriptionPage() {
               </p>
 
               <p className="upload-dropzone-help">
-                JPEG, PNG, WEBP or PDF
-                (max 10MB)
+                JPEG, PNG, WEBP or
+                PDF (max 10MB)
               </p>
-
             </label>
           ) : (
             <div className="upload-selected-file">
-
               <div className="upload-selected-file-icon">
-                <FileText size={26} />
+                <FileText
+                  size={26}
+                />
               </div>
 
               <div className="upload-selected-file-info">
-
                 <p className="upload-selected-file-name">
-                  {selectedFile.name}
+                  {
+                    selectedFile.name
+                  }
                 </p>
 
                 <p className="upload-selected-file-size">
@@ -1162,22 +1395,25 @@ function UploadPrescriptionPage() {
                     selectedFile.size,
                   )}
                 </p>
-
               </div>
 
               <button
                 type="button"
                 className="upload-remove-file"
-                onClick={removeFile}
-                disabled={submitting}
+                onClick={
+                  removeFile
+                }
+                disabled={
+                  submitting
+                }
                 aria-label="Remove selected prescription"
               >
-                <X size={18} />
+                <X
+                  size={18}
+                />
               </button>
-
             </div>
           )}
-
         </div>
 
         {/* ==================================================
@@ -1185,10 +1421,9 @@ function UploadPrescriptionPage() {
         ================================================== */}
 
         <div className="form-fields">
-
           {/* Patient */}
-          <div className="form-group">
 
+          <div className="form-group">
             <label htmlFor="patient-name">
               Patient Name *
             </label>
@@ -1197,20 +1432,25 @@ function UploadPrescriptionPage() {
               id="patient-name"
               name="patientName"
               type="text"
-              value={formData.patientName}
-              onChange={handleInputChange}
+              value={
+                formData.patientName
+              }
+              onChange={
+                handleInputChange
+              }
               placeholder="Full name of the patient"
               autoComplete="name"
               maxLength={120}
-              disabled={submitting}
+              disabled={
+                submitting
+              }
               required
             />
-
           </div>
 
           {/* Doctor */}
-          <div className="form-group">
 
+          <div className="form-group">
             <label htmlFor="doctor-name">
               Doctor Name *
             </label>
@@ -1219,14 +1459,19 @@ function UploadPrescriptionPage() {
               id="doctor-name"
               name="doctorName"
               type="text"
-              value={formData.doctorName}
-              onChange={handleInputChange}
+              value={
+                formData.doctorName
+              }
+              onChange={
+                handleInputChange
+              }
               placeholder="Doctor's full name"
               maxLength={120}
-              disabled={submitting}
+              disabled={
+                submitting
+              }
               required
             />
-
           </div>
 
           {/* ================================================
@@ -1234,7 +1479,6 @@ function UploadPrescriptionPage() {
           ================================================ */}
 
           <div className="form-group">
-
             <label htmlFor="prescription-date">
               Prescription Date *
             </label>
@@ -1254,7 +1498,9 @@ function UploadPrescriptionPage() {
               }
               placeholder="MM-DD-YYYY"
               autoComplete="off"
-              disabled={submitting}
+              disabled={
+                submitting
+              }
               aria-invalid={
                 prescriptionDateError
                   ? 'true'
@@ -1268,19 +1514,23 @@ function UploadPrescriptionPage() {
               id="prescription-date-help"
               className="field-help"
             >
-              You can type a date such as
-              &quot;September 29 2026&quot;,
-              &quot;09-29-2026&quot;, or
-              &quot;2026 29 09&quot;. We&apos;ll
-              format it automatically.
+              You can type a date
+              such as &quot;September
+              29 2026&quot;,
+              &quot;09-29-2026&quot;,
+              or &quot;2026 29
+              09&quot;. We&apos;ll
+              format it
+              automatically.
             </p>
 
             {prescriptionDateError && (
               <p className="upload-field-error">
-                {prescriptionDateError}
+                {
+                  prescriptionDateError
+                }
               </p>
             )}
-
           </div>
 
           {/* ================================================
@@ -1288,24 +1538,24 @@ function UploadPrescriptionPage() {
           ================================================ */}
 
           <div className="form-group upload-pharmacy-group">
-
             <label htmlFor="pharmacy-search">
               Select Pharmacy *
             </label>
 
             <div className="upload-pharmacy-search">
-
               <div
                 className={[
                   'upload-pharmacy-input-wrapper',
+
                   selectedPharmacy
                     ? 'upload-pharmacy-input-selected'
                     : '',
                 ]
-                  .filter(Boolean)
+                  .filter(
+                    Boolean,
+                  )
                   .join(' ')}
               >
-
                 {selectedPharmacy ? (
                   <Building2
                     size={18}
@@ -1319,10 +1569,14 @@ function UploadPrescriptionPage() {
                 )}
 
                 <input
-                  ref={pharmacySearchRef}
+                  ref={
+                    pharmacySearchRef
+                  }
                   id="pharmacy-search"
                   type="text"
-                  value={pharmacySearch}
+                  value={
+                    pharmacySearch
+                  }
                   onChange={
                     handlePharmacySearchChange
                   }
@@ -1330,7 +1584,8 @@ function UploadPrescriptionPage() {
                     if (
                       pharmacySearch
                         .trim()
-                        .length >= 2 &&
+                        .length >=
+                        2 &&
                       !selectedPharmacy
                     ) {
                       setShowPharmacySuggestions(
@@ -1363,16 +1618,20 @@ function UploadPrescriptionPage() {
                     onClick={
                       clearSelectedPharmacy
                     }
-                    disabled={submitting}
+                    disabled={
+                      submitting
+                    }
                     aria-label="Clear selected pharmacy"
                   >
-                    <X size={17} />
+                    <X
+                      size={17}
+                    />
                   </button>
                 )}
-
               </div>
 
               {/* Suggestions */}
+
               {showPharmacySuggestions &&
                 !selectedPharmacy &&
                 pharmacySuggestions.length >
@@ -1382,9 +1641,10 @@ function UploadPrescriptionPage() {
                     className="upload-pharmacy-suggestions"
                     role="listbox"
                   >
-
                     {pharmacySuggestions.map(
-                      (pharmacy) => (
+                      (
+                        pharmacy,
+                      ) => (
                         <button
                           key={
                             pharmacy.pharmacy_id
@@ -1394,11 +1654,6 @@ function UploadPrescriptionPage() {
                           onMouseDown={(
                             event,
                           ) => {
-                            /*
-                             * Prevent input blur before
-                             * the click can select the
-                             * suggestion.
-                             */
                             event.preventDefault()
                           }}
                           onClick={() =>
@@ -1409,15 +1664,15 @@ function UploadPrescriptionPage() {
                           role="option"
                           aria-selected="false"
                         >
-
                           <div className="upload-pharmacy-suggestion-icon">
                             <Building2
-                              size={17}
+                              size={
+                                17
+                              }
                             />
                           </div>
 
                           <div className="upload-pharmacy-suggestion-copy">
-
                             <span className="upload-pharmacy-suggestion-name">
                               {
                                 pharmacy.name
@@ -1431,51 +1686,50 @@ function UploadPrescriptionPage() {
                                 }
                               </span>
                             )}
-
                           </div>
-
                         </button>
                       ),
                     )}
-
                   </div>
                 )}
 
-              {/* No partner */}
+              {/* No matching partner */}
+
               {shouldShowNoPharmacyMatch && (
                 <div className="upload-pharmacy-no-match">
-
-                  <Building2 size={19} />
+                  <Building2
+                    size={19}
+                  />
 
                   <div>
-
                     <strong>
-                      No partner pharmacy found
+                      No partner
+                      pharmacy found
                     </strong>
 
                     <p>
-                      Sorry, that pharmacy is
-                      not currently a PharmaLink
-                      partner. Please search for
+                      Sorry, that
+                      pharmacy is not
+                      currently a
+                      PharmaLink
+                      partner. Please
+                      search for
                       another pharmacy.
                     </p>
-
                   </div>
-
                 </div>
               )}
-
             </div>
 
             {selectedPharmacy ? (
               <div className="upload-selected-pharmacy">
-
                 <div className="upload-selected-pharmacy-check">
-                  <Check size={15} />
+                  <Check
+                    size={15}
+                  />
                 </div>
 
                 <div>
-
                   <p>
                     {
                       selectedPharmacy.name
@@ -1489,51 +1743,61 @@ function UploadPrescriptionPage() {
                       }
                     </span>
                   )}
-
                 </div>
-
               </div>
             ) : (
               <p className="field-help">
-                Start typing the name or
-                location of a PharmaLink partner
-                pharmacy. Suggestions appear
-                after 2 characters.
+                Start typing the name
+                or location of a
+                PharmaLink partner
+                pharmacy. Suggestions
+                appear after 2
+                characters.
               </p>
             )}
 
             {pharmacySearchError && (
               <p className="upload-field-error">
-                {pharmacySearchError}
+                {
+                  pharmacySearchError
+                }
               </p>
             )}
-
           </div>
 
           {/* Notes */}
-          <div className="form-group">
 
+          <div className="form-group">
             <label htmlFor="additional-notes">
-              Additional Notes (Optional)
+              Additional Notes
+              (Optional)
             </label>
 
             <textarea
               id="additional-notes"
               name="notes"
-              value={formData.notes}
-              onChange={handleInputChange}
+              value={
+                formData.notes
+              }
+              onChange={
+                handleInputChange
+              }
               placeholder="Any special instructions or notes"
               rows={4}
               maxLength={500}
-              disabled={submitting}
+              disabled={
+                submitting
+              }
             />
 
             <p className="upload-notes-count">
-              {formData.notes.length}/500
+              {
+                formData.notes
+                  .length
+              }
+              /500
             </p>
-
           </div>
-
         </div>
 
         {/* ==================================================
@@ -1570,19 +1834,17 @@ function UploadPrescriptionPage() {
             pharmaciesLoading
           }
         >
-
-          <Check size={18} />
+          <Check
+            size={18}
+          />
 
           <span>
             {submitting
               ? 'Uploading Prescription...'
               : 'Upload Prescription'}
           </span>
-
         </button>
-
       </form>
-
     </section>
   )
 }
