@@ -791,87 +791,70 @@ function UploadPrescriptionPage() {
   // UPLOAD FILE TO SUPABASE STORAGE
   // ==========================================================
 
-  const uploadPrescriptionFile =
-    async (file) => {
-      const {
-        data: {
-          user,
-        },
-      } = await supabase.auth.getUser()
+  const uploadPrescriptionFile = async (file) => {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
 
-      if (!user) {
-        throw new Error(
-          'Your session has expired. Please log in again.',
-        )
-      }
+  if (userError || !user) {
+    throw new Error(
+      'Your session has expired. Please log in again.',
+    )
+  }
 
-      const extension =
-        file.name
-          .split('.')
-          .pop()
-          ?.toLowerCase() || 'file'
+  const extension =
+    file.name
+      .split('.')
+      .pop()
+      ?.toLowerCase() || 'file'
 
-      const safeUserId =
-        String(user.id).replace(
-          /[^a-zA-Z0-9_-]/g,
-          '',
-        )
+  const safeUserId = String(user.id).replace(
+    /[^a-zA-Z0-9_-]/g,
+    '',
+  )
 
-      const uniqueName =
-        `${Date.now()}-${crypto.randomUUID()}.${extension}`
+  const uniqueName =
+    `${Date.now()}-${crypto.randomUUID()}.${extension}`
 
-      const storagePath =
-        `${safeUserId}/${uniqueName}`
+  const storagePath =
+    `${safeUserId}/${uniqueName}`
 
-      const {
-        data: uploadData,
-        error: uploadError,
-      } = await supabase.storage
-        .from('prescriptions')
-        .upload(
-          storagePath,
-          file,
-          {
-            cacheControl: '3600',
-            upsert: false,
-            contentType: file.type,
-          },
-        )
+  const {
+    data: uploadData,
+    error: uploadError,
+  } = await supabase.storage
+    .from('prescriptions')
+    .upload(
+      storagePath,
+      file,
+      {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type,
+      },
+    )
 
-      if (uploadError) {
-        throw new Error(
-          uploadError.message ||
-            'Unable to upload prescription file.',
-        )
-      }
+  if (uploadError) {
+    throw new Error(
+      uploadError.message ||
+        'Unable to upload prescription file.',
+    )
+  }
 
-      /*
-       * Preserve the existing PharmaLink behavior of
-       * storing the Storage URL with the prescription.
-       */
-      const {
-        data: publicUrlData,
-      } = supabase.storage
-        .from('prescriptions')
-        .getPublicUrl(
-          uploadData.path,
-        )
+  /*
+   
+   Do NOT convert this into a public URL.
 
-      const imageUrl =
-        publicUrlData?.publicUrl
+   */
+  if (!uploadData?.path) {
+    throw new Error(
+      'Prescription file was uploaded, but its storage path could not be determined.',
+    )
+  }
 
-      if (!imageUrl) {
-        throw new Error(
-          'Prescription file was uploaded, but its URL could not be generated.',
-        )
-      }
-
-      return {
-        imageUrl,
-        storagePath:
-          uploadData.path,
-      }
-    }
+  return uploadData.path
+}
 
   // ==========================================================
   // SUBMIT
@@ -985,22 +968,11 @@ function UploadPrescriptionPage() {
     try {
       setSubmitting(true)
 
-      const {
-        imageUrl,
-      } =
+      const storagePath =
         await uploadPrescriptionFile(
           selectedFile,
         )
-
-      /*
-       * Keep the existing backend contract:
-       *
-       * UI date:
-       * 09-29-2026
-       *
-       * Backend date:
-       * 2026-09-29
-       */
+      
       const response =
         await api.createPrescription({
           pharmacy_id: pharmacyId,
