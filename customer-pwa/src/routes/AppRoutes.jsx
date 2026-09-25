@@ -15,6 +15,7 @@ import SupportPage from '../pages/SupportPage'
 import AboutPage from '../pages/AboutPage'
 import UploadPrescriptionPage from '../pages/UploadPrescriptionPage'
 import RequestMedicinePage from '../pages/RequestMedicinePage'
+import MyRequestsPage from '../pages/MyRequestsPage'
 import AIAssistantPage from '../pages/AIAssistantPage'
 import ReservationsPage from '../pages/ReservationsPage'
 import MyReservationsPage from '../pages/MyReservationsPage'
@@ -25,7 +26,7 @@ function AppRoutes() {
   return (
     <Routes>
       {/* =========================
-          Public pages (NOT protected)
+          Public pages
       ========================== */}
 
       <Route
@@ -35,13 +36,12 @@ function AppRoutes() {
 
       {/* =========================
           PROTECTED: Customer PWA
-          All routes here require authentication
       ========================== */}
 
       <Route element={<ProtectedRoute />}>
         <Route element={<CustomerLayout />}>
 
-          {/* Public browsing (but requires login) */}
+          {/* Main browsing */}
 
           <Route
             index
@@ -68,7 +68,9 @@ function AppRoutes() {
             element={<PharmacyDetailsPage />}
           />
 
-          {/* Protected customer pages */}
+          {/* =========================
+              RESERVATIONS
+          ========================== */}
 
           <Route
             path="reservations"
@@ -85,10 +87,18 @@ function AppRoutes() {
             element={<ReservationDetailsPage />}
           />
 
+          {/* =========================
+              PRESCRIPTIONS
+          ========================== */}
+
           <Route
             path="upload-prescription"
             element={<UploadPrescriptionPage />}
           />
+
+          {/* =========================
+              MEDICINE REQUESTS
+          ========================== */}
 
           <Route
             path="request-medicine"
@@ -96,9 +106,22 @@ function AppRoutes() {
           />
 
           <Route
+            path="my-requests"
+            element={<MyRequestsPage />}
+          />
+
+          {/* =========================
+              AI ASSISTANT
+          ========================== */}
+
+          <Route
             path="assistant"
             element={<AIAssistantPage />}
           />
+
+          {/* =========================
+              ACCOUNT / INFORMATION
+          ========================== */}
 
           <Route
             path="profile"

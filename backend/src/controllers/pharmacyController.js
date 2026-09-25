@@ -1,29 +1,162 @@
 const supabase = require('../config/supabase')
 
-// GET all pharmacies
+/* ============================================================
+   HELPERS
+============================================================ */
+
+/**
+ * Check whether a coordinate value was actually provided.
+ * Important: null and empty string are NOT treated as coordinates.
+ */
+const hasCoordinateValue = (value) => {
+  return (
+    value !== undefined &&
+    value !== null &&
+    value !== ''
+  )
+}
+
+/**
+ * Validate latitude and longitude.
+ *
+ * Returns:
+ * {
+ *   valid: boolean,
+ *   latitude: number | null,
+ *   longitude: number | null,
+ *   message?: string
+ * }
+ */
+const validateCoordinates = (
+  latitude,
+  longitude,
+  { allowClear = false } = {}
+) => {
+  const hasLatitude = hasCoordinateValue(latitude)
+  const hasLongitude = hasCoordinateValue(longitude)
+
+  /*
+   * For update requests, allow:
+   *
+   * latitude: null
+   * longitude: null
+   *
+   * This clears the pharmacy location.
+   */
+  if (
+    allowClear &&
+    (latitude === null || latitude === '') &&
+    (longitude === null || longitude === '')
+  ) {
+    return {
+      valid: true,
+      latitude: null,
+      longitude: null,
+    }
+  }
+
+  /*
+   * If neither coordinate was supplied,
+   * location is simply not being provided.
+   */
+  if (!hasLatitude && !hasLongitude) {
+    return {
+      valid: true,
+      latitude: null,
+      longitude: null,
+    }
+  }
+
+  /*
+   * Latitude and longitude must always
+   * be provided together.
+   */
+  if (hasLatitude !== hasLongitude) {
+    return {
+      valid: false,
+      message:
+        'Latitude and longitude must be provided together',
+    }
+  }
+
+  const normalizedLatitude = Number(latitude)
+  const normalizedLongitude = Number(longitude)
+
+  /*
+   * Latitude range:
+   * -90 to 90
+   */
+  if (
+    !Number.isFinite(normalizedLatitude) ||
+    normalizedLatitude < -90 ||
+    normalizedLatitude > 90
+  ) {
+    return {
+      valid: false,
+      message:
+        'Latitude must be a number between -90 and 90',
+    }
+  }
+
+  /*
+   * Longitude range:
+   * -180 to 180
+   */
+  if (
+    !Number.isFinite(normalizedLongitude) ||
+    normalizedLongitude < -180 ||
+    normalizedLongitude > 180
+  ) {
+    return {
+      valid: false,
+      message:
+        'Longitude must be a number between -180 and 180',
+    }
+  }
+
+  return {
+    valid: true,
+    latitude: normalizedLatitude,
+    longitude: normalizedLongitude,
+  }
+}
+
+/* ============================================================
+   GET ALL PHARMACIES
+============================================================ */
+
 const getPharmacies = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('pharmacies')
       .select('*')
-      .order('pharmacy_id', { ascending: true })
+      .order('pharmacy_id', {
+        ascending: true,
+      })
 
     if (error) {
-      console.error('Get pharmacies error:', error)
+      console.error(
+        'Get pharmacies error:',
+        error
+      )
 
       return res.status(500).json({
         success: false,
-        message: 'Failed to retrieve pharmacies',
+        message:
+          'Failed to retrieve pharmacies',
         error: error.message,
       })
     }
 
     return res.status(200).json({
       success: true,
-      data,
+      data: data || [],
     })
   } catch (error) {
-    console.error('Server error:', error)
+    console.error(
+      'Get pharmacies server error:',
+      error
+    )
 
     return res.status(500).json({
       success: false,
@@ -32,7 +165,10 @@ const getPharmacies = async (req, res) => {
   }
 }
 
-// CREATE a pharmacy
+/* ============================================================
+   CREATE PHARMACY
+============================================================ */
+
 const createPharmacy = async (req, res) => {
   try {
     const {
@@ -40,61 +176,142 @@ const createPharmacy = async (req, res) => {
       address,
       contact_number,
       email,
+      latitude,
+      longitude,
     } = req.body
 
-    // Validate required fields
-if (!name || !name.trim()) {
-  return res.status(400).json({
-    success: false,
-    message: 'Pharmacy name is required',
-  })
-}
+    /* --------------------------------------------------------
+       Validate pharmacy name
+    -------------------------------------------------------- */
 
-if (!address || !address.trim()) {
-  return res.status(400).json({
-    success: false,
-    message: 'Pharmacy address is required',
-  })
-}
+    if (
+      !name ||
+      typeof name !== 'string' ||
+      !name.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pharmacy name is required',
+      })
+    }
 
-// Validate email if provided
-if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-  return res.status(400).json({
-    success: false,
-    message: 'Please provide a valid email address',
-  })
-}
+    /* --------------------------------------------------------
+       Validate pharmacy address
+    -------------------------------------------------------- */
+
+    if (
+      !address ||
+      typeof address !== 'string' ||
+      !address.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Pharmacy address is required',
+      })
+    }
+
+    /* --------------------------------------------------------
+       Validate email if provided
+    -------------------------------------------------------- */
+
+    if (
+      email !== undefined &&
+      email !== null &&
+      email !== '' &&
+      (
+        typeof email !== 'string' ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+          email.trim()
+        )
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Please provide a valid email address',
+      })
+    }
+
+    /* --------------------------------------------------------
+       Validate coordinates
+    -------------------------------------------------------- */
+
+    const coordinateResult =
+      validateCoordinates(
+        latitude,
+        longitude
+      )
+
+    if (!coordinateResult.valid) {
+      return res.status(400).json({
+        success: false,
+        message: coordinateResult.message,
+      })
+    }
+
+    /* --------------------------------------------------------
+       Create pharmacy
+    -------------------------------------------------------- */
 
     const { data, error } = await supabase
       .from('pharmacies')
       .insert([
         {
-          name,
-          address,
-          contact_number: contact_number || null,
-          email: email || null,
+          name: name.trim(),
+
+          address: address.trim(),
+
+          contact_number:
+            typeof contact_number ===
+              'string' &&
+            contact_number.trim()
+              ? contact_number.trim()
+              : null,
+
+          email:
+            typeof email === 'string' &&
+            email.trim()
+              ? email
+                  .trim()
+                  .toLowerCase()
+              : null,
+
+          latitude:
+            coordinateResult.latitude,
+
+          longitude:
+            coordinateResult.longitude,
         },
       ])
       .select()
       .single()
 
     if (error) {
-      console.error('Create pharmacy error:', error)
+      console.error(
+        'Create pharmacy error:',
+        error
+      )
 
       return res.status(500).json({
         success: false,
-        message: 'Failed to create pharmacy',
+        message:
+          'Failed to create pharmacy',
         error: error.message,
       })
     }
 
     return res.status(201).json({
       success: true,
-      message: 'Pharmacy created successfully',
+      message:
+        'Pharmacy created successfully',
       data,
     })
   } catch (error) {
-    console.error('Server error:', error)
+    console.error(
+      'Create pharmacy server error:',
+      error
+    )
 
     return res.status(500).json({
       success: false,
@@ -103,24 +320,57 @@ if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
   }
 }
 
-// GET a single pharmacy by ID
-const getPharmacyById = async (req, res) => {
+/* ============================================================
+   GET PHARMACY BY ID
+============================================================ */
+
+const getPharmacyById = async (
+  req,
+  res
+) => {
   try {
     const { id } = req.params
+
+    /* --------------------------------------------------------
+       Validate pharmacy ID
+    -------------------------------------------------------- */
+
+    const pharmacyId = Number(id)
+
+    if (
+      !Number.isInteger(pharmacyId) ||
+      pharmacyId <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid pharmacy ID',
+      })
+    }
 
     const { data, error } = await supabase
       .from('pharmacies')
       .select('*')
-      .eq('pharmacy_id', id)
-      .single()
+      .eq('pharmacy_id', pharmacyId)
+      .maybeSingle()
 
     if (error) {
-      console.error('Get pharmacy error:', error)
+      console.error(
+        'Get pharmacy error:',
+        error
+      )
 
+      return res.status(500).json({
+        success: false,
+        message:
+          'Failed to retrieve pharmacy',
+        error: error.message,
+      })
+    }
+
+    if (!data) {
       return res.status(404).json({
         success: false,
         message: 'Pharmacy not found',
-        error: error.message,
       })
     }
 
@@ -129,7 +379,10 @@ const getPharmacyById = async (req, res) => {
       data,
     })
   } catch (error) {
-    console.error('Server error:', error)
+    console.error(
+      'Get pharmacy server error:',
+      error
+    )
 
     return res.status(500).json({
       success: false,
@@ -138,8 +391,14 @@ const getPharmacyById = async (req, res) => {
   }
 }
 
-// UPDATE a pharmacy
-const updatePharmacy = async (req, res) => {
+/* ============================================================
+   UPDATE PHARMACY
+============================================================ */
+
+const updatePharmacy = async (
+  req,
+  res
+) => {
   try {
     const { id } = req.params
 
@@ -149,104 +408,267 @@ const updatePharmacy = async (req, res) => {
       contact_number,
       email,
       status,
+      latitude,
+      longitude,
     } = req.body
 
-    // Validate provided fields
-if (name !== undefined && !name.trim()) {
-  return res.status(400).json({
-    success: false,
-    message: 'Pharmacy name cannot be empty',
-  })
-}
+    /* --------------------------------------------------------
+       Validate pharmacy ID
+    -------------------------------------------------------- */
 
-if (address !== undefined && !address.trim()) {
-  return res.status(400).json({
-    success: false,
-    message: 'Pharmacy address cannot be empty',
-  })
-}
+    const pharmacyId = Number(id)
 
-// Validate email if provided
-if (
-  email !== undefined &&
-  email !== null &&
-  email !== '' &&
-  !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-) {
-  return res.status(400).json({
-    success: false,
-    message: 'Please provide a valid email address',
-  })
-}
+    if (
+      !Number.isInteger(pharmacyId) ||
+      pharmacyId <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid pharmacy ID',
+      })
+    }
 
-// Validate status if provided
-if (
-  status !== undefined &&
-  !['ACTIVE', 'INACTIVE', 'SUSPENDED'].includes(status)
-) {
-  return res.status(400).json({
-    success: false,
-    message: 'Invalid pharmacy status',
-  })
-}
+    /* --------------------------------------------------------
+       Validate name if provided
+    -------------------------------------------------------- */
 
-    // Make sure the pharmacy exists
-    const { data: existingPharmacy, error: findError } = await supabase
+    if (
+      name !== undefined &&
+      (
+        typeof name !== 'string' ||
+        !name.trim()
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Pharmacy name cannot be empty',
+      })
+    }
+
+    /* --------------------------------------------------------
+       Validate address if provided
+    -------------------------------------------------------- */
+
+    if (
+      address !== undefined &&
+      (
+        typeof address !== 'string' ||
+        !address.trim()
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Pharmacy address cannot be empty',
+      })
+    }
+
+    /* --------------------------------------------------------
+       Validate email if provided
+    -------------------------------------------------------- */
+
+    if (
+      email !== undefined &&
+      email !== null &&
+      email !== '' &&
+      (
+        typeof email !== 'string' ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+          email.trim()
+        )
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Please provide a valid email address',
+      })
+    }
+
+    /* --------------------------------------------------------
+       Validate status if provided
+    -------------------------------------------------------- */
+
+    if (
+      status !== undefined &&
+      ![
+        'ACTIVE',
+        'INACTIVE',
+        'SUSPENDED',
+      ].includes(status)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid pharmacy status',
+      })
+    }
+
+    /* --------------------------------------------------------
+       Determine whether location is being updated
+    -------------------------------------------------------- */
+
+    const locationWasProvided =
+      latitude !== undefined ||
+      longitude !== undefined
+
+    let normalizedLatitude
+    let normalizedLongitude
+
+    if (locationWasProvided) {
+      const coordinateResult =
+        validateCoordinates(
+          latitude,
+          longitude,
+          {
+            allowClear: true,
+          }
+        )
+
+      if (!coordinateResult.valid) {
+        return res.status(400).json({
+          success: false,
+          message:
+            coordinateResult.message,
+        })
+      }
+
+      normalizedLatitude =
+        coordinateResult.latitude
+
+      normalizedLongitude =
+        coordinateResult.longitude
+    }
+
+    /* --------------------------------------------------------
+       Make sure pharmacy exists
+    -------------------------------------------------------- */
+
+    const {
+      data: existingPharmacy,
+      error: findError,
+    } = await supabase
       .from('pharmacies')
       .select('pharmacy_id')
-      .eq('pharmacy_id', id)
-      .single()
+      .eq('pharmacy_id', pharmacyId)
+      .maybeSingle()
 
-    if (findError || !existingPharmacy) {
+    if (findError) {
+      console.error(
+        'Find pharmacy error:',
+        findError
+      )
+
+      return res.status(500).json({
+        success: false,
+        message:
+          'Failed to verify pharmacy',
+        error: findError.message,
+      })
+    }
+
+    if (!existingPharmacy) {
       return res.status(404).json({
         success: false,
         message: 'Pharmacy not found',
       })
     }
 
-    // Build the update object using only provided fields
+    /* --------------------------------------------------------
+       Build update object
+    -------------------------------------------------------- */
+
     const updates = {}
 
-    if (name !== undefined) updates.name = name
-    if (address !== undefined) updates.address = address
-    if (contact_number !== undefined) {
-      updates.contact_number = contact_number
+    if (name !== undefined) {
+      updates.name = name.trim()
     }
-    if (email !== undefined) updates.email = email
-    if (status !== undefined) updates.status = status
 
-    // Prevent an empty update
-    if (Object.keys(updates).length === 0) {
+    if (address !== undefined) {
+      updates.address = address.trim()
+    }
+
+    if (contact_number !== undefined) {
+      updates.contact_number =
+        typeof contact_number ===
+          'string' &&
+        contact_number.trim()
+          ? contact_number.trim()
+          : null
+    }
+
+    if (email !== undefined) {
+      updates.email =
+        typeof email === 'string' &&
+        email.trim()
+          ? email
+              .trim()
+              .toLowerCase()
+          : null
+    }
+
+    if (status !== undefined) {
+      updates.status = status
+    }
+
+    if (locationWasProvided) {
+      updates.latitude =
+        normalizedLatitude
+
+      updates.longitude =
+        normalizedLongitude
+    }
+
+    /* --------------------------------------------------------
+       Prevent empty update
+    -------------------------------------------------------- */
+
+    if (
+      Object.keys(updates).length === 0
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'No fields provided for update',
+        message:
+          'No fields provided for update',
       })
     }
+
+    /* --------------------------------------------------------
+       Update pharmacy
+    -------------------------------------------------------- */
 
     const { data, error } = await supabase
       .from('pharmacies')
       .update(updates)
-      .eq('pharmacy_id', id)
+      .eq('pharmacy_id', pharmacyId)
       .select()
       .single()
 
     if (error) {
-      console.error('Update pharmacy error:', error)
+      console.error(
+        'Update pharmacy error:',
+        error
+      )
 
       return res.status(500).json({
         success: false,
-        message: 'Failed to update pharmacy',
+        message:
+          'Failed to update pharmacy',
         error: error.message,
       })
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Pharmacy updated successfully',
+      message:
+        'Pharmacy updated successfully',
       data,
     })
   } catch (error) {
-    console.error('Server error:', error)
+    console.error(
+      'Update pharmacy server error:',
+      error
+    )
 
     return res.status(500).json({
       success: false,
@@ -255,9 +677,13 @@ if (
   }
 }
 
+/* ============================================================
+   EXPORTS
+============================================================ */
+
 module.exports = {
   getPharmacies,
   getPharmacyById,
   createPharmacy,
   updatePharmacy,
-}   
+}

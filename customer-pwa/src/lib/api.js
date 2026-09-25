@@ -31,14 +31,17 @@ export async function apiRequest(
 
   const response = await fetch(`${API_URL}${path}`, {
     method,
+
     headers: {
       ...(body
         ? { 'Content-Type': 'application/json' }
         : {}),
+
       ...(accessToken
         ? { Authorization: `Bearer ${accessToken}` }
         : {}),
     },
+
     ...(body
       ? { body: JSON.stringify(body) }
       : {}),
@@ -75,6 +78,7 @@ export const api = {
 
   // ==========================================================
   // MEDICINES
+  // ==========================================================
   //
   // Uses the same customer-facing availability endpoint used
   // by PharmaLink search.
@@ -115,6 +119,17 @@ export const api = {
   getMedicineRequestById: async (requestId) => {
     const response = await apiRequest(
       `/medicine-requests/${requestId}`,
+    )
+
+    return response?.data || null
+  },
+
+  cancelMedicineRequest: async (requestId) => {
+    const response = await apiRequest(
+      `/medicine-requests/${requestId}/cancel`,
+      {
+        method: 'PATCH',
+      },
     )
 
     return response?.data || null

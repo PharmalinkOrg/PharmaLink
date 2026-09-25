@@ -468,18 +468,26 @@ async function getAllPharmacies() {
         contact_number,
         email,
         status,
+        latitude,
+        longitude,
         created_at,
         updated_at
       `)
       .order('created_at', { ascending: false })
 
     if (error) {
-      throw new Error(`Pharmacies query failed: ${error.message}`)
+      throw new Error(
+        `Pharmacies query failed: ${error.message}`
+      )
     }
 
     return data || []
   } catch (error) {
-    console.error('getAllPharmacies error:', error)
+    console.error(
+      'getAllPharmacies error:',
+      error
+    )
+
     throw error
   }
 }

@@ -3493,3 +3493,792 @@ body.modal-open {
     top: 0;
   }
 }
+
+/* =========================================================
+   MEDICINE REQUESTS
+   ========================================================= */
+
+.medicine-requests-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Toolbar */
+
+.medicine-request-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  margin-bottom: 18px;
+}
+
+.medicine-request-search {
+  flex: 1;
+}
+
+.medicine-request-search input,
+.medicine-request-toolbar select {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+
+  border: 1px solid #d7e0dc;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #1f2937;
+
+  font-size: 13px;
+}
+
+.medicine-request-toolbar select {
+  width: 220px;
+  flex: 0 0 220px;
+}
+
+.medicine-request-search input:focus,
+.medicine-request-toolbar select:focus,
+.medicine-response-field input:focus,
+.medicine-response-field select:focus,
+.medicine-response-field textarea:focus {
+  outline: none;
+  border-color: #17634f;
+  box-shadow: 0 0 0 3px rgba(23, 99, 79, 0.1);
+}
+
+/* Table */
+
+.medicine-request-table-card {
+  overflow: hidden;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.medicine-request-table-scroll {
+  overflow-x: auto;
+}
+
+.medicine-request-table {
+  width: 100%;
+  min-width: 980px;
+
+  border-collapse: collapse;
+}
+
+.medicine-request-table th,
+.medicine-request-table td {
+  padding: 13px 14px;
+
+  border-bottom: 1px solid #e8eeeb;
+
+  text-align: left;
+  vertical-align: middle;
+}
+
+.medicine-request-table th {
+  background: #f8faf9;
+
+  color: #475569;
+
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.medicine-request-table td {
+  color: #334155;
+
+  font-size: 13px;
+}
+
+.medicine-request-table tbody tr:hover {
+  background: #fbfdfc;
+}
+
+.medicine-request-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.medicine-request-table td strong {
+  color: #1f2937;
+}
+
+.medicine-request-date {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #94a3b8;
+
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.medicine-request-medicine-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  min-width: 160px;
+}
+
+.medicine-request-medicine-cell small {
+  color: #64748b;
+
+  font-size: 11px;
+}
+
+/* Request status */
+
+.medicine-request-status,
+.medicine-response-status {
+  display: inline-flex;
+  align-items: center;
+
+  width: fit-content;
+
+  padding: 5px 8px;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.medicine-request-status.open {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.medicine-request-status.fulfilled {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.medicine-request-status.cancelled,
+.medicine-request-status.expired {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.medicine-response-status.available {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.medicine-response-status.partially_available {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.medicine-response-status.unavailable {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.medicine-response-pending {
+  display: inline-flex;
+
+  padding: 5px 8px;
+
+  border-radius: 999px;
+
+  background: #f1f5f9;
+  color: #64748b;
+
+  font-size: 10px;
+  font-weight: 650;
+}
+
+/* Table action */
+
+.medicine-request-view-button {
+  min-height: 34px;
+  padding: 6px 10px;
+
+  border: 1px solid #b9d4cb;
+  border-radius: 7px;
+
+  background: #ffffff;
+  color: #17634f;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.medicine-request-view-button:hover {
+  border-color: #17634f;
+  background: #f0fdf7;
+}
+
+/* Empty state */
+
+.medicine-request-empty {
+  padding: 48px 24px;
+
+  text-align: center;
+}
+
+.medicine-request-empty h3 {
+  margin: 0 0 5px;
+
+  color: #1f2937;
+
+  font-size: 16px;
+}
+
+.medicine-request-empty p {
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 13px;
+}
+
+/* =========================================================
+   REQUEST DETAILS MODAL
+   ========================================================= */
+
+.medicine-request-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.medicine-request-modal {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 48px);
+
+  overflow: hidden;
+
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 20px 60px rgba(15, 23, 42, 0.2);
+}
+
+.medicine-request-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding: 20px 22px;
+
+  border-bottom: 1px solid #e5ebe8;
+}
+
+.medicine-request-modal-eyebrow {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: #17634f;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.medicine-request-modal-header h3 {
+  margin: 0;
+
+  color: #17211e;
+
+  font-size: 20px;
+  font-weight: 750;
+}
+
+.medicine-request-modal-header p {
+  margin: 4px 0 0;
+
+  color: #64748b;
+
+  font-size: 11px;
+}
+
+.medicine-request-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+
+  padding: 0;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+
+  background: #ffffff;
+  color: #64748b;
+
+  font-size: 20px;
+  line-height: 1;
+}
+
+.medicine-request-close:hover {
+  background: #f8fafc;
+  color: #1f2937;
+}
+
+.medicine-request-modal-body {
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+
+  padding: 20px 22px 24px;
+}
+
+/* Overall request state */
+
+.medicine-request-state-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 18px;
+  padding: 10px 12px;
+
+  border: 1px solid #e5ebe8;
+  border-radius: 9px;
+
+  background: #f8faf9;
+}
+
+.medicine-request-state-row > span:first-child {
+  color: #64748b;
+
+  font-size: 11px;
+  font-weight: 650;
+}
+
+/* Detail sections */
+
+.medicine-request-detail-section {
+  padding: 18px 0;
+
+  border-bottom: 1px solid #edf1ef;
+}
+
+.medicine-request-detail-section:first-of-type {
+  padding-top: 0;
+}
+
+.medicine-request-detail-section h4,
+.medicine-request-response-section h4 {
+  margin: 0 0 12px;
+
+  color: #1f2937;
+
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.medicine-request-customer-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.medicine-request-customer-grid > div {
+  min-width: 0;
+
+  padding: 11px;
+
+  border: 1px solid #e5ebe8;
+  border-radius: 9px;
+
+  background: #fafcfb;
+}
+
+.medicine-request-customer-grid span {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: #94a3b8;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.medicine-request-customer-grid strong {
+  display: block;
+
+  overflow-wrap: anywhere;
+
+  color: #334155;
+
+  font-size: 11px;
+  font-weight: 650;
+}
+
+/* Requested items */
+
+.medicine-request-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.medicine-request-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 12px;
+
+  border: 1px solid #e5ebe8;
+  border-radius: 9px;
+
+  background: #fafcfb;
+}
+
+.medicine-request-item-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+
+  min-width: 0;
+}
+
+.medicine-request-item-main strong {
+  color: #1f2937;
+
+  font-size: 12px;
+}
+
+.medicine-request-item-main > span {
+  color: #64748b;
+
+  font-size: 10px;
+}
+
+.medicine-request-item-main
+  .medicine-request-rx {
+  width: fit-content;
+
+  margin-top: 3px;
+  padding: 3px 6px;
+
+  border-radius: 5px;
+
+  background: #fff1f2;
+  color: #be123c;
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.medicine-request-item-quantity {
+  flex: 0 0 auto;
+
+  text-align: right;
+}
+
+.medicine-request-item-quantity span {
+  display: block;
+
+  color: #94a3b8;
+
+  font-size: 9px;
+}
+
+.medicine-request-item-quantity strong {
+  color: #17634f;
+
+  font-size: 16px;
+}
+
+.medicine-request-notes {
+  padding: 12px;
+
+  border: 1px solid #e5ebe8;
+  border-radius: 9px;
+
+  background: #fafcfb;
+  color: #475569;
+
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+/* =========================================================
+   PHARMACY RESPONSE
+   ========================================================= */
+
+.medicine-request-response-section {
+  margin-top: 20px;
+  padding: 18px;
+
+  border: 1px solid #cfe2dc;
+  border-radius: 11px;
+
+  background: #f7fbf9;
+}
+
+.medicine-request-response-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  margin-bottom: 16px;
+}
+
+.medicine-request-response-heading h4 {
+  margin-bottom: 3px;
+}
+
+.medicine-request-response-heading p {
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.medicine-response-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.medicine-response-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  min-width: 0;
+}
+
+.medicine-response-field > span {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+
+  color: #334155;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.medicine-response-field > span small {
+  color: #94a3b8;
+
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.medicine-response-field input,
+.medicine-response-field select,
+.medicine-response-field textarea {
+  width: 100%;
+  min-width: 0;
+
+  padding: 9px 10px;
+
+  border: 1px solid #d7e0dc;
+  border-radius: 8px;
+
+  background: #ffffff;
+  color: #1f2937;
+
+  font-size: 11px;
+}
+
+.medicine-response-field input,
+.medicine-response-field select {
+  min-height: 40px;
+}
+
+.medicine-response-field textarea {
+  min-height: 88px;
+
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.medicine-response-help {
+  color: #94a3b8;
+
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.medicine-response-row {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.medicine-response-price {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+}
+
+.medicine-response-price > span {
+  position: absolute;
+  left: 11px;
+
+  color: #64748b;
+
+  font-size: 11px;
+}
+
+.medicine-response-price input {
+  padding-left: 27px;
+}
+
+.medicine-response-character-count {
+  align-self: flex-end;
+
+  color: #94a3b8;
+
+  font-size: 9px;
+}
+
+.medicine-response-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+
+  padding-top: 3px;
+}
+
+.medicine-response-actions
+  .primary-button,
+.medicine-response-actions
+  .secondary-button {
+  min-height: 38px;
+
+  padding: 8px 14px;
+
+  font-size: 11px;
+}
+
+.medicine-request-closed-message {
+  padding: 12px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+
+  background: #f8fafc;
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .medicine-requests-page {
+    padding: 20px;
+  }
+
+  .medicine-request-customer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .medicine-requests-page {
+    padding: 16px;
+  }
+
+  .medicine-request-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .medicine-request-toolbar select {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .medicine-request-modal-backdrop {
+    align-items: flex-end;
+
+    padding: 0;
+  }
+
+  .medicine-request-modal {
+    width: 100%;
+    max-height: 94vh;
+
+    border-radius: 16px 16px 0 0;
+  }
+
+  .medicine-request-modal-header {
+    padding: 17px;
+  }
+
+  .medicine-request-modal-body {
+    max-height: calc(94vh - 80px);
+
+    padding: 17px;
+  }
+
+  .medicine-request-item {
+    align-items: flex-start;
+  }
+
+  .medicine-response-row {
+    grid-template-columns: 1fr;
+  }
+
+  .medicine-request-response-heading {
+    flex-direction: column;
+  }
+
+  .medicine-response-actions {
+    flex-direction: column-reverse;
+  }
+
+  .medicine-response-actions
+    .primary-button,
+  .medicine-response-actions
+    .secondary-button {
+    width: 100%;
+  }
+}

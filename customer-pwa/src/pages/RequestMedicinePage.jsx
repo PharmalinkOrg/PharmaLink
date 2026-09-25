@@ -5,17 +5,13 @@ import { useNavigate } from 'react-router-dom'
 import {
   AlertCircle,
   ArrowLeft,
-  Check,
   CheckCircle2,
-  ChevronDown,
   FileText,
   LoaderCircle,
-  MapPin,
   PackageSearch,
   Pill,
   Search,
   Send,
-  Store,
   X,
 } from 'lucide-react'
 
@@ -82,18 +78,6 @@ function getMedicineMeta(medicine) {
     .join(' • ')
 }
 
-function getPharmacyId(pharmacy) {
-  const value =
-    pharmacy?.pharmacy_id ??
-    pharmacy?.id
-
-  const number = Number(value)
-
-  return Number.isInteger(number) && number > 0
-    ? number
-    : null
-}
-
 function getMedicineId(medicine) {
   const value =
     medicine?.medicine_id ??
@@ -106,25 +90,35 @@ function getMedicineId(medicine) {
     : null
 }
 
-function getOfferingPharmacyId(offering) {
-  return getPharmacyId(
-    offering?.pharmacy || {
-      pharmacy_id: offering?.pharmacy_id,
-    },
-  )
-}
+/**
+ * Customer search results represent logical medicines,
+ * but the backend still uses pharmacy-owned medicine rows.
+ *
+ * We only need one valid medicine_id as a reference when
+ * the customer selects an existing PharmaLink medicine.
+ */
+function getRepresentativeMedicineId(medicine) {
+  if (!medicine) {
+    return null
+  }
 
-function getOfferingMedicineId(offering) {
-  return getMedicineId(offering)
-}
+  const directId = getMedicineId(medicine)
 
-function isOutOfStockOffering(offering) {
-  const quantity = Number(offering?.quantity)
+  if (directId) {
+    return directId
+  }
 
-  return (
-    Number.isFinite(quantity) &&
-    quantity <= 0
-  )
+  if (Array.isArray(medicine.offerings)) {
+    for (const offering of medicine.offerings) {
+      const offeringId = getMedicineId(offering)
+
+      if (offeringId) {
+        return offeringId
+      }
+    }
+  }
+
+  return null
 }
 
 function buildMedicineGroups(rawMedicines) {
@@ -136,39 +130,49 @@ function buildMedicineGroups(rawMedicines) {
     if (!groups.has(key)) {
       groups.set(key, {
         medicine_key: key,
+
         generic_name:
           entry.generic_name || '',
+
         brand_name:
           entry.brand_name || '',
+
         dosage:
           entry.dosage || '',
+
         dosage_form:
           entry.dosage_form || '',
+
         requires_prescription:
           Boolean(entry.requires_prescription),
+
         offerings: [],
       })
     }
 
     const group = groups.get(key)
 
-    // Some endpoints may already return grouped offerings.
     if (Array.isArray(entry.offerings)) {
       for (const offering of entry.offerings) {
         group.offerings.push({
           ...offering,
+
           generic_name:
             offering.generic_name ??
             entry.generic_name,
+
           brand_name:
             offering.brand_name ??
             entry.brand_name,
+
           dosage:
             offering.dosage ??
             entry.dosage,
+
           dosage_form:
             offering.dosage_form ??
             entry.dosage_form,
+
           requires_prescription:
             offering.requires_prescription ??
             entry.requires_prescription,
@@ -178,21 +182,10 @@ function buildMedicineGroups(rawMedicines) {
       continue
     }
 
-    // Otherwise treat the returned row itself as an offering.
     group.offerings.push(entry)
   }
 
   return Array.from(groups.values())
-}
-
-function pharmacyMatchesOffering(
-  offering,
-  pharmacyId,
-) {
-  return (
-    getOfferingPharmacyId(offering) ===
-    Number(pharmacyId)
-  )
 }
 
 // ============================================================
@@ -210,9 +203,6 @@ function RequestMedicinePage() {
   const [rawMedicines, setRawMedicines] =
     useState([])
 
-  const [pharmacies, setPharmacies] =
-    useState([])
-
   const [medicineQuery, setMedicineQuery] =
     useState('')
 
@@ -222,8 +212,28 @@ function RequestMedicinePage() {
   ] = useState(null)
 
   const [
-    selectedPharmacyId,
-    setSelectedPharmacyId,
+    useManualEntry,
+    setUseManualEntry,
+  ] = useState(false)
+
+  const [
+    manualMedicineName,
+    setManualMedicineName,
+  ] = useState('')
+
+  const [
+    manualBrandName,
+    setManualBrandName,
+  ] = useState('')
+
+  const [
+    manualDosage,
+    setManualDosage,
+  ] = useState('')
+
+  const [
+    manualDosageForm,
+    setManualDosageForm,
   ] = useState('')
 
   const [quantity, setQuantity] =
@@ -237,17 +247,23 @@ function RequestMedicinePage() {
     setShowMedicineSuggestions,
   ] = useState(false)
 
-  const [loadingData, setLoadingData] =
-    useState(true)
+  const [
+    loadingData,
+    setLoadingData,
+  ] = useState(true)
 
-  const [isSubmitting, setIsSubmitting] =
-    useState(false)
+  const [
+    isSubmitting,
+    setIsSubmitting,
+  ] = useState(false)
 
   const [error, setError] =
     useState('')
 
-  const [successMessage, setSuccessMessage] =
-    useState('')
+  const [
+    successMessage,
+    setSuccessMessage,
+  ] = useState('')
 
   // ==========================================================
   // AUTH
@@ -268,24 +284,19 @@ function RequestMedicinePage() {
   ])
 
   // ==========================================================
-  // LOAD MEDICINES + PARTNER PHARMACIES
+  // LOAD PHARMALINK MEDICINES
   // ==========================================================
 
   useEffect(() => {
     let isCurrent = true
 
-    async function loadData() {
+    async function loadMedicines() {
       try {
         setLoadingData(true)
         setError('')
 
-        const [
-          medicinesData,
-          pharmaciesData,
-        ] = await Promise.all([
-          api.getAvailableMedicines(),
-          api.getPharmacies(),
-        ])
+        const medicinesData =
+          await api.getAvailableMedicines()
 
         if (!isCurrent) {
           return
@@ -296,22 +307,16 @@ function RequestMedicinePage() {
             ? medicinesData
             : [],
         )
-
-        setPharmacies(
-          Array.isArray(pharmaciesData)
-            ? pharmaciesData
-            : [],
-        )
       } catch (loadError) {
         console.error(
-          'Failed to load medicine request data:',
+          'Failed to load medicines:',
           loadError,
         )
 
         if (isCurrent) {
           setError(
             loadError.message ||
-              'Unable to load medicines and pharmacies.',
+              'Unable to load PharmaLink medicines. You can still enter the medicine manually.',
           )
         }
       } finally {
@@ -322,7 +327,7 @@ function RequestMedicinePage() {
     }
 
     if (!authLoading && user) {
-      loadData()
+      loadMedicines()
     }
 
     return () => {
@@ -356,103 +361,36 @@ function RequestMedicinePage() {
 
     return medicineGroups
       .filter((medicine) => {
-        const searchable = normalizeText(
-          [
-            medicine.generic_name,
-            medicine.brand_name,
-            medicine.dosage,
-            medicine.dosage_form,
-          ]
-            .filter(Boolean)
-            .join(' '),
-        )
+        const searchable =
+          normalizeText(
+            [
+              medicine.generic_name,
+              medicine.brand_name,
+              medicine.dosage,
+              medicine.dosage_form,
+            ]
+              .filter(Boolean)
+              .join(' '),
+          )
 
         return searchable.includes(query)
       })
-      .slice(0, 10)
+      .slice(0, 8)
   }, [
     medicineGroups,
     medicineQuery,
   ])
 
   // ==========================================================
-  // ACTIVE PARTNER PHARMACIES
-  // ==========================================================
-
-  const activePharmacies = useMemo(
-    () =>
-      pharmacies.filter(
-        (pharmacy) =>
-          pharmacy.status === 'ACTIVE',
-      ),
-    [pharmacies],
-  )
-
-  // ==========================================================
-  // SELECTED PHARMACY
-  // ==========================================================
-
-  const selectedPharmacy = useMemo(
-    () =>
-      activePharmacies.find(
-        (pharmacy) =>
-          getPharmacyId(pharmacy) ===
-          Number(selectedPharmacyId),
-      ) || null,
-    [
-      activePharmacies,
-      selectedPharmacyId,
-    ],
-  )
-
-  // ==========================================================
-  // FIND THE CORRECT PHARMACY-OWNED MEDICINE ID
-  // ==========================================================
-
-  const selectedOffering = useMemo(() => {
-    if (
-      !selectedMedicine ||
-      !selectedPharmacyId
-    ) {
-      return null
-    }
-
-    return (
-      selectedMedicine.offerings.find(
-        (offering) =>
-          pharmacyMatchesOffering(
-            offering,
-            selectedPharmacyId,
-          ),
-      ) || null
-    )
-  }, [
-    selectedMedicine,
-    selectedPharmacyId,
-  ])
-
-  // ==========================================================
-  // PHARMACY AVAILABILITY INFORMATION
-  // ==========================================================
-
-  const selectedOfferingIsOutOfStock =
-    selectedOffering
-      ? isOutOfStockOffering(
-          selectedOffering,
-        )
-      : false
-
-  // ==========================================================
-  // MEDICINE SEARCH
+  // SEARCH HANDLERS
   // ==========================================================
 
   function handleMedicineSearch(value) {
     setMedicineQuery(value)
-
     setSelectedMedicine(null)
-    setSelectedPharmacyId('')
-    setSuccessMessage('')
+    setUseManualEntry(false)
     setError('')
+    setSuccessMessage('')
 
     setShowMedicineSuggestions(
       value.trim().length > 0,
@@ -466,7 +404,7 @@ function RequestMedicinePage() {
       getMedicineName(medicine),
     )
 
-    setSelectedPharmacyId('')
+    setUseManualEntry(false)
     setShowMedicineSuggestions(false)
     setError('')
     setSuccessMessage('')
@@ -475,10 +413,39 @@ function RequestMedicinePage() {
   function clearSelectedMedicine() {
     setSelectedMedicine(null)
     setMedicineQuery('')
-    setSelectedPharmacyId('')
+    setUseManualEntry(false)
     setShowMedicineSuggestions(false)
     setError('')
     setSuccessMessage('')
+  }
+
+  function startManualEntry() {
+    const typedValue =
+      medicineQuery.trim()
+
+    setSelectedMedicine(null)
+    setShowMedicineSuggestions(false)
+    setUseManualEntry(true)
+
+    if (
+      typedValue &&
+      !manualMedicineName
+    ) {
+      setManualMedicineName(typedValue)
+    }
+
+    setError('')
+    setSuccessMessage('')
+  }
+
+  function cancelManualEntry() {
+    setUseManualEntry(false)
+    setManualMedicineName('')
+    setManualBrandName('')
+    setManualDosage('')
+    setManualDosageForm('')
+    setMedicineQuery('')
+    setError('')
   }
 
   // ==========================================================
@@ -488,7 +455,13 @@ function RequestMedicinePage() {
   function resetForm() {
     setMedicineQuery('')
     setSelectedMedicine(null)
-    setSelectedPharmacyId('')
+    setUseManualEntry(false)
+
+    setManualMedicineName('')
+    setManualBrandName('')
+    setManualDosage('')
+    setManualDosageForm('')
+
     setQuantity(1)
     setNotes('')
     setShowMedicineSuggestions(false)
@@ -504,20 +477,6 @@ function RequestMedicinePage() {
     setError('')
     setSuccessMessage('')
 
-    if (!selectedMedicine) {
-      setError(
-        'Please select an existing medicine from the search results.',
-      )
-      return
-    }
-
-    if (!selectedPharmacyId) {
-      setError(
-        'Please select the partner pharmacy you want to send this request to.',
-      )
-      return
-    }
-
     const parsedQuantity =
       Number(quantity)
 
@@ -528,78 +487,111 @@ function RequestMedicinePage() {
       setError(
         'Requested quantity must be a whole number greater than zero.',
       )
+
       return
     }
 
-    if (!selectedOffering) {
-      setError(
-        'This medicine does not have a matching record for the selected pharmacy.',
-      )
-      return
+    let requestItem
+
+    // --------------------------------------------------------
+    // Existing PharmaLink medicine
+    // --------------------------------------------------------
+
+    if (selectedMedicine) {
+      const medicineId =
+        getRepresentativeMedicineId(
+          selectedMedicine,
+        )
+
+      if (!medicineId) {
+        setError(
+          'The selected medicine could not be identified. Please select it again or enter it manually.',
+        )
+
+        return
+      }
+
+      requestItem = {
+        medicine_id: medicineId,
+
+        requested_quantity:
+          parsedQuantity,
+
+        notes: null,
+      }
     }
 
-    const medicineId =
-      getOfferingMedicineId(
-        selectedOffering,
-      )
+    // --------------------------------------------------------
+    // Manual medicine
+    // --------------------------------------------------------
 
-    if (!medicineId) {
-      setError(
-        'The selected medicine could not be identified. Please select the medicine again.',
-      )
-      return
+    else if (useManualEntry) {
+      const medicineName =
+        manualMedicineName.trim()
+
+      if (!medicineName) {
+        setError(
+          'Please enter the medicine name.',
+        )
+
+        return
+      }
+
+      requestItem = {
+        medicine_id: null,
+
+        medicine_name:
+          medicineName,
+
+        brand_name:
+          manualBrandName.trim() ||
+          null,
+
+        dosage:
+          manualDosage.trim() ||
+          null,
+
+        dosage_form:
+          manualDosageForm.trim() ||
+          null,
+
+        requested_quantity:
+          parsedQuantity,
+
+        notes: null,
+      }
     }
 
-    /*
-     * Medicine Requests are intended for medicine that is
-     * unavailable / out of stock at the selected pharmacy.
-     *
-     * If quantity information is present and stock is greater
-     * than zero, direct the customer back to normal reservation.
-     */
-    const offeringQuantity =
-      Number(selectedOffering.quantity)
+    // --------------------------------------------------------
+    // Nothing selected / entered
+    // --------------------------------------------------------
 
-    if (
-      Number.isFinite(offeringQuantity) &&
-      offeringQuantity > 0
-    ) {
+    else {
       setError(
-        'This medicine is currently available at the selected pharmacy. Please use the normal reservation process instead.',
+        'Select a PharmaLink medicine or enter the medicine manually.',
       )
+
       return
     }
 
     try {
       setIsSubmitting(true)
 
-      const requestData = {
-        pharmacy_id:
-          Number(selectedPharmacyId),
-
-        notes:
-          notes.trim() || null,
-
-        items: [
-          {
-            medicine_id:
-              medicineId,
-
-            requested_quantity:
-              parsedQuantity,
-
-            notes: null,
-          },
-        ],
-      }
-
       const createdRequest =
-        await api.createMedicineRequest(
-          requestData,
-        )
+        await api.createMedicineRequest({
+          notes:
+            notes.trim() || null,
+
+          items: [
+            requestItem,
+          ],
+        })
 
       setSuccessMessage(
-        `Medicine request #${createdRequest?.medicine_request_id || ''} submitted successfully.`,
+        `Medicine request #${
+          createdRequest
+            ?.medicine_request_id || ''
+        } was sent to PharmaLink partner pharmacies.`,
       )
 
       resetForm()
@@ -624,16 +616,16 @@ function RequestMedicinePage() {
 
   if (authLoading || loadingData) {
     return (
-      <main className="request-page">
-        <div className="request-container">
-          <div className="request-loading">
+      <main className="request-medicine-page">
+        <div className="request-medicine-container">
+          <div className="request-medicine-loading">
             <LoaderCircle
               size={24}
               className="spinner"
             />
 
             <span>
-              Loading medicine request...
+              Loading medicines...
             </span>
           </div>
         </div>
@@ -646,143 +638,150 @@ function RequestMedicinePage() {
   // ==========================================================
 
   return (
-    <main className="request-page">
-      <div className="request-container">
-        {/* ====================================================
-            HEADER
-        ==================================================== */}
+    <main className="request-medicine-page">
+      <div className="request-medicine-container">
 
-        <header className="request-header">
+        {/* HEADER */}
+
+        <header className="request-medicine-header">
           <button
             type="button"
-            className="back-btn"
+            className="request-medicine-back"
             onClick={() => navigate(-1)}
             aria-label="Go back"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={19} />
             <span>Back</span>
           </button>
 
-          <div className="request-header-copy">
-            <span className="request-eyebrow">
+          <div className="request-medicine-heading">
+            <span className="request-medicine-eyebrow">
               Medicine Request
             </span>
 
             <h1>
-              Request an unavailable medicine
+              Looking for a medicine?
             </h1>
 
-            <p className="request-description">
-              Request an existing PharmaLink
-              medicine that is currently
-              unavailable or out of stock at
-              a partner pharmacy.
+            <p>
+              Send a request to PharmaLink partner
+              pharmacies. Pharmacies that can help
+              can respond with their availability.
             </p>
           </div>
         </header>
 
-        {/* ====================================================
-            ERROR
-        ==================================================== */}
+        {/* ERROR */}
 
         {error && (
           <div
-            className="alert alert-error"
+            className="request-medicine-alert request-medicine-alert-error"
             role="alert"
           >
-            <AlertCircle
-              size={20}
-              className="alert-icon"
-            />
+            <AlertCircle size={20} />
 
-            <span>{error}</span>
+            <span>
+              {error}
+            </span>
 
             <button
               type="button"
-              className="alert-close"
               onClick={() => setError('')}
               aria-label="Dismiss error"
             >
-              <X size={18} />
+              <X size={17} />
             </button>
           </div>
         )}
 
-        {/* ====================================================
-            SUCCESS
-        ==================================================== */}
+        {/* SUCCESS */}
 
         {successMessage && (
-          <div
-            className="alert alert-success"
-            role="status"
-          >
-            <CheckCircle2
-              size={20}
-              className="alert-icon"
-            />
+          <div className="request-medicine-success">
+            <div className="request-medicine-success-content">
+              <CheckCircle2 size={20} />
 
-            <span>
-              {successMessage}
-            </span>
+              <div>
+                <strong>Request sent successfully</strong>
+
+                <p>
+                  Partner pharmacies can now respond to your
+                  medicine request.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="request-medicine-view-requests"
+              onClick={() => navigate('/my-requests')}
+            >
+              View My Requests
+            </button>
           </div>
         )}
 
-        {/* ====================================================
-            INFORMATION
-        ==================================================== */}
+        {/* EXPLANATION */}
 
-        <div className="request-info-card">
-          <PackageSearch size={22} />
+        <section className="request-medicine-info">
+          <div className="request-medicine-info-icon">
+            <PackageSearch size={21} />
+          </div>
 
           <div>
             <strong>
-              When should I use this?
+              How Medicine Requests work
             </strong>
 
             <p>
-              Use Medicine Request when the
-              medicine already exists in
-              PharmaLink but is currently
-              unavailable at the pharmacy you
-              want. If the medicine is in
-              stock, reserve it instead.
+              Search PharmaLink first, or enter the
+              medicine yourself if you cannot find
+              it. Your request is shared with
+              participating partner pharmacies.
             </p>
           </div>
-        </div>
+        </section>
 
-        {/* ====================================================
-            FORM
-        ==================================================== */}
+        {/* FORM */}
 
         <form
-          className="request-form"
+          className="request-medicine-form"
           onSubmit={handleSubmit}
         >
-          <div className="form-fields">
-            {/* ================================================
-                MEDICINE
-            ================================================ */}
+          <section className="request-medicine-section">
+            <div className="request-medicine-section-heading">
+              <span className="request-medicine-step">
+                1
+              </span>
 
-            <div className="form-group">
-              <label htmlFor="medicineName">
-                Medicine *
-              </label>
+              <div>
+                <h2>
+                  Medicine
+                </h2>
 
-              <p className="field-help">
-                Search for an existing medicine
-                in PharmaLink.
-              </p>
+                <p>
+                  Search the PharmaLink catalog or
+                  enter the medicine manually.
+                </p>
+              </div>
+            </div>
 
-              <div className="medicine-search-wrapper">
-                <div className="search-input-wrapper">
+            {/* SEARCH */}
+
+            {!useManualEntry && (
+              <div className="request-medicine-field">
+                <label htmlFor="medicineSearch">
+                  Search medicine
+                </label>
+
+                <div className="request-medicine-search">
                   <Search size={19} />
 
                   <input
-                    id="medicineName"
+                    id="medicineSearch"
                     type="text"
                     value={medicineQuery}
-                    placeholder="Search medicine name, brand, or dosage"
+                    placeholder="Medicine name, brand, or dosage"
                     autoComplete="off"
                     disabled={isSubmitting}
                     onChange={(event) =>
@@ -792,9 +791,7 @@ function RequestMedicinePage() {
                     }
                     onFocus={() => {
                       if (
-                        medicineQuery
-                          .trim()
-                          .length > 0 &&
+                        medicineQuery.trim() &&
                         !selectedMedicine
                       ) {
                         setShowMedicineSuggestions(
@@ -807,110 +804,148 @@ function RequestMedicinePage() {
                   {medicineQuery && (
                     <button
                       type="button"
-                      className="medicine-search-clear"
+                      className="request-medicine-clear"
                       onClick={
                         clearSelectedMedicine
                       }
                       disabled={isSubmitting}
-                      aria-label="Clear medicine"
+                      aria-label="Clear medicine search"
                     >
                       <X size={17} />
                     </button>
                   )}
                 </div>
 
+                {/* SEARCH RESULTS */}
+
                 {showMedicineSuggestions &&
                   !selectedMedicine && (
-                    <div className="suggestions-list">
+                    <div className="request-medicine-suggestions">
                       {filteredMedicines.length >
                       0 ? (
-                        filteredMedicines.map(
-                          (medicine) => (
-                            <button
-                              key={
-                                medicine.medicine_key
-                              }
-                              type="button"
-                              className="suggestion-item"
-                              disabled={
-                                isSubmitting
-                              }
-                              onClick={() =>
-                                handleSelectMedicine(
-                                  medicine,
-                                )
-                              }
-                            >
-                              <div className="suggestion-icon">
-                                <Pill
-                                  size={18}
-                                />
-                              </div>
-
-                              <div className="suggestion-content">
-                                <strong className="suggestion-name">
-                                  {getMedicineName(
+                        <>
+                          {filteredMedicines.map(
+                            (medicine) => (
+                              <button
+                                key={
+                                  medicine.medicine_key
+                                }
+                                type="button"
+                                className="request-medicine-suggestion"
+                                onClick={() =>
+                                  handleSelectMedicine(
                                     medicine,
-                                  )}
-                                </strong>
+                                  )
+                                }
+                                disabled={
+                                  isSubmitting
+                                }
+                              >
+                                <span className="request-medicine-suggestion-icon">
+                                  <Pill
+                                    size={18}
+                                  />
+                                </span>
 
-                                {getMedicineMeta(
-                                  medicine,
-                                ) && (
-                                  <span className="suggestion-meta">
-                                    {getMedicineMeta(
+                                <span className="request-medicine-suggestion-copy">
+                                  <strong>
+                                    {getMedicineName(
                                       medicine,
                                     )}
-                                  </span>
-                                )}
+                                  </strong>
 
-                                <span className="suggestion-meta">
-                                  {medicine
-                                    .requires_prescription
-                                    ? 'Prescription required'
-                                    : 'No prescription required'}
+                                  {getMedicineMeta(
+                                    medicine,
+                                  ) && (
+                                    <small>
+                                      {getMedicineMeta(
+                                        medicine,
+                                      )}
+                                    </small>
+                                  )}
+
+                                  <small>
+                                    {medicine
+                                      .requires_prescription
+                                      ? 'Prescription required'
+                                      : 'No prescription required'}
+                                  </small>
                                 </span>
-                              </div>
+                              </button>
+                            ),
+                          )}
+
+                          <div className="request-medicine-manual-row">
+                            <span>
+                              Can't find the exact
+                              medicine?
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={
+                                startManualEntry
+                              }
+                            >
+                              Enter manually
                             </button>
-                          ),
-                        )
+                          </div>
+                        </>
                       ) : (
-                        <div className="suggestions-empty">
+                        <div className="request-medicine-no-results">
                           <PackageSearch
-                            size={20}
+                            size={22}
                           />
 
                           <div>
                             <strong>
-                              No matching medicine
+                              No exact match found
                             </strong>
 
                             <p>
-                              Medicine Requests
-                              can only be submitted
-                              for medicines that
-                              already exist in
-                              PharmaLink.
+                              You can still send a
+                              request by entering the
+                              medicine details
+                              yourself.
                             </p>
+
+                            <button
+                              type="button"
+                              onClick={
+                                startManualEntry
+                              }
+                            >
+                              Enter medicine manually
+                            </button>
                           </div>
                         </div>
                       )}
                     </div>
                   )}
-              </div>
-            </div>
 
-            {/* ================================================
-                SELECTED MEDICINE
-            ================================================ */}
+                {!selectedMedicine &&
+                  !showMedicineSuggestions && (
+                    <button
+                      type="button"
+                      className="request-medicine-manual-link"
+                      onClick={startManualEntry}
+                    >
+                      Can't find it? Enter medicine
+                      manually
+                    </button>
+                  )}
+              </div>
+            )}
+
+            {/* SELECTED MEDICINE */}
 
             {selectedMedicine && (
-              <div className="selected-medicine-card">
-                <div className="selected-medicine-icon">
-                  <Pill size={22} />
+              <div className="request-medicine-selected">
+                <div className="request-medicine-selected-icon">
+                  <Pill size={21} />
                 </div>
 
-                <div className="selected-medicine-info">
+                <div className="request-medicine-selected-copy">
                   <span>
                     Selected medicine
                   </span>
@@ -933,193 +968,178 @@ function RequestMedicinePage() {
 
                   {selectedMedicine
                     .requires_prescription && (
-                    <small className="prescription-required">
+                    <small className="request-medicine-rx">
                       Prescription required
                     </small>
                   )}
                 </div>
 
-                <Check
-                  size={20}
-                  className="selected-check"
-                />
-              </div>
-            )}
-
-            {/* ================================================
-                PHARMACY
-            ================================================ */}
-
-            <div className="form-group">
-              <label htmlFor="pharmacyId">
-                Partner Pharmacy *
-              </label>
-
-              <p className="field-help">
-                Choose the pharmacy that should
-                receive this request.
-              </p>
-
-              <div className="select-wrapper">
-                <Store size={19} />
-
-                <select
-                  id="pharmacyId"
-                  value={selectedPharmacyId}
-                  disabled={
-                    isSubmitting ||
-                    !selectedMedicine
+                <button
+                  type="button"
+                  className="request-medicine-change"
+                  onClick={
+                    clearSelectedMedicine
                   }
-                  required
-                  onChange={(event) => {
-                    setSelectedPharmacyId(
-                      event.target.value,
-                    )
-
-                    setError('')
-                    setSuccessMessage('')
-                  }}
+                  disabled={isSubmitting}
                 >
-                  <option value="">
-                    Select partner pharmacy
-                  </option>
-
-                  {activePharmacies.map(
-                    (pharmacy) => {
-                      const pharmacyId =
-                        getPharmacyId(
-                          pharmacy,
-                        )
-
-                      if (!pharmacyId) {
-                        return null
-                      }
-
-                      return (
-                        <option
-                          key={pharmacyId}
-                          value={pharmacyId}
-                        >
-                          {pharmacy.name}
-                        </option>
-                      )
-                    },
-                  )}
-                </select>
-
-                <ChevronDown
-                  size={18}
-                  className="select-chevron"
-                />
-              </div>
-            </div>
-
-            {/* ================================================
-                SELECTED PHARMACY DETAILS
-            ================================================ */}
-
-            {selectedPharmacy && (
-              <div className="selected-pharmacy-card">
-                <MapPin size={20} />
-
-                <div>
-                  <span>
-                    Request will be sent to
-                  </span>
-
-                  <strong>
-                    {selectedPharmacy.name}
-                  </strong>
-
-                  <small>
-                    {selectedPharmacy.address ||
-                      'Address unavailable'}
-                  </small>
-                </div>
+                  Change
+                </button>
               </div>
             )}
 
-            {/* ================================================
-                MEDICINE DOES NOT BELONG TO PHARMACY
-            ================================================ */}
+            {/* MANUAL ENTRY */}
 
-            {selectedMedicine &&
-              selectedPharmacy &&
-              !selectedOffering && (
-                <div className="request-warning">
-                  <AlertCircle size={19} />
-
-                  <p>
-                    This pharmacy does not
-                    currently have a matching
-                    record for this medicine.
-                    Please choose another partner
-                    pharmacy.
-                  </p>
-                </div>
-              )}
-
-            {/* ================================================
-                CURRENTLY AVAILABLE
-            ================================================ */}
-
-            {selectedOffering &&
-              !selectedOfferingIsOutOfStock &&
-              Number.isFinite(
-                Number(
-                  selectedOffering.quantity,
-                ),
-              ) &&
-              Number(
-                selectedOffering.quantity,
-              ) > 0 && (
-                <div className="request-warning">
-                  <AlertCircle size={19} />
-
+            {useManualEntry && (
+              <div className="request-medicine-manual">
+                <div className="request-medicine-manual-header">
                   <div>
                     <strong>
-                      Medicine currently
-                      available
+                      Enter medicine details
                     </strong>
 
                     <p>
-                      This pharmacy currently
-                      has{' '}
-                      {
-                        selectedOffering.quantity
-                      }{' '}
-                      in stock. Please use the
-                      normal reservation process
-                      instead of submitting a
-                      Medicine Request.
+                      Add what you know. Only the
+                      medicine name is required.
                     </p>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={
+                      cancelManualEntry
+                    }
+                    disabled={isSubmitting}
+                  >
+                    Use search
+                  </button>
                 </div>
-              )}
 
-            {/* ================================================
-                QUANTITY
-            ================================================ */}
+                <div className="request-medicine-manual-grid">
+                  <div className="request-medicine-field request-medicine-field-wide">
+                    <label htmlFor="manualMedicineName">
+                      Medicine name *
+                    </label>
 
-            <div className="form-group">
-              <label htmlFor="quantity">
-                Requested Quantity *
+                    <input
+                      id="manualMedicineName"
+                      type="text"
+                      value={
+                        manualMedicineName
+                      }
+                      placeholder="e.g. Amoxicillin"
+                      disabled={isSubmitting}
+                      onChange={(event) =>
+                        setManualMedicineName(
+                          event.target.value,
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div className="request-medicine-field">
+                    <label htmlFor="manualBrandName">
+                      Brand
+                      <span>
+                        {' '}(Optional)
+                      </span>
+                    </label>
+
+                    <input
+                      id="manualBrandName"
+                      type="text"
+                      value={manualBrandName}
+                      placeholder="e.g. Amoxil"
+                      disabled={isSubmitting}
+                      onChange={(event) =>
+                        setManualBrandName(
+                          event.target.value,
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div className="request-medicine-field">
+                    <label htmlFor="manualDosage">
+                      Dosage
+                      <span>
+                        {' '}(Optional)
+                      </span>
+                    </label>
+
+                    <input
+                      id="manualDosage"
+                      type="text"
+                      value={manualDosage}
+                      placeholder="e.g. 500 mg"
+                      disabled={isSubmitting}
+                      onChange={(event) =>
+                        setManualDosage(
+                          event.target.value,
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div className="request-medicine-field request-medicine-field-wide">
+                    <label htmlFor="manualDosageForm">
+                      Dosage form
+                      <span>
+                        {' '}(Optional)
+                      </span>
+                    </label>
+
+                    <input
+                      id="manualDosageForm"
+                      type="text"
+                      value={
+                        manualDosageForm
+                      }
+                      placeholder="e.g. Capsule, tablet, syrup"
+                      disabled={isSubmitting}
+                      onChange={(event) =>
+                        setManualDosageForm(
+                          event.target.value,
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* QUANTITY */}
+
+          <section className="request-medicine-section">
+            <div className="request-medicine-section-heading">
+              <span className="request-medicine-step">
+                2
+              </span>
+
+              <div>
+                <h2>
+                  Quantity
+                </h2>
+
+                <p>
+                  How many units are you looking for?
+                </p>
+              </div>
+            </div>
+
+            <div className="request-medicine-field">
+              <label htmlFor="requestQuantity">
+                Requested quantity *
               </label>
 
-              <p className="field-help">
-                Enter the number of units you
-                want to ask the pharmacy about.
-              </p>
-
               <input
-                id="quantity"
+                id="requestQuantity"
                 type="number"
                 min="1"
                 step="1"
                 inputMode="numeric"
                 value={quantity}
                 disabled={isSubmitting}
-                required
                 onChange={(event) =>
                   setQuantity(
                     event.target.value,
@@ -1127,30 +1147,46 @@ function RequestMedicinePage() {
                 }
               />
             </div>
+          </section>
 
-            {/* ================================================
-                NOTES
-            ================================================ */}
+          {/* NOTES */}
 
-            <div className="form-group">
-              <label htmlFor="notes">
-                Additional Notes
-                <span className="optional-label">
-                  {' '}
-                  (Optional)
+          <section className="request-medicine-section">
+            <div className="request-medicine-section-heading">
+              <span className="request-medicine-step">
+                3
+              </span>
+
+              <div>
+                <h2>
+                  Additional information
+                </h2>
+
+                <p>
+                  Add anything that may help
+                  pharmacies understand the request.
+                </p>
+              </div>
+            </div>
+
+            <div className="request-medicine-field">
+              <label htmlFor="requestNotes">
+                Notes
+                <span>
+                  {' '}(Optional)
                 </span>
               </label>
 
-              <div className="textarea-wrapper">
-                <FileText size={19} />
+              <div className="request-medicine-textarea">
+                <FileText size={18} />
 
                 <textarea
-                  id="notes"
+                  id="requestNotes"
                   value={notes}
                   rows={4}
                   maxLength={500}
                   disabled={isSubmitting}
-                  placeholder="Add information that may help the pharmacy review your request."
+                  placeholder="Add any helpful details..."
                   onChange={(event) =>
                     setNotes(
                       event.target.value,
@@ -1159,37 +1195,38 @@ function RequestMedicinePage() {
                 />
               </div>
 
-              <div className="field-counter">
+              <div className="request-medicine-counter">
                 {notes.length}/500
               </div>
             </div>
+          </section>
+
+          {/* BROADCAST NOTE */}
+
+          <div className="request-medicine-broadcast">
+            <Send size={20} />
+
+            <div>
+              <strong>
+                Sent to partner pharmacies
+              </strong>
+
+              <p>
+                Your request is not a reservation.
+                Partner pharmacies can respond if
+                they can help, and you can compare
+                their responses before deciding
+                what to do next.
+              </p>
+            </div>
           </div>
 
-          {/* ==================================================
-              SUBMIT
-          ================================================== */}
+          {/* SUBMIT */}
 
           <button
             type="submit"
-            className={`submit-btn ${
-              isSubmitting
-                ? 'loading'
-                : ''
-            }`}
-            disabled={
-              isSubmitting ||
-              !selectedMedicine ||
-              !selectedPharmacyId ||
-              !selectedOffering ||
-              (Number.isFinite(
-                Number(
-                  selectedOffering?.quantity,
-                ),
-              ) &&
-                Number(
-                  selectedOffering?.quantity,
-                ) > 0)
-            }
+            className="request-medicine-submit"
+            disabled={isSubmitting}
           >
             {isSubmitting ? (
               <>
@@ -1198,12 +1235,13 @@ function RequestMedicinePage() {
                   className="spinner"
                 />
 
-                Submitting request...
+                Sending request...
               </>
             ) : (
               <>
                 <Send size={19} />
-                Submit Medicine Request
+
+                Send Request to Pharmacies
               </>
             )}
           </button>

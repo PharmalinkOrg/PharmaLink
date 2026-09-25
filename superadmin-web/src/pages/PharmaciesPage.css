@@ -4,6 +4,10 @@
   margin: 0 auto;
 }
 
+/* ============================================================
+   PAGE HEADER
+============================================================ */
+
 .page-header {
   display: flex;
   align-items: flex-start;
@@ -19,19 +23,26 @@
 }
 
 .page-title-row svg {
-  color: #172A3A;
+  color: #172a3a;
 }
 
 .page-title-row h1 {
   margin: 0;
   font-size: 24px;
   font-weight: 700;
+  color: #172a3a;
 }
 
 .page-header p {
   margin: 6px 0 0;
   color: #64748b;
   font-size: 14px;
+}
+
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .pharmacy-count {
@@ -42,6 +53,38 @@
   font-size: 13px;
   font-weight: 600;
 }
+
+.add-pharmacy-button {
+  height: 40px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 9px;
+  background: #172a3a;
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.add-pharmacy-button:hover {
+  background: #27475e;
+}
+
+.add-pharmacy-button:active {
+  transform: translateY(1px);
+}
+
+/* ============================================================
+   TOOLBAR
+============================================================ */
 
 .pharmacy-toolbar {
   display: flex;
@@ -57,7 +100,7 @@
   gap: 9px;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
-  background: #fff;
+  background: #ffffff;
 }
 
 .search-box {
@@ -99,15 +142,23 @@
 .search-box:focus-within,
 .sort-box:focus-within {
   border-color: #508991;
-  box-shadow: 0 0 0 3px rgba(80, 137, 145, 0.18);
+  box-shadow:
+    0 0 0 3px
+    rgba(80, 137, 145, 0.18);
 }
+
+/* ============================================================
+   TABLE
+============================================================ */
 
 .pharmacy-table-card {
   overflow: hidden;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 4px 16px rgba(23, 60, 52, 0.06);
+  background: #ffffff;
+  box-shadow:
+    0 4px 16px
+    rgba(23, 60, 52, 0.06);
 }
 
 .table-wrapper {
@@ -158,7 +209,7 @@
   flex-shrink: 0;
   border-radius: 9px;
   background: #f0fdf4;
-  color: #172A3A;
+  color: #172a3a;
 }
 
 .pharmacy-name-cell strong {
@@ -203,6 +254,39 @@
   flex-shrink: 0;
 }
 
+.empty-value {
+  color: #94a3b8;
+}
+
+/* ============================================================
+   LOCATION STATUS
+============================================================ */
+
+.location-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.location-badge.located {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.location-badge.missing {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+/* ============================================================
+   STATUS
+============================================================ */
+
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -219,7 +303,8 @@
 }
 
 .status-badge.inactive,
-.status-badge.rejected {
+.status-badge.rejected,
+.status-badge.suspended {
   background: #fef2f2;
   color: #b91c1c;
 }
@@ -234,6 +319,10 @@
   white-space: nowrap;
 }
 
+/* ============================================================
+   TABLE STATES
+============================================================ */
+
 .table-state {
   padding: 56px 24px;
   text-align: center;
@@ -245,28 +334,18 @@
   color: #b91c1c;
 }
 
+/* ============================================================
+   TABLE FOOTER / PAGINATION
+============================================================ */
+
 .table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   padding: 12px 4px;
   color: #94a3b8;
   font-size: 12px;
-}
-
-@media (max-width: 768px) {
-  .pharmacies-page {
-    padding: 16px;
-  }
-
-  .page-header {
-    flex-direction: column;
-  }
-
-  .pharmacy-toolbar {
-    flex-direction: column;
-  }
-
-  .sort-box {
-    width: 100%;
-  }
 }
 
 .pagination {
@@ -279,7 +358,7 @@
   padding: 7px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  background: #fff;
+  background: #ffffff;
   color: #334155;
   cursor: pointer;
 }
@@ -294,19 +373,710 @@
   cursor: not-allowed;
 }
 
-.table-footer {
+/* ============================================================
+   MODAL BACKDROP
+============================================================ */
+
+.pharmacy-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  padding: 24px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  background:
+    rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(2px);
+}
+
+/* ============================================================
+   MODAL
+============================================================ */
+
+.pharmacy-modal {
+  width: min(680px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
+    0 24px 70px
+    rgba(15, 23, 42, 0.2);
+}
+
+.pharmacy-modal-header {
+  padding: 20px 22px;
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  padding: 12px 4px;
+  gap: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-title-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #172a3a;
+}
+
+.modal-title-row h2 {
+  margin: 0;
+  color: #172a3a;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.modal-title-row p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.modal-close-button {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.modal-close-button:hover {
+  background: #f1f5f9;
+  color: #172a3a;
+}
+
+.modal-close-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   STEPS
+============================================================ */
+
+.pharmacy-form-steps {
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+}
+
+.form-step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   color: #94a3b8;
+}
+
+.form-step > span {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 50%;
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.form-step div {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-step strong {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.form-step small {
+  margin-top: 2px;
+  font-size: 10px;
+}
+
+.form-step.active {
+  color: #172a3a;
+}
+
+.form-step.active > span {
+  border-color: #172a3a;
+  background: #172a3a;
+  color: #ffffff;
+}
+
+.form-step.complete {
+  color: #166534;
+}
+
+.form-step.complete > span {
+  border-color: #166534;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.step-line {
+  height: 1px;
+  flex: 1;
+  margin: 0 18px;
+  background: #cbd5e1;
+}
+
+/* ============================================================
+   FORM CONTENT
+============================================================ */
+
+.pharmacy-form-content {
+  padding: 24px;
+}
+
+.form-section-heading {
+  margin-bottom: 20px;
+}
+
+.form-section-heading h3 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.form-section-heading p {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.pharmacy-form-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.form-group label span {
+  margin-left: 3px;
+  color: #dc2626;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dbe2ea;
+  border-radius: 9px;
+  outline: none;
+  background: #ffffff;
+  color: #1e293b;
+  font: inherit;
+  font-size: 13px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.form-group input {
+  height: 42px;
+  padding: 0 12px;
+}
+
+.form-group textarea {
+  padding: 11px 12px;
+  resize: vertical;
+  min-height: 84px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #508991;
+  box-shadow:
+    0 0 0 3px
+    rgba(80, 137, 145, 0.14);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #94a3b8;
+}
+
+.form-group small {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+/* ============================================================
+   LOCATION STEP
+============================================================ */
+
+.location-notice {
+  margin-bottom: 16px;
+  padding: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  background: #f0f9ff;
+  color: #075985;
+}
+
+.location-notice > svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.location-notice strong {
+  display: block;
+  font-size: 13px;
+}
+
+.location-notice p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.selected-address-card {
+  margin-bottom: 18px;
+  padding: 13px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.selected-address-card > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #508991;
+}
+
+.selected-address-card div {
+  min-width: 0;
+}
+
+.selected-address-card span {
+  display: block;
+  margin-bottom: 3px;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.selected-address-card strong {
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.location-preview {
+  min-height: 150px;
+  margin-top: 20px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+  text-align: left;
+}
+
+.location-preview-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.location-preview strong {
+  color: #334155;
+  font-size: 13px;
+}
+
+.location-preview p {
+  max-width: 370px;
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   FORM ERROR
+============================================================ */
+
+.form-error-message {
+  margin: 0 24px 20px;
+  padding: 11px 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fef2f2;
+  color: #b91c1c;
   font-size: 12px;
 }
 
+.form-error-message svg {
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   MODAL FOOTER
+============================================================ */
+
+.pharmacy-modal-footer {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 40px;
+  padding: 0 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 1px solid #172a3a;
+  background: #172a3a;
+  color: #ffffff;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: #27475e;
+}
+
+.secondary-button {
+  border: 1px solid #dbe2ea;
+  background: #ffffff;
+  color: #475569;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+
 @media (max-width: 768px) {
+  .pharmacies-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+  }
+
+  .page-header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .add-pharmacy-button {
+    flex: 1;
+  }
+
+  .pharmacy-toolbar {
+    flex-direction: column;
+  }
+
+  .sort-box {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .table-footer {
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .pharmacy-modal-backdrop {
+    padding: 12px;
+    align-items: flex-start;
+  }
+
+  .pharmacy-modal {
+    margin-top: 12px;
+    max-height: calc(100vh - 24px);
+  }
+
+  .pharmacy-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-group.full-width {
+    grid-column: auto;
+  }
+
+  .pharmacy-form-steps {
+    padding: 14px 18px;
+  }
+
+  .form-step small {
+    display: none;
+  }
+
+  .step-line {
+    margin: 0 10px;
+  }
+
+  .pharmacy-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .primary-button,
+  .secondary-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pharmacy-count {
+    text-align: center;
+  }
+
+  .modal-title-icon {
+    display: none;
+  }
+
+  .pharmacy-modal-header {
+    padding: 17px;
+  }
+
+  .pharmacy-form-content {
+    padding: 18px;
+  }
+
+  .form-error-message {
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+
+  .location-preview {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* ============================================================
+   STEP 1 LOCATION HINT
+============================================================ */
+
+.location-step-hint {
+  margin-top: 20px;
+  padding: 13px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.location-step-hint > svg {
+  margin-top: 1px;
+  flex-shrink: 0;
+  color: #508991;
+}
+
+.location-step-hint strong {
+  display: block;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.location-step-hint p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   LOCATION SEARCH
+============================================================ */
+
+.location-search-group {
+  margin-bottom: 18px;
+}
+
+.location-search-input {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid #dbe2ea;
+  border-radius: 9px;
+  background: #ffffff;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.location-search-input:focus-within {
+  border-color: #508991;
+  box-shadow:
+    0 0 0 3px
+    rgba(80, 137, 145, 0.14);
+}
+
+.location-search-input > svg {
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
+.location-search-input input {
+  width: 100%;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  box-shadow: none;
+}
+
+.location-search-input input:focus {
+  border: 0;
+  box-shadow: none;
+}
+
+/* ============================================================
+   SELECTED ADDRESS
+============================================================ */
+
+.selected-address-card.has-address {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.selected-address-card.has-address > svg {
+  color: #166534;
+}
+
+.no-selected-address {
+  margin: 2px 0 0;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+/* ============================================================
+   LOCATION CONFIRMATION
+============================================================ */
+
+.location-confirmation-card {
+  margin-top: 16px;
+  padding: 13px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.location-confirmation-card > svg {
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.location-confirmation-card strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.location-confirmation-card p {
+  margin: 4px 0 0;
+  color: #334155;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.location-confirmation-card small {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 10px;
 }

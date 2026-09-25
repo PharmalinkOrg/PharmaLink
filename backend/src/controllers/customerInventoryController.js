@@ -4,9 +4,6 @@ const supabaseAdmin = require('../config/supabaseAdmin')
    HELPERS
 ============================================================ */
 
-/**
- * Validate positive integer IDs.
- */
 const isValidId = (value) => {
   return (
     Number.isInteger(Number(value)) &&
@@ -14,10 +11,6 @@ const isValidId = (value) => {
   )
 }
 
-/**
- * Normalize medicine values when generating the
- * customer-facing logical medicine key.
- */
 const normalizeMedicineValue = (value) => {
   return String(value ?? '')
     .trim()
@@ -25,13 +18,6 @@ const normalizeMedicineValue = (value) => {
     .replace(/\s+/g, ' ')
 }
 
-/**
- * Create a logical medicine key.
- *
- * Medicines remain pharmacy-owned and may have different
- * medicine IDs. This key is only used to group equivalent
- * medicine variants for the Customer PWA.
- */
 const createMedicineKey = (medicine) => {
   return [
     normalizeMedicineValue(medicine.generic_name),
@@ -47,8 +33,6 @@ const createMedicineKey = (medicine) => {
 ============================================================ */
 
 /**
- * GET customer-visible inventory for one pharmacy.
- *
  * GET /api/pharmacies/:pharmacyId/available-medicines
  */
 const getAvailableMedicines = async (req, res) => {
@@ -112,31 +96,25 @@ const getAvailableMedicines = async (req, res) => {
       })
     }
 
-    /*
-     * Supabase embedded filters do not always remove the
-     * parent inventory row when the joined medicine does
-     * not match, so filter inactive/null medicines here.
-     */
-    const availableMedicines = (data || []).filter(
-      (item) => {
+    const availableMedicines =
+      (data || []).filter((item) => {
         if (!item.medicines) {
           return false
         }
 
-        if (item.medicines.status !== 'ACTIVE') {
+        if (
+          item.medicines.status !== 'ACTIVE'
+        ) {
           return false
         }
 
-        /*
-         * Ensure the medicine belongs to the same pharmacy
-         * as the inventory record.
-         */
         return (
-          Number(item.medicines.pharmacy_id) ===
+          Number(
+            item.medicines.pharmacy_id
+          ) ===
           Number(item.pharmacy_id)
         )
-      }
-    )
+      })
 
     return res.status(200).json({
       success: true,
@@ -161,15 +139,10 @@ const getAvailableMedicines = async (req, res) => {
 ============================================================ */
 
 /**
- * GET aggregated customer-visible medicines.
- *
  * GET /api/pharmacies/available-medicines
  *
- * Each pharmacy keeps its own medicine records.
- *
- * Equivalent medicine records are grouped into one
- * customer-facing result while preserving each pharmacy's
- * actual pharmacy_id and medicine_id inside "offerings".
+ * Groups equivalent pharmacy-owned medicine records into
+ * one customer-facing medicine.
  */
 const getCustomerMedicines = async (
   req,
@@ -203,6 +176,8 @@ const getCustomerMedicines = async (
           name,
           address,
           contact_number,
+          latitude,
+          longitude,
           status
         )
       `)
@@ -236,33 +211,25 @@ const getCustomerMedicines = async (
       const medicine = item.medicines
       const pharmacy = item.pharmacies
 
-      /*
-       * Ignore rows with broken/missing relationships.
-       */
       if (!medicine || !pharmacy) {
         continue
       }
 
-      /*
-       * Customer PWA should only see active medicines
-       * belonging to active pharmacies.
-       */
-      if (medicine.status !== 'ACTIVE') {
+      if (
+        medicine.status !== 'ACTIVE'
+      ) {
         continue
       }
 
-      if (pharmacy.status !== 'ACTIVE') {
+      if (
+        pharmacy.status !== 'ACTIVE'
+      ) {
         continue
       }
 
       /*
-       * Protect against inconsistent ownership.
-       *
-       * Inventory pharmacy
-       *      =
-       * Medicine owner
-       *      =
-       * Joined pharmacy
+       * Inventory, medicine and pharmacy must
+       * all belong to the same pharmacy.
        */
       if (
         Number(medicine.pharmacy_id) !==
@@ -276,10 +243,6 @@ const getCustomerMedicines = async (
       const medicineKey =
         createMedicineKey(medicine)
 
-      /*
-       * Create the logical customer-facing medicine
-       * the first time this variant is encountered.
-       */
       if (!groups.has(medicineKey)) {
         groups.set(medicineKey, {
           medicine_key: medicineKey,
@@ -317,18 +280,25 @@ const getCustomerMedicines = async (
         groups.get(medicineKey)
 
       /*
-       * A pharmacy-owned medicine may have multiple
-       * inventory batches.
-       *
-       * Combine those batches into one pharmacy offering.
+       * One pharmacy medicine can have
+       * multiple inventory batches.
        */
-      let offering = group.offerings.find(
-        (existing) =>
-          Number(existing.pharmacy_id) ===
-            Number(item.pharmacy_id) &&
-          Number(existing.medicine_id) ===
-            Number(item.medicine_id)
-      )
+      let offering =
+        group.offerings.find(
+          (existing) =>
+            Number(
+              existing.pharmacy_id
+            ) ===
+              Number(
+                item.pharmacy_id
+              ) &&
+            Number(
+              existing.medicine_id
+            ) ===
+              Number(
+                item.medicine_id
+              )
+        )
 
       if (!offering) {
         offering = {
@@ -350,6 +320,12 @@ const getCustomerMedicines = async (
 
             contact_number:
               pharmacy.contact_number,
+
+            latitude:
+              pharmacy.latitude,
+
+            longitude:
+              pharmacy.longitude,
           },
 
           quantity: 0,
@@ -373,19 +349,17 @@ const getCustomerMedicines = async (
       group.total_available_quantity +=
         quantity
 
-      /*
-       * A medicine can exist in multiple batches with
-       * different prices. Show the lowest currently
-       * available price for the pharmacy offering.
-       */
       if (
         Number.isFinite(price) &&
         (
-          offering.lowest_price === null ||
-          price < offering.lowest_price
+          offering.lowest_price ===
+            null ||
+          price <
+            offering.lowest_price
         )
       ) {
-        offering.lowest_price = price
+        offering.lowest_price =
+          price
       }
 
       offering.batches.push({
@@ -406,10 +380,6 @@ const getCustomerMedicines = async (
       })
     }
 
-    /*
-     * Convert Map -> Array and calculate how many
-     * distinct pharmacies offer each logical medicine.
-     */
     const medicines =
       Array.from(groups.values())
         .map((medicine) => ({
@@ -418,7 +388,9 @@ const getCustomerMedicines = async (
           pharmacy_count: new Set(
             medicine.offerings.map(
               (offering) =>
-                Number(offering.pharmacy_id)
+                Number(
+                  offering.pharmacy_id
+                )
             )
           ).size,
         }))
@@ -426,7 +398,9 @@ const getCustomerMedicines = async (
           return String(
             a.generic_name || ''
           ).localeCompare(
-            String(b.generic_name || '')
+            String(
+              b.generic_name || ''
+            )
           )
         })
 
@@ -453,28 +427,15 @@ const getCustomerMedicines = async (
 ============================================================ */
 
 /**
- * GET pharmacies offering an equivalent medicine.
- *
  * GET /api/pharmacies/medicine/:medicineId/pharmacies
  *
- * The medicineId in the URL represents one pharmacy-owned
- * medicine record.
+ * The supplied medicine ID is one pharmacy-owned medicine.
  *
- * We first determine what logical medicine variant that ID
- * represents, then find equivalent medicine records belonging
- * to other pharmacies.
+ * This endpoint finds equivalent medicine records belonging
+ * to other pharmacies and aggregates their available batches.
  *
- * Example:
- *
- * medicine_id 214
- * Rose Pharmacy
- * Ambroxol / Mucosolvan / 30 mg / Tablet
- *
- * becomes:
- *
- * 214 -> Rose Pharmacy
- * 134 -> Gv Botica
- * ... -> other pharmacies
+ * Pharmacy coordinates are included so the Customer PWA
+ * can calculate distance from the customer.
  */
 const getMedicinePharmacies = async (
   req,
@@ -493,7 +454,7 @@ const getMedicinePharmacies = async (
     }
 
     /* --------------------------------------------------------
-       1. Get the representative medicine
+       1. Get representative medicine
     -------------------------------------------------------- */
 
     const {
@@ -513,7 +474,10 @@ const getMedicinePharmacies = async (
         requires_prescription,
         status
       `)
-      .eq('medicine_id', medicineId)
+      .eq(
+        'medicine_id',
+        medicineId
+      )
       .maybeSingle()
 
     if (medicineError) {
@@ -526,8 +490,10 @@ const getMedicinePharmacies = async (
         success: false,
         message:
           'Failed to retrieve medicine',
-        error: medicineError.message,
-        code: medicineError.code,
+        error:
+          medicineError.message,
+        code:
+          medicineError.code,
       })
     }
 
@@ -550,7 +516,7 @@ const getMedicinePharmacies = async (
     }
 
     /* --------------------------------------------------------
-       2. Find equivalent pharmacy-owned medicine records
+       2. Find equivalent medicine records
     -------------------------------------------------------- */
 
     let equivalentQuery =
@@ -589,9 +555,6 @@ const getMedicinePharmacies = async (
           'ACTIVE'
         )
 
-    /*
-     * PostgreSQL requires IS NULL instead of = NULL.
-     */
     if (
       representativeMedicine.brand_name ===
         null ||
@@ -626,15 +589,13 @@ const getMedicinePharmacies = async (
         success: false,
         message:
           'Failed to retrieve equivalent medicines',
-        error: equivalentError.message,
-        code: equivalentError.code,
+        error:
+          equivalentError.message,
+        code:
+          equivalentError.code,
       })
     }
 
-    /*
-     * This should normally contain at least the
-     * representative medicine itself.
-     */
     if (
       !equivalentMedicines ||
       equivalentMedicines.length === 0
@@ -686,11 +647,13 @@ const getMedicinePharmacies = async (
     const equivalentMedicineIds =
       equivalentMedicines.map(
         (medicine) =>
-          Number(medicine.medicine_id)
+          Number(
+            medicine.medicine_id
+          )
       )
 
     /* --------------------------------------------------------
-       3. Retrieve available inventory for equivalents
+       3. Retrieve inventory + pharmacy coordinates
     -------------------------------------------------------- */
 
     const {
@@ -711,6 +674,8 @@ const getMedicinePharmacies = async (
           name,
           address,
           contact_number,
+          latitude,
+          longitude,
           status
         )
       `)
@@ -737,28 +702,35 @@ const getMedicinePharmacies = async (
         success: false,
         message:
           'Failed to retrieve pharmacy availability',
-        error: inventoryError.message,
-        code: inventoryError.code,
+        error:
+          inventoryError.message,
+        code:
+          inventoryError.code,
       })
     }
 
     /* --------------------------------------------------------
-       4. Aggregate batches by pharmacy + medicine
+       4. Aggregate inventory batches
     -------------------------------------------------------- */
 
-    const medicineById = new Map(
-      equivalentMedicines.map(
-        (medicine) => [
-          Number(medicine.medicine_id),
-          medicine,
-        ]
+    const medicineById =
+      new Map(
+        equivalentMedicines.map(
+          (medicine) => [
+            Number(
+              medicine.medicine_id
+            ),
+            medicine,
+          ]
+        )
       )
-    )
 
-    const offeringsMap = new Map()
+    const offeringsMap =
+      new Map()
 
     for (
-      const item of inventoryRows || []
+      const item of
+        inventoryRows || []
     ) {
       const pharmacy =
         item.pharmacies
@@ -768,14 +740,17 @@ const getMedicinePharmacies = async (
       }
 
       if (
-        pharmacy.status !== 'ACTIVE'
+        pharmacy.status !==
+        'ACTIVE'
       ) {
         continue
       }
 
       const equivalentMedicine =
         medicineById.get(
-          Number(item.medicine_id)
+          Number(
+            item.medicine_id
+          )
         )
 
       if (!equivalentMedicine) {
@@ -783,18 +758,27 @@ const getMedicinePharmacies = async (
       }
 
       /*
-       * Inventory, medicine and pharmacy must all
-       * represent the same pharmacy.
+       * Ownership protection:
+       *
+       * medicine.pharmacy_id
+       * =
+       * inventory.pharmacy_id
+       * =
+       * pharmacy.pharmacy_id
        */
       if (
         Number(
           equivalentMedicine.pharmacy_id
         ) !==
-          Number(item.pharmacy_id) ||
+          Number(
+            item.pharmacy_id
+          ) ||
         Number(
           pharmacy.pharmacy_id
         ) !==
-          Number(item.pharmacy_id)
+          Number(
+            item.pharmacy_id
+          )
       ) {
         continue
       }
@@ -828,6 +812,18 @@ const getMedicinePharmacies = async (
 
               contact_number:
                 pharmacy.contact_number,
+
+              /*
+               * These may legitimately be null.
+               *
+               * The frontend should only calculate
+               * distance when both are available.
+               */
+              latitude:
+                pharmacy.latitude,
+
+              longitude:
+                pharmacy.longitude,
             },
 
             quantity: 0,
@@ -845,10 +841,14 @@ const getMedicinePharmacies = async (
         )
 
       const quantity =
-        Number(item.quantity) || 0
+        Number(
+          item.quantity
+        ) || 0
 
       const price =
-        Number(item.unit_price)
+        Number(
+          item.unit_price
+        )
 
       offering.quantity +=
         quantity
@@ -885,7 +885,7 @@ const getMedicinePharmacies = async (
     }
 
     /* --------------------------------------------------------
-       5. Build customer-facing pharmacy offerings
+       5. Build offerings
     -------------------------------------------------------- */
 
     const offerings =
@@ -893,9 +893,13 @@ const getMedicinePharmacies = async (
         offeringsMap.values()
       ).sort((a, b) => {
         /*
-         * Lowest price first.
+         * Backend fallback ordering.
          *
-         * Offerings without a valid price go last.
+         * We cannot sort by distance here because
+         * customer location is not sent to this API.
+         *
+         * The frontend will sort by distance after
+         * receiving browser location.
          */
         if (
           a.lowest_price === null &&
@@ -924,11 +928,15 @@ const getMedicinePharmacies = async (
 
     const totalAvailableQuantity =
       offerings.reduce(
-        (total, offering) => {
+        (
+          total,
+          offering
+        ) => {
           return (
             total +
             Number(
-              offering.quantity || 0
+              offering.quantity ||
+                0
             )
           )
         },
@@ -946,7 +954,7 @@ const getMedicinePharmacies = async (
       ).size
 
     /* --------------------------------------------------------
-       6. Return medicine + pharmacy availability
+       6. Response
     -------------------------------------------------------- */
 
     return res.status(200).json({

@@ -4,8 +4,12 @@ const {
   createMedicineRequest,
   getCustomerMedicineRequests,
   getCustomerMedicineRequestById,
+  cancelMedicineRequest,
+
   getPharmacyMedicineRequests,
   getMedicineRequestById,
+  respondToMedicineRequest,
+
   updateMedicineRequestStatus,
 } = require('../controllers/medicineRequestController')
 
@@ -14,6 +18,10 @@ const loadPharmaUser = require('../middleware/userMiddleware')
 const requireRole = require('../middleware/roleMiddleware')
 
 const router = express.Router()
+
+// ============================================================
+// AUTH MIDDLEWARE GROUPS
+// ============================================================
 
 const customerOnly = [
   authenticateUser,
@@ -24,54 +32,129 @@ const customerOnly = [
 const pharmacyAdminOnly = [
   authenticateUser,
   loadPharmaUser,
-  requireRole('SUPER_ADMIN', 'PHARMACY_ADMIN'),
+  requireRole('PHARMACY_ADMIN'),
 ]
 
-/* ============================================================
-   CUSTOMER ROUTES
-============================================================ */
+const pharmacyOrSuperAdmin = [
+  authenticateUser,
+  loadPharmaUser,
+  requireRole(
+    'SUPER_ADMIN',
+    'PHARMACY_ADMIN'
+  ),
+]
 
+const superAdminOnly = [
+  authenticateUser,
+  loadPharmaUser,
+  requireRole('SUPER_ADMIN'),
+]
+
+// ============================================================
+// CUSTOMER ROUTES
+// ============================================================
+
+/**
+ * Create broadcast medicine request.
+ *
+ * POST /api/medicine-requests
+ */
 router.post(
   '/',
   ...customerOnly,
   createMedicineRequest
 )
 
+/**
+ * Get authenticated customer's requests.
+ *
+ * GET /api/medicine-requests
+ */
 router.get(
   '/',
   ...customerOnly,
   getCustomerMedicineRequests
 )
 
-/* ============================================================
-   PHARMACY / SUPER ADMIN ROUTES
-============================================================ */
+/**
+ * Cancel customer's open request.
+ *
+ * PATCH /api/medicine-requests/:requestId/cancel
+ */
+router.patch(
+  '/:requestId/cancel',
+  ...customerOnly,
+  cancelMedicineRequest
+)
 
+// ============================================================
+// PHARMACY ROUTES
+// ============================================================
+
+/**
+ * Pharmacy Admin:
+ *   sees OPEN broadcast requests plus requests
+ *   previously responded to.
+ *
+ * Super Admin:
+ *   sees all requests.
+ *
+ * GET /api/medicine-requests/pharmacy
+ */
 router.get(
   '/pharmacy',
-  ...pharmacyAdminOnly,
+  ...pharmacyOrSuperAdmin,
   getPharmacyMedicineRequests
 )
 
-router.patch(
-  '/:requestId/status',
-  ...pharmacyAdminOnly,
-  updateMedicineRequestStatus
-)
-
-/*
- * Keep this pharmacy detail route separate from the customer
- * detail route because they use different ownership rules.
+/**
+ * Get pharmacy-side request details.
+ *
+ * GET /api/medicine-requests/pharmacy/:requestId
  */
 router.get(
   '/pharmacy/:requestId',
-  ...pharmacyAdminOnly,
+  ...pharmacyOrSuperAdmin,
   getMedicineRequestById
 )
 
-/* ============================================================
-   CUSTOMER DETAIL
-============================================================ */
+/**
+ * Pharmacy responds to a customer request.
+ *
+ * POST /api/medicine-requests/:requestId/respond
+ */
+router.post(
+  '/:requestId/respond',
+  ...pharmacyAdminOnly,
+  respondToMedicineRequest
+)
+
+// ============================================================
+// SUPER ADMIN ROUTES
+// ============================================================
+
+/**
+ * Directly change the overall request lifecycle.
+ *
+ * PATCH /api/medicine-requests/:requestId/status
+ *
+ * Pharmacy Admins DO NOT use this route.
+ * Their AVAILABLE / PARTIALLY_AVAILABLE / UNAVAILABLE
+ * state belongs to medicine_request_responses.
+ */
+router.patch(
+  '/:requestId/status',
+  ...superAdminOnly,
+  updateMedicineRequestStatus
+)
+
+// ============================================================
+// CUSTOMER DETAIL
+// ============================================================
+//
+// Keep the generic /:requestId route LAST.
+// Otherwise it can interfere with more specific paths.
+// ============================================================
 
 router.get(
   '/:requestId',
