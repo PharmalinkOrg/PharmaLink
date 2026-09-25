@@ -879,6 +879,123 @@ a:focus-visible {
   line-height: 1.5;
 }
 
+.upload-page .form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}
+
+.upload-page .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+  min-width: 0;
+}
+
+.upload-page .form-group label {
+  display: block;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.upload-page .form-group input,
+.upload-page .form-group select,
+.upload-page .form-group textarea {
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.upload-page .form-group input,
+.upload-page .form-group select {
+  min-height: 46px;
+  padding: 10px 12px;
+}
+
+.upload-page .form-group textarea {
+  min-height: 100px;
+  padding: 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.upload-page .form-group input::placeholder,
+.upload-page .form-group textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.upload-page .form-group input:hover:not(:disabled),
+.upload-page .form-group select:hover:not(:disabled),
+.upload-page .form-group textarea:hover:not(:disabled) {
+  border-color: var(--primary-muted);
+}
+
+.upload-page .form-group input:focus,
+.upload-page .form-group select:focus,
+.upload-page .form-group textarea:focus {
+  border-color: var(--primary);
+  outline: none;
+
+  box-shadow:
+    0 0 0 3px
+    color-mix(
+      in srgb,
+      var(--primary) 14%,
+      transparent
+    );
+}
+
+.upload-page .form-group input:disabled,
+.upload-page .form-group select:disabled,
+.upload-page .form-group textarea:disabled {
+  cursor: not-allowed;
+  background: var(--disabled-bg);
+  color: var(--disabled);
+  opacity: 0.7;
+}
+
+.upload-page .form-group select {
+  appearance: auto;
+  cursor: pointer;
+}
+
+.upload-page .field-help {
+  margin: 1px 0 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+  .upload-page .form-fields {
+    gap: 16px;
+  }
+
+  .upload-page .form-group input,
+  .upload-page .form-group select {
+    min-height: 48px;
+  }
+
+  .upload-page .form-group textarea {
+    min-height: 96px;
+  }
+}
 .form-group select:disabled {
   cursor: not-allowed;
   opacity: 0.65;
