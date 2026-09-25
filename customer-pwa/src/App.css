@@ -773,146 +773,368 @@ a:focus-visible {
    ========================================================= */
 
 .upload-page {
-  min-height: 100vh;
-  padding: 24px 20px 100px;
+  width: 100%;
+  min-height: 100%;
+  padding: 8px 0 32px;
   background: var(--background);
 }
 
-.upload-container {
+/* ---------------------------------------------------------
+   Header
+   --------------------------------------------------------- */
+
+.upload-page-header {
   width: 100%;
-  max-width: 680px;
-  margin: 0 auto;
+  margin-bottom: 22px;
 }
 
-.upload-description {
-  margin: 0 0 20px;
+.upload-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  min-height: 38px;
+  margin: 0 0 12px;
+  padding: 6px 4px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: transparent;
+  color: var(--primary);
+
+  font-size: 0.85rem;
+  font-weight: 700;
+
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.upload-back-button:hover:not(:disabled) {
+  color: var(--primary-dark);
+  background: var(--primary-light);
+}
+
+.upload-back-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.upload-page-heading {
+  width: 100%;
+}
+
+.upload-page-eyebrow {
+  margin: 0 0 5px;
+
+  color: var(--primary);
+
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.upload-page-heading h1 {
+  margin: 0;
+
+  color: var(--text-primary);
+
+  font-size: clamp(1.55rem, 5vw, 2rem);
+  font-weight: 800;
+  line-height: 1.18;
+  letter-spacing: -0.03em;
+}
+
+.upload-page-heading > p:not(.upload-page-eyebrow) {
+  max-width: 580px;
+  margin: 9px 0 0;
+
   color: var(--text-secondary);
+
   font-size: 0.9rem;
   line-height: 1.6;
 }
 
-.upload-form {
+/* ---------------------------------------------------------
+   Form
+   --------------------------------------------------------- */
+
+.upload-prescription-form {
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  width: 100%;
 }
 
-/* File drop zone */
+/* =========================================================
+   FILE DROPZONE
+   ========================================================= */
 
-.drop-zone {
+.upload-dropzone {
   position: relative;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 230px;
+
+  width: 100%;
+  min-height: 220px;
   padding: 24px;
+
+  overflow: hidden;
+
   border: 2px dashed var(--border);
   border-radius: var(--radius-panel);
+
   background: var(--surface);
-  cursor: pointer;
+
   transition:
     border-color 0.2s ease,
     background-color 0.2s ease,
-    transform 0.2s ease;
+    box-shadow 0.2s ease;
 }
 
-.drop-zone:hover {
+.upload-dropzone:hover {
   border-color: var(--primary-muted);
   background: var(--primary-soft);
 }
 
-.drop-zone.dragging {
+.upload-dropzone-active {
   border-color: var(--primary);
   background: var(--primary-light);
+
+  box-shadow:
+    0 0 0 3px
+    color-mix(
+      in srgb,
+      var(--primary) 12%,
+      transparent
+    );
 }
 
-.drop-zone.has-file {
-  border-color: var(--primary);
+.upload-dropzone-has-file {
+  min-height: 120px;
+
+  border-style: solid;
+  border-color: var(--primary-muted);
+
   background: var(--primary-soft);
 }
 
-.drop-zone-content {
+/*
+ * Important:
+ * Hide the browser's default "Choose File" control.
+ */
+.upload-file-input {
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+
+  margin: -1px;
+  padding: 0;
+
+  overflow: hidden;
+
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+
+  border: 0;
+
+  white-space: nowrap;
+}
+
+/* Dropzone label */
+
+.upload-dropzone-label {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
+  width: 100%;
+  min-height: 170px;
+
+  cursor: pointer;
   text-align: center;
 }
 
-.drop-zone-icon {
+.upload-dropzone-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+
+  width: 58px;
+  height: 58px;
+  margin-bottom: 10px;
+
+  border-radius: 14px;
+
+  background: var(--primary-light);
   color: var(--primary);
 }
 
-.drop-zone-text {
+.upload-dropzone-title {
   margin: 0;
+
   color: var(--text-primary);
+
   font-size: 0.9rem;
-}
-
-.drop-zone-text strong {
-  color: var(--primary);
-  font-weight: 750;
-}
-
-.drop-zone-subtext {
-  margin: 7px 0 0;
-  color: var(--text-muted);
-  font-size: 0.76rem;
-}
-
-.file-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-}
-.field-help {
-  margin: 6px 0 0;
-  color: var(--text-muted);
-  font-size: 0.72rem;
   line-height: 1.5;
 }
+
+.upload-dropzone-title strong {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.upload-dropzone-help {
+  margin: 6px 0 0;
+
+  color: var(--text-muted);
+
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+/* ---------------------------------------------------------
+   Selected file
+   --------------------------------------------------------- */
+
+.upload-selected-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: 100%;
+  padding: 14px;
+
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+
+  background: var(--surface);
+}
+
+.upload-selected-file-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+
+  border-radius: 11px;
+
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.upload-selected-file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-selected-file-name {
+  margin: 0;
+
+  overflow: hidden;
+
+  color: var(--text-primary);
+
+  font-size: 0.82rem;
+  font-weight: 750;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upload-selected-file-size {
+  margin: 3px 0 0;
+
+  color: var(--text-muted);
+
+  font-size: 0.7rem;
+}
+
+.upload-remove-file {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: transparent;
+  color: var(--text-muted);
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.upload-remove-file:hover:not(:disabled) {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+/* =========================================================
+   FORM FIELDS
+   ========================================================= */
 
 .upload-page .form-fields {
   display: flex;
   flex-direction: column;
   gap: 18px;
+
   width: 100%;
 }
 
 .upload-page .form-group {
+  position: relative;
+
   display: flex;
   flex-direction: column;
   gap: 7px;
+
   width: 100%;
   min-width: 0;
 }
 
 .upload-page .form-group label {
   display: block;
+
   margin: 0;
+
   color: var(--text-primary);
-  font-size: 0.85rem;
-  font-weight: 700;
-  line-height: 1.35;
+
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.4;
 }
 
 .upload-page .form-group input,
-.upload-page .form-group select,
 .upload-page .form-group textarea {
   width: 100%;
   max-width: 100%;
+
   border: 1px solid var(--border);
   border-radius: 10px;
+
   background: var(--surface);
   color: var(--text-primary);
+
   font-size: 0.9rem;
+
   outline: none;
 
   transition:
@@ -921,8 +1143,7 @@ a:focus-visible {
     background-color 0.2s ease;
 }
 
-.upload-page .form-group input,
-.upload-page .form-group select {
+.upload-page .form-group input {
   min-height: 46px;
   padding: 10px 12px;
 }
@@ -930,7 +1151,9 @@ a:focus-visible {
 .upload-page .form-group textarea {
   min-height: 100px;
   padding: 12px;
+
   line-height: 1.5;
+
   resize: vertical;
 }
 
@@ -941,15 +1164,14 @@ a:focus-visible {
 }
 
 .upload-page .form-group input:hover:not(:disabled),
-.upload-page .form-group select:hover:not(:disabled),
 .upload-page .form-group textarea:hover:not(:disabled) {
   border-color: var(--primary-muted);
 }
 
 .upload-page .form-group input:focus,
-.upload-page .form-group select:focus,
 .upload-page .form-group textarea:focus {
   border-color: var(--primary);
+
   outline: none;
 
   box-shadow:
@@ -962,74 +1184,61 @@ a:focus-visible {
 }
 
 .upload-page .form-group input:disabled,
-.upload-page .form-group select:disabled,
 .upload-page .form-group textarea:disabled {
   cursor: not-allowed;
+
   background: var(--disabled-bg);
   color: var(--disabled);
+
   opacity: 0.7;
 }
 
-.upload-page .form-group select {
-  appearance: auto;
-  cursor: pointer;
-}
+/* ---------------------------------------------------------
+   Helper / validation text
+   --------------------------------------------------------- */
 
 .upload-page .field-help {
   margin: 1px 0 0;
+
   color: var(--text-muted);
-  font-size: 0.72rem;
+
+  font-size: 0.7rem;
   line-height: 1.5;
-}
-
-@media (max-width: 600px) {
-  .upload-page .form-fields {
-    gap: 16px;
-  }
-
-  .upload-page .form-group input,
-  .upload-page .form-group select {
-    min-height: 48px;
-  }
-
-  .upload-page .form-group textarea {
-    min-height: 96px;
-  }
 }
 
 .upload-page .upload-field-error {
   margin: 2px 0 0;
 
-  color: var(--danger, #dc2626);
+  color: var(--error);
 
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 650;
   line-height: 1.45;
 }
 
 .upload-page
   .form-group
   input[aria-invalid='true'] {
-  border-color: var(--danger, #dc2626);
+  border-color: var(--error);
 }
 
 .upload-page
   .form-group
   input[aria-invalid='true']:focus {
-  border-color: var(--danger, #dc2626);
+  border-color: var(--error);
 
   box-shadow:
     0 0 0 3px
     color-mix(
       in srgb,
-      var(--danger, #dc2626) 12%,
+      var(--error) 12%,
       transparent
     );
 }
 
-/* ---------------------------------------------------------
-   Pharmacy field container
-   --------------------------------------------------------- */
+/* =========================================================
+   SEARCHABLE PHARMACY
+   ========================================================= */
 
 .upload-page .upload-pharmacy-group {
   position: relative;
@@ -1040,12 +1249,7 @@ a:focus-visible {
   width: 100%;
 }
 
-/* ---------------------------------------------------------
-   Search input
-   --------------------------------------------------------- */
-
-.upload-page
-  .upload-pharmacy-input-wrapper {
+.upload-page .upload-pharmacy-input-wrapper {
   position: relative;
 
   display: flex;
@@ -1060,11 +1264,7 @@ a:focus-visible {
   width: 100%;
   min-height: 48px;
 
-  padding:
-    10px
-    42px
-    10px
-    42px;
+  padding: 10px 42px;
 
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -1075,23 +1275,6 @@ a:focus-visible {
   font-size: 0.9rem;
 
   outline: none;
-
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.upload-page
-  .upload-pharmacy-input-wrapper
-  input::placeholder {
-  color: var(--text-muted);
-}
-
-.upload-page
-  .upload-pharmacy-input-wrapper
-  input:hover:not(:disabled) {
-  border-color: var(--primary-muted);
 }
 
 .upload-page
@@ -1108,21 +1291,9 @@ a:focus-visible {
     );
 }
 
-.upload-page
-  .upload-pharmacy-input-wrapper
-  input:disabled {
-  cursor: not-allowed;
+/* Search / building icon */
 
-  background: var(--disabled-bg);
-  color: var(--disabled);
-}
-
-/* ---------------------------------------------------------
-   Search / building icon
-   --------------------------------------------------------- */
-
-.upload-page
-  .upload-pharmacy-leading-icon {
+.upload-pharmacy-leading-icon {
   position: absolute;
   left: 13px;
   z-index: 2;
@@ -1132,46 +1303,36 @@ a:focus-visible {
   color: var(--text-muted);
 }
 
-.upload-page
-  .upload-pharmacy-input-wrapper:focus-within
+.upload-pharmacy-input-wrapper:focus-within
   .upload-pharmacy-leading-icon {
   color: var(--primary);
 }
 
-/* ---------------------------------------------------------
-   Selected search input
-   --------------------------------------------------------- */
+/* Selected input */
 
 .upload-page
   .upload-pharmacy-input-selected
   input {
   border-color: var(--primary-muted);
 
-  background:
-    color-mix(
-      in srgb,
-      var(--primary-light) 40%,
-      var(--surface)
-    );
+  background: var(--primary-soft);
 
   font-weight: 700;
 }
 
-/* ---------------------------------------------------------
-   Clear selected pharmacy
-   --------------------------------------------------------- */
+/* Clear pharmacy */
 
-.upload-page
-  .upload-pharmacy-clear {
+.upload-pharmacy-clear {
   position: absolute;
-  right: 9px;
+  right: 8px;
+  z-index: 3;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
 
   padding: 0;
 
@@ -1180,35 +1341,27 @@ a:focus-visible {
 
   background: transparent;
   color: var(--text-muted);
-
-  cursor: pointer;
-
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
 }
 
-.upload-page
-  .upload-pharmacy-clear:hover {
+.upload-pharmacy-clear:hover:not(:disabled) {
   background: var(--surface-soft);
   color: var(--text-primary);
 }
 
 /* ---------------------------------------------------------
-   Suggestions dropdown
+   Pharmacy suggestions
    --------------------------------------------------------- */
 
-.upload-page
-  .upload-pharmacy-suggestions {
+.upload-pharmacy-suggestions {
   position: absolute;
 
   top: calc(100% + 6px);
   left: 0;
   right: 0;
 
-  z-index: 50;
+  z-index: 60;
 
-  max-height: 320px;
+  max-height: 280px;
   overflow-y: auto;
 
   padding: 6px;
@@ -1219,61 +1372,44 @@ a:focus-visible {
   background: var(--surface);
 
   box-shadow:
-    0 12px 30px
-    rgba(15, 23, 42, 0.14);
+    0 14px 32px
+    rgba(18, 44, 79, 0.14);
 }
 
-/* ---------------------------------------------------------
-   Individual suggestion
-   --------------------------------------------------------- */
-
-.upload-page
-  .upload-pharmacy-suggestion {
+.upload-pharmacy-suggestion {
   display: flex;
   align-items: flex-start;
   gap: 11px;
 
   width: 100%;
-
   padding: 11px 10px;
 
   border: 0;
   border-radius: 9px;
 
   background: transparent;
-  color: inherit;
+  color: var(--text-primary);
 
   text-align: left;
-
-  cursor: pointer;
 
   transition:
     background-color 0.15s ease;
 }
 
-.upload-page
-  .upload-pharmacy-suggestion:hover,
-.upload-page
-  .upload-pharmacy-suggestion:focus-visible {
+.upload-pharmacy-suggestion:hover,
+.upload-pharmacy-suggestion:focus-visible {
   background: var(--surface-soft);
-
   outline: none;
 }
 
-/* ---------------------------------------------------------
-   Suggestion icon
-   --------------------------------------------------------- */
-
-.upload-page
-  .upload-pharmacy-suggestion-icon {
+.upload-pharmacy-suggestion-icon {
   display: flex;
   align-items: center;
   justify-content: center;
 
-  flex: 0 0 auto;
-
   width: 34px;
   height: 34px;
+  flex: 0 0 34px;
 
   border-radius: 9px;
 
@@ -1281,12 +1417,7 @@ a:focus-visible {
   color: var(--primary);
 }
 
-/* ---------------------------------------------------------
-   Suggestion text
-   --------------------------------------------------------- */
-
-.upload-page
-  .upload-pharmacy-suggestion-copy {
+.upload-pharmacy-suggestion-copy {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -1294,17 +1425,15 @@ a:focus-visible {
   min-width: 0;
 }
 
-.upload-page
-  .upload-pharmacy-suggestion-name {
+.upload-pharmacy-suggestion-name {
   color: var(--text-primary);
 
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 750;
   line-height: 1.35;
 }
 
-.upload-page
-  .upload-pharmacy-suggestion-address {
+.upload-pharmacy-suggestion-address {
   margin-top: 3px;
 
   color: var(--text-secondary);
@@ -1314,18 +1443,17 @@ a:focus-visible {
 }
 
 /* ---------------------------------------------------------
-   No matching partner pharmacy
+   Pharmacy not found
    --------------------------------------------------------- */
 
-.upload-page
-  .upload-pharmacy-no-match {
+.upload-pharmacy-no-match {
   position: absolute;
 
   top: calc(100% + 6px);
   left: 0;
   right: 0;
 
-  z-index: 50;
+  z-index: 60;
 
   display: flex;
   align-items: flex-start;
@@ -1333,41 +1461,28 @@ a:focus-visible {
 
   padding: 13px;
 
-  border: 1px solid
-    var(--warning-border, #fde68a);
+  border: 1px solid #fde68a;
   border-radius: 12px;
 
-  background:
-    var(--warning-light, #fffbeb);
+  background: #fffbeb;
+  color: #92400e;
 
-  color:
-    var(--warning-dark, #92400e);
-
-  box-shadow:
-    0 10px 24px
-    rgba(15, 23, 42, 0.1);
+  box-shadow: var(--shadow-soft);
 }
 
-.upload-page
-  .upload-pharmacy-no-match
-  > svg {
+.upload-pharmacy-no-match > svg {
   flex: 0 0 auto;
-
   margin-top: 1px;
 }
 
-.upload-page
-  .upload-pharmacy-no-match
-  strong {
+.upload-pharmacy-no-match strong {
   display: block;
 
   font-size: 0.78rem;
   font-weight: 800;
 }
 
-.upload-page
-  .upload-pharmacy-no-match
-  p {
+.upload-pharmacy-no-match p {
   margin: 3px 0 0;
 
   font-size: 0.72rem;
@@ -1378,43 +1493,36 @@ a:focus-visible {
    Selected pharmacy confirmation
    --------------------------------------------------------- */
 
-.upload-page
-  .upload-selected-pharmacy {
+.upload-selected-pharmacy {
   display: flex;
   align-items: flex-start;
   gap: 10px;
 
-  margin-top: 9px;
-  padding: 10px 12px;
+  margin-top: 2px;
+  padding: 11px 12px;
 
-  border: 1px solid
-    var(--success-border, #bbf7d0);
+  border: 1px solid var(--success-border);
   border-radius: 10px;
 
-  background:
-    var(--success-light, #f0fdf4);
+  background: var(--success-bg);
 }
 
-.upload-page
-  .upload-selected-pharmacy-check {
+.upload-selected-pharmacy-check {
   display: flex;
   align-items: center;
   justify-content: center;
 
-  flex: 0 0 auto;
-
   width: 25px;
   height: 25px;
+  flex: 0 0 25px;
 
   border-radius: 50%;
 
-  background: var(--primary);
+  background: var(--success);
   color: #ffffff;
 }
 
-.upload-page
-  .upload-selected-pharmacy
-  p {
+.upload-selected-pharmacy p {
   margin: 0;
 
   color: var(--text-primary);
@@ -1424,9 +1532,7 @@ a:focus-visible {
   line-height: 1.35;
 }
 
-.upload-page
-  .upload-selected-pharmacy
-  span {
+.upload-selected-pharmacy span {
   display: block;
 
   margin-top: 2px;
@@ -1437,13 +1543,12 @@ a:focus-visible {
   line-height: 1.4;
 }
 
-/* ---------------------------------------------------------
-   Notes counter
-   --------------------------------------------------------- */
+/* =========================================================
+   NOTES
+   ========================================================= */
 
-.upload-page
-  .upload-notes-count {
-  margin: 2px 0 0;
+.upload-notes-count {
+  margin: 0;
 
   color: var(--text-muted);
 
@@ -1453,12 +1558,12 @@ a:focus-visible {
   text-align: right;
 }
 
-/* ---------------------------------------------------------
-   Alert messages
-   --------------------------------------------------------- */
+/* =========================================================
+   ALERTS
+   ========================================================= */
 
-.upload-page .upload-alert {
-  padding: 11px 13px;
+.upload-alert {
+  padding: 12px 13px;
 
   border: 1px solid transparent;
   border-radius: 10px;
@@ -1468,178 +1573,156 @@ a:focus-visible {
   line-height: 1.5;
 }
 
-.upload-page
-  .upload-alert-error {
-  border-color:
-    var(--danger-border, #fecaca);
-
-  background:
-    var(--danger-light, #fef2f2);
-
-  color:
-    var(--danger-dark, #b91c1c);
+.upload-alert-error {
+  border-color: var(--error-border);
+  background: var(--error-bg);
+  color: var(--error);
 }
 
-.upload-page
-  .upload-alert-success {
-  border-color:
-    var(--success-border, #bbf7d0);
-
-  background:
-    var(--success-light, #f0fdf4);
-
-  color:
-    var(--success-dark, #166534);
+.upload-alert-success {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success);
 }
 
-/* ---------------------------------------------------------
-   Mobile
-   --------------------------------------------------------- */
+/* =========================================================
+   SUBMIT BUTTON
+   ========================================================= */
+
+.upload-page .submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  width: 100%;
+  min-height: 48px;
+
+  padding: 11px 18px;
+
+  border: 0;
+  border-radius: var(--radius-button);
+
+  background: var(--primary);
+  color: #ffffff;
+
+  font-size: 0.88rem;
+  font-weight: 750;
+
+  box-shadow: var(--shadow-soft);
+
+  transition:
+    background-color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.15s ease;
+}
+
+.upload-page .submit-btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.upload-page .submit-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.upload-page .submit-btn:disabled {
+  cursor: not-allowed;
+
+  background: var(--primary-muted);
+  color: #ffffff;
+
+  box-shadow: none;
+
+  opacity: 0.72;
+}
+
+/* =========================================================
+   DARK THEME ADJUSTMENTS
+   ========================================================= */
+
+:root[data-theme='dark']
+  .upload-pharmacy-no-match {
+  border-color: #725b22;
+  background: #3b321b;
+  color: #f5d978;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
 
 @media (max-width: 600px) {
-  .upload-page
-    .upload-pharmacy-suggestions {
-    max-height: 260px;
+  .upload-page {
+    padding: 4px 0 24px;
   }
 
-  .upload-page
-    .upload-pharmacy-suggestion {
-    padding: 10px 9px;
+  .upload-page-header {
+    margin-bottom: 18px;
+  }
+
+  .upload-page-heading h1 {
+    font-size: 1.55rem;
+  }
+
+  .upload-page-heading > p:not(.upload-page-eyebrow) {
+    font-size: 0.85rem;
+  }
+
+  .upload-prescription-form {
+    gap: 18px;
+  }
+
+  .upload-dropzone {
+    min-height: 190px;
+    padding: 20px 16px;
+  }
+
+  .upload-dropzone-label {
+    min-height: 145px;
+  }
+
+  .upload-dropzone-icon {
+    width: 52px;
+    height: 52px;
+  }
+
+  .upload-page .form-fields {
+    gap: 16px;
+  }
+
+  .upload-page .form-group input {
+    min-height: 48px;
+
+    /*
+     * Prevents automatic zoom on iOS when focusing
+     * the field.
+     */
+    font-size: 16px;
+  }
+
+  .upload-page .form-group textarea {
+    min-height: 96px;
+    font-size: 16px;
   }
 
   .upload-page
     .upload-pharmacy-input-wrapper
     input {
     min-height: 48px;
-
     font-size: 16px;
   }
 
-  /*
-   * 16px prevents unwanted automatic zoom
-   * on some mobile browsers when focusing
-   * text inputs.
-   */
-  .upload-page
-    #prescription-date {
-    font-size: 16px;
+  .upload-pharmacy-suggestions {
+    max-height: 250px;
   }
 
-.form-group select:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
+  .upload-pharmacy-suggestion {
+    padding: 11px 9px;
+  }
 
-.submit-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.submit-btn:not(:disabled) {
-  cursor: pointer;
-}
-
-/* File preview */
-
-.file-preview {
-  position: relative;
-  width: 100%;
-  max-width: 460px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.preview-image {
-  width: 100%;
-  max-height: 300px;
-  object-fit: contain;
-  border-radius: 10px;
-}
-
-.pdf-preview {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 7px;
-  padding: 24px;
-  text-align: center;
-}
-
-.pdf-icon {
-  font-size: 3rem;
-}
-
-.pdf-name {
-  max-width: 100%;
-  overflow: hidden;
-  color: var(--text-primary);
-  font-size: 0.88rem;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pdf-size {
-  color: var(--text-muted);
-  font-size: 0.76rem;
-}
-
-.remove-file-btn {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  background: var(--surface);
-  color: var(--text-secondary);
-  box-shadow: var(--shadow-soft);
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.remove-file-btn:hover:not(:disabled) {
-  background: var(--error-bg);
-  color: var(--error);
-}
-
-/* Upload progress */
-
-.progress-container {
-  position: relative;
-  width: 100%;
-  height: 28px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--border-light);
-}
-
-.progress-bar {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 0;
-  border-radius: inherit;
-  background: var(--primary);
-  transition: width 0.25s ease;
-}
-
-.progress-text {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-primary);
-  font-size: 0.72rem;
-  font-weight: 750;
-}
+  #prescription-date {
+    font-size: 16px;
+  }
 }
 /* =========================================================
    REQUEST MEDICINE PAGE
