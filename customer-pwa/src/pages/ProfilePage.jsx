@@ -23,7 +23,7 @@ import {
   X,
   CheckCircle2,
 } from 'lucide-react'
-import { api, apiRequest } from '../lib/api'
+import { api } from '../lib/api'
 import { queryKeys } from '../lib/queryKeys'
 import { useProfile } from '../hooks/queries/useProfile'
 import { usePharmacies } from '../hooks/queries/usePharmacies'
@@ -93,7 +93,6 @@ function ProfilePage() {
 
   // ------------------------------------------------------------
   // Notification preferences
-  // Functionality will be connected later.
   // ------------------------------------------------------------
 
   const [notifications, setNotifications] = useState({
@@ -208,10 +207,7 @@ function ProfilePage() {
         const name = pharmacy.name?.toLowerCase() || ''
         const address = pharmacy.address?.toLowerCase() || ''
 
-        return (
-          name.includes(query) ||
-          address.includes(query)
-        )
+        return name.includes(query) || address.includes(query)
       })
       .slice(0, 6)
   }, [pharmacies, pharmacySearch, selectedPharmacy])
@@ -240,10 +236,7 @@ function ProfilePage() {
     },
 
     onSuccess: (updatedProfile) => {
-      queryClient.setQueryData(
-        queryKeys.profile,
-        updatedProfile
-      )
+      queryClient.setQueryData(queryKeys.profile, updatedProfile)
     },
   })
 
@@ -276,9 +269,7 @@ function ProfilePage() {
     } catch (error) {
       setStatus({
         type: 'error',
-        message:
-          error.message ||
-          'Unable to save your profile.',
+        message: error.message || 'Unable to save your profile.',
       })
     }
   }
@@ -311,13 +302,11 @@ function ProfilePage() {
     })
 
     try {
-      const {
-        data: authSession,
-        error: sessionError,
-      } = await supabase.auth.setSession({
-        access_token: session.accessToken,
-        refresh_token: session.refreshToken,
-      })
+      const { data: authSession, error: sessionError } =
+        await supabase.auth.setSession({
+          access_token: session.accessToken,
+          refresh_token: session.refreshToken,
+        })
 
       if (sessionError) {
         throw new Error(
@@ -333,32 +322,27 @@ function ProfilePage() {
 
       const filePath = `${session.user.id}/avatar.png`
 
-      const { error: uploadError } =
-        await supabase.storage
-          .from('avatars')
-          .upload(filePath, file, {
-            upsert: true,
-            contentType: file.type,
-          })
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type,
+        })
 
       if (uploadError) {
         throw uploadError
       }
 
-      const { data: publicUrlData } =
-        supabase.storage
-          .from('avatars')
-          .getPublicUrl(filePath)
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
 
       const updatedProfile = await api.updateMyProfile({
         ...form,
         avatar_url: publicUrlData.publicUrl,
       })
 
-      queryClient.setQueryData(
-        queryKeys.profile,
-        updatedProfile
-      )
+      queryClient.setQueryData(queryKeys.profile, updatedProfile)
 
       setStatus({
         type: 'success',
@@ -367,9 +351,7 @@ function ProfilePage() {
     } catch (error) {
       setStatus({
         type: 'error',
-        message:
-          error.message ||
-          'Failed to upload avatar.',
+        message: error.message || 'Failed to upload avatar.',
       })
     } finally {
       setIsUploadingAvatar(false)
@@ -426,28 +408,26 @@ function ProfilePage() {
     ) {
       setStatus({
         type: 'error',
-        message:
-          'Please sign in again before changing your password.',
+        message: 'Please sign in again before changing your password.',
       })
 
       return
     }
 
     if (
-      passwordForm.newPassword !==
-      passwordForm.confirmPassword
+      passwordForm.newPassword !== passwordForm.confirmPassword
     ) {
       setStatus({
         type: 'error',
-        message:
-          'New password and confirmation do not match.',
+        message: 'New password and confirmation do not match.',
       })
 
       return
     }
 
-    const passwordError =
-      validateNewPassword(passwordForm.newPassword)
+    const passwordError = validateNewPassword(
+      passwordForm.newPassword
+    )
 
     if (passwordError) {
       setStatus({
@@ -459,8 +439,7 @@ function ProfilePage() {
     }
 
     if (
-      passwordForm.currentPassword ===
-      passwordForm.newPassword
+      passwordForm.currentPassword === passwordForm.newPassword
     ) {
       setStatus({
         type: 'error',
@@ -486,9 +465,7 @@ function ProfilePage() {
         })
 
       if (verificationError) {
-        throw new Error(
-          'Your current password is incorrect.'
-        )
+        throw new Error('Your current password is incorrect.')
       }
 
       const { error: updateError } =
@@ -511,15 +488,12 @@ function ProfilePage() {
 
       setStatus({
         type: 'success',
-        message:
-          'Your password has been changed successfully.',
+        message: 'Your password has been changed successfully.',
       })
     } catch (error) {
       setStatus({
         type: 'error',
-        message:
-          error.message ||
-          'Unable to change your password.',
+        message: error.message || 'Unable to change your password.',
       })
     } finally {
       setIsUpdatingPassword(false)
@@ -575,12 +549,18 @@ function ProfilePage() {
     })
   }
 
-  const handleToggleReport = () => {
-    if (isReporting) {
-      resetReportForm()
+  const handleOpenReport = () => {
+    resetReportForm()
+    setIsReporting(true)
+  }
+
+  const handleCloseReport = () => {
+    if (isSubmittingReport) {
+      return
     }
 
-    setIsReporting((current) => !current)
+    setIsReporting(false)
+    resetReportForm()
   }
 
   const handlePharmacySearchChange = (event) => {
@@ -589,9 +569,7 @@ function ProfilePage() {
     setPharmacySearch(value)
     setSelectedPharmacy(null)
 
-    setShowPharmacySuggestions(
-      Boolean(value.trim())
-    )
+    setShowPharmacySuggestions(Boolean(value.trim()))
 
     setReportStatus({
       type: '',
@@ -638,18 +616,6 @@ function ProfilePage() {
   const handleReportSubmit = async (event) => {
     event.preventDefault()
 
-    const session = getStoredSession()
-
-    if (!session?.accessToken) {
-      setReportStatus({
-        type: 'error',
-        message:
-          'Please sign in again before submitting a report.',
-      })
-
-      return
-    }
-
     if (!selectedPharmacy?.pharmacy_id) {
       setReportStatus({
         type: 'error',
@@ -660,14 +626,31 @@ function ProfilePage() {
       return
     }
 
-    const description =
-      reportForm.description.trim()
+    const description = reportForm.description.trim()
+    const subject = reportForm.subject.trim()
 
     if (!description) {
       setReportStatus({
         type: 'error',
-        message:
-          'Please describe your concern or feedback.',
+        message: 'Please describe your concern or feedback.',
+      })
+
+      return
+    }
+
+    if (description.length > 2000) {
+      setReportStatus({
+        type: 'error',
+        message: 'Your description cannot exceed 2000 characters.',
+      })
+
+      return
+    }
+
+    if (subject.length > 150) {
+      setReportStatus({
+        type: 'error',
+        message: 'Your subject cannot exceed 150 characters.',
       })
 
       return
@@ -681,37 +664,35 @@ function ProfilePage() {
     })
 
     try {
-      await apiRequest('/reports', {
-        token: session.accessToken,
-        method: 'POST',
-        body: {
-          pharmacy_id:
-            selectedPharmacy.pharmacy_id,
-
-          subject:
-            reportForm.subject.trim() || null,
-
-          description,
-        },
+      const response = await api.createReport({
+        pharmacy_id: selectedPharmacy.pharmacy_id,
+        subject: subject || null,
+        description,
       })
 
-      const pharmacyName =
-        selectedPharmacy.name
+      if (!response?.success) {
+        throw new Error(
+          response?.message || 'Unable to submit your report.'
+        )
+      }
 
-      setPharmacySearch('')
-      setSelectedPharmacy(null)
+      const pharmacyName = selectedPharmacy.name
 
-      setReportForm({
-        subject: '',
-        description: '',
-      })
-
-      setShowPharmacySuggestions(false)
+      resetReportForm()
 
       setReportStatus({
         type: 'success',
-        message: `Your report has been sent to ${pharmacyName}.`,
+        message: `Your report was submitted successfully to ${pharmacyName}.`,
       })
+
+      setTimeout(() => {
+        setIsReporting(false)
+
+        setReportStatus({
+          type: '',
+          message: '',
+        })
+      }, 1500)
     } catch (error) {
       setReportStatus({
         type: 'error',
@@ -753,15 +734,12 @@ function ProfilePage() {
       {/* Loading State */}
       {isLoading && (
         <div className="flex justify-center items-center py-20">
-          <p className="text-gray-500">
-            Loading your profile...
-          </p>
+          <p className="text-gray-500">Loading your profile...</p>
         </div>
       )}
 
       {!isLoading && profile && (
         <div className="flex flex-col gap-4 max-w-lg mx-auto">
-
           {/* =====================================================
               PROFILE HEADER
           ====================================================== */}
@@ -776,10 +754,7 @@ function ProfilePage() {
                 />
               ) : (
                 <div className="w-20 h-20 rounded-full bg-teal-700 text-white flex items-center justify-center text-2xl font-bold border-4 border-white shadow-md">
-                  {getInitials(
-                    profile.first_name,
-                    profile.last_name
-                  )}
+                  {getInitials(profile.first_name, profile.last_name)}
                 </div>
               )}
 
@@ -798,8 +773,7 @@ function ProfilePage() {
 
             <div className="text-center mb-4">
               <h3 className="text-xl font-bold text-gray-900">
-                {profile.first_name}{' '}
-                {profile.last_name}
+                {profile.first_name} {profile.last_name}
               </h3>
 
               <p className="text-sm text-gray-500 mt-1">
@@ -807,23 +781,18 @@ function ProfilePage() {
               </p>
 
               <p className="text-sm text-gray-500">
-                {profile.phone ||
-                  'No phone number added'}
+                {profile.phone || 'No phone number added'}
               </p>
             </div>
 
             <button
               type="button"
-              onClick={() =>
-                setIsEditing(!isEditing)
-              }
+              onClick={() => setIsEditing(!isEditing)}
               className="profile-secondary-button flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold transition-colors"
             >
               <Pencil size={16} />
 
-              {isEditing
-                ? 'Cancel Edit'
-                : 'Edit Profile'}
+              {isEditing ? 'Cancel Edit' : 'Edit Profile'}
             </button>
           </div>
 
@@ -838,8 +807,7 @@ function ProfilePage() {
               </h3>
 
               <p className="text-xs text-gray-500 mb-4">
-                Only your name and phone number can be
-                changed.
+                Only your name and phone number can be changed.
               </p>
 
               <form
@@ -897,9 +865,7 @@ function ProfilePage() {
                   disabled={isSaving}
                   className="profile-primary-button mt-2 w-full py-3 rounded-xl font-semibold text-sm disabled:cursor-not-allowed"
                 >
-                  {isSaving
-                    ? 'Saving...'
-                    : 'Save changes'}
+                  {isSaving ? 'Saving...' : 'Save changes'}
                 </button>
               </form>
             </div>
@@ -917,15 +883,11 @@ function ProfilePage() {
                 </h3>
 
                 <p className="text-xs text-gray-500 mt-1">
-                  Manage your sign-in and account
-                  security.
+                  Manage your sign-in and account security.
                 </p>
               </div>
 
-              <ShieldCheck
-                size={19}
-                className="text-teal-700"
-              />
+              <ShieldCheck size={19} className="text-teal-700" />
             </div>
 
             <div className="flex items-center justify-between gap-4 pb-4 border-b border-gray-100">
@@ -947,9 +909,7 @@ function ProfilePage() {
             <button
               type="button"
               onClick={() => {
-                setIsChangingPassword(
-                  (current) => !current
-                )
+                setIsChangingPassword((current) => !current)
 
                 setStatus({
                   type: '',
@@ -977,9 +937,7 @@ function ProfilePage() {
               <ChevronRight
                 size={18}
                 className={`text-gray-400 transition-transform ${
-                  isChangingPassword
-                    ? 'rotate-90'
-                    : ''
+                  isChangingPassword ? 'rotate-90' : ''
                 }`}
               />
             </button>
@@ -990,23 +948,11 @@ function ProfilePage() {
                 className="mt-5 pt-5 border-t border-gray-100 flex flex-col gap-4"
               >
                 {[
-                  [
-                    'currentPassword',
-                    'Current password',
-                  ],
-                  [
-                    'newPassword',
-                    'New password',
-                  ],
-                  [
-                    'confirmPassword',
-                    'Confirm new password',
-                  ],
+                  ['currentPassword', 'Current password'],
+                  ['newPassword', 'New password'],
+                  ['confirmPassword', 'Confirm new password'],
                 ].map(([name, label]) => (
-                  <label
-                    key={name}
-                    className="flex flex-col gap-1.5"
-                  >
+                  <label key={name} className="flex flex-col gap-1.5">
                     <span className="text-xs font-semibold text-gray-700">
                       {label}
                     </span>
@@ -1014,25 +960,15 @@ function ProfilePage() {
                     <div className="relative">
                       <input
                         name={name}
-                        type={
-                          showPasswords
-                            ? 'text'
-                            : 'password'
-                        }
+                        type={showPasswords ? 'text' : 'password'}
                         value={passwordForm[name]}
-                        onChange={
-                          handlePasswordChange
-                        }
+                        onChange={handlePasswordChange}
                         required
                         minLength={
-                          name ===
-                          'currentPassword'
-                            ? undefined
-                            : 8
+                          name === 'currentPassword' ? undefined : 8
                         }
                         autoComplete={
-                          name ===
-                          'currentPassword'
+                          name === 'currentPassword'
                             ? 'current-password'
                             : 'new-password'
                         }
@@ -1042,10 +978,7 @@ function ProfilePage() {
                       <button
                         type="button"
                         onClick={() =>
-                          setShowPasswords(
-                            (current) =>
-                              !current
-                          )
+                          setShowPasswords((current) => !current)
                         }
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
                         aria-label={
@@ -1065,9 +998,8 @@ function ProfilePage() {
                 ))}
 
                 <p className="text-xs text-gray-500 leading-relaxed">
-                  Minimum 8 characters with one
-                  uppercase letter, one number, and one
-                  special character.
+                  Minimum 8 characters with one uppercase letter, one
+                  number, and one special character.
                 </p>
 
                 <div className="flex gap-3">
@@ -1113,15 +1045,11 @@ function ProfilePage() {
                 </h3>
 
                 <p className="text-xs text-gray-500 mt-1">
-                  Choose how you would like to receive
-                  PharmaLink updates.
+                  Choose how you would like to receive PharmaLink updates.
                 </p>
               </div>
 
-              <Bell
-                size={18}
-                className="text-teal-700"
-              />
+              <Bell size={18} className="text-teal-700" />
             </div>
 
             <div className="flex flex-col gap-5">
@@ -1132,20 +1060,15 @@ function ProfilePage() {
                   </p>
 
                   <p className="text-xs text-gray-500 leading-tight">
-                    Get real-time prescription and
-                    pickup updates.
+                    Get real-time prescription and pickup updates.
                   </p>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() =>
-                    toggleNotification('push')
-                  }
+                  onClick={() => toggleNotification('push')}
                   className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
-                    notifications.push
-                      ? 'bg-teal-700'
-                      : 'bg-gray-300'
+                    notifications.push ? 'bg-teal-700' : 'bg-gray-300'
                   }`}
                   aria-label="Toggle Push Notifications"
                 >
@@ -1166,20 +1089,15 @@ function ProfilePage() {
                   </p>
 
                   <p className="text-xs text-gray-500 leading-tight">
-                    Receive monthly statements and
-                    order receipts.
+                    Receive monthly statements and order receipts.
                   </p>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() =>
-                    toggleNotification('email')
-                  }
+                  onClick={() => toggleNotification('email')}
                   className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
-                    notifications.email
-                      ? 'bg-teal-700'
-                      : 'bg-gray-300'
+                    notifications.email ? 'bg-teal-700' : 'bg-gray-300'
                   }`}
                   aria-label="Toggle Email Alerts"
                 >
@@ -1200,20 +1118,15 @@ function ProfilePage() {
                   </p>
 
                   <p className="text-xs text-gray-500 leading-tight">
-                    SMS alerts for ready orders &
-                    reservations.
+                    SMS alerts for ready orders & reservations.
                   </p>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() =>
-                    toggleNotification('sms')
-                  }
+                  onClick={() => toggleNotification('sms')}
                   className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
-                    notifications.sms
-                      ? 'bg-teal-700'
-                      : 'bg-gray-300'
+                    notifications.sms ? 'bg-teal-700' : 'bg-gray-300'
                   }`}
                   aria-label="Toggle SMS Updates"
                 >
@@ -1241,15 +1154,11 @@ function ProfilePage() {
                 </h3>
 
                 <p className="text-xs text-gray-500 mt-1">
-                  Personalize your PharmaLink
-                  experience.
+                  Personalize your PharmaLink experience.
                 </p>
               </div>
 
-              <Settings
-                size={18}
-                className="text-teal-700"
-              />
+              <Settings size={18} className="text-teal-700" />
             </div>
 
             <div className="flex flex-col divide-y divide-gray-100">
@@ -1265,8 +1174,7 @@ function ProfilePage() {
                     </p>
 
                     <p className="text-xs text-gray-500">
-                      Additional languages coming
-                      later
+                      Additional languages coming later
                     </p>
                   </div>
                 </div>
@@ -1274,17 +1182,13 @@ function ProfilePage() {
                 <select
                   value={language}
                   onChange={(event) =>
-                    setLanguage(
-                      event.target.value
-                    )
+                    setLanguage(event.target.value)
                   }
                   className="profile-settings-select"
                   aria-label="Application language"
                   disabled
                 >
-                  <option value="en">
-                    English
-                  </option>
+                  <option value="en">English</option>
                 </select>
               </div>
 
@@ -1307,26 +1211,15 @@ function ProfilePage() {
                   className="profile-settings-select"
                   aria-label="Application theme"
                 >
-                  <option value="light">
-                    Light
-                  </option>
-
-                  <option value="dark">
-                    Dark
-                  </option>
-
-                  <option value="system">
-                    System Default
-                  </option>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                  <option value="system">System Default</option>
                 </select>
               </div>
 
               <div className="flex justify-between items-center gap-4 py-4 last:pb-0">
                 <div className="flex items-center gap-3">
-                  <Type
-                    size={17}
-                    className="text-teal-700"
-                  />
+                  <Type size={17} className="text-teal-700" />
 
                   <div>
                     <p className="text-sm font-semibold text-gray-900">
@@ -1342,24 +1235,14 @@ function ProfilePage() {
                 <select
                   value={textSize}
                   onChange={(event) =>
-                    setTextSize(
-                      event.target.value
-                    )
+                    setTextSize(event.target.value)
                   }
                   className="profile-settings-select"
                   aria-label="Application text size"
                 >
-                  <option value="small">
-                    Small
-                  </option>
-
-                  <option value="default">
-                    Default
-                  </option>
-
-                  <option value="large">
-                    Large
-                  </option>
+                  <option value="small">Small</option>
+                  <option value="default">Default</option>
+                  <option value="large">Large</option>
                 </select>
               </div>
             </div>
@@ -1377,26 +1260,19 @@ function ProfilePage() {
                 </h3>
 
                 <p className="text-xs text-gray-500 mt-1">
-                  Learn more about PharmaLink and get
-                  help.
+                  Learn more about PharmaLink and get help.
                 </p>
               </div>
 
-              <HelpCircle
-                size={18}
-                className="text-teal-700"
-              />
+              <HelpCircle size={18} className="text-teal-700" />
             </div>
 
             <div className="divide-y divide-gray-100">
-
               {/* Privacy */}
 
               <button
                 type="button"
-                onClick={() =>
-                  navigate('/privacy')
-                }
+                onClick={() => navigate('/privacy')}
                 className="w-full py-4 flex items-center justify-between text-left"
               >
                 <div>
@@ -1405,24 +1281,18 @@ function ProfilePage() {
                   </p>
 
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Learn how your information is
-                    handled.
+                    Learn how your information is handled.
                   </p>
                 </div>
 
-                <ChevronRight
-                  size={17}
-                  className="text-gray-400"
-                />
+                <ChevronRight size={17} className="text-gray-400" />
               </button>
 
               {/* Help */}
 
               <button
                 type="button"
-                onClick={() =>
-                  navigate('/support')
-                }
+                onClick={() => navigate('/support')}
                 className="w-full py-4 flex items-center justify-between text-left"
               >
                 <div>
@@ -1435,10 +1305,7 @@ function ProfilePage() {
                   </p>
                 </div>
 
-                <ChevronRight
-                  size={17}
-                  className="text-gray-400"
-                />
+                <ChevronRight size={17} className="text-gray-400" />
               </button>
 
               {/* =================================================
@@ -1448,9 +1315,8 @@ function ProfilePage() {
               <div>
                 <button
                   type="button"
-                  onClick={handleToggleReport}
+                  onClick={handleOpenReport}
                   className="w-full py-4 flex items-center justify-between text-left"
-                  aria-expanded={isReporting}
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0">
@@ -1463,311 +1329,21 @@ function ProfilePage() {
                       </p>
 
                       <p className="text-xs text-gray-500 mt-0.5">
-                        Send a concern or feedback to
-                        a partner pharmacy.
+                        Send a concern or feedback to a partner
+                        pharmacy.
                       </p>
                     </div>
                   </div>
 
-                  <ChevronRight
-                    size={17}
-                    className={`text-gray-400 transition-transform ${
-                      isReporting
-                        ? 'rotate-90'
-                        : ''
-                    }`}
-                  />
+                  <ChevronRight size={17} className="text-gray-400" />
                 </button>
-
-                {isReporting && (
-                  <div className="pb-5 pt-1">
-                    <div className="bg-gray-50 border border-gray-100 rounded-xl p-4">
-                      <div className="mb-5">
-                        <h4 className="text-sm font-bold text-gray-900">
-                          Send a Report
-                        </h4>
-
-                        <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                          Select the partner pharmacy
-                          you want to contact and
-                          describe your concern or
-                          feedback.
-                        </p>
-                      </div>
-
-                      <form
-                        onSubmit={
-                          handleReportSubmit
-                        }
-                        className="flex flex-col gap-4"
-                      >
-                        {/* Pharmacy */}
-
-                        <div>
-                          <label
-                            htmlFor="report-pharmacy"
-                            className="block text-xs font-semibold text-gray-700 mb-1.5"
-                          >
-                            Pharmacy{' '}
-                            <span className="text-red-500">
-                              *
-                            </span>
-                          </label>
-
-                          <div className="relative">
-                            <Search
-                              size={16}
-                              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                            />
-
-                            <input
-                              id="report-pharmacy"
-                              type="text"
-                              value={
-                                pharmacySearch
-                              }
-                              onChange={
-                                handlePharmacySearchChange
-                              }
-                              onFocus={() => {
-                                if (
-                                  pharmacySearch.trim() &&
-                                  !selectedPharmacy
-                                ) {
-                                  setShowPharmacySuggestions(
-                                    true
-                                  )
-                                }
-                              }}
-                              placeholder="Type a pharmacy name..."
-                              autoComplete="off"
-                              className="profile-input w-full pl-9 pr-10 py-2.5 rounded-lg text-sm"
-                            />
-
-                            {pharmacySearch && (
-                              <button
-                                type="button"
-                                onClick={
-                                  handleClearPharmacy
-                                }
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
-                                aria-label="Clear selected pharmacy"
-                              >
-                                <X size={16} />
-                              </button>
-                            )}
-                          </div>
-
-                          {selectedPharmacy && (
-                            <div className="mt-2 flex items-start gap-2 text-xs text-emerald-700">
-                              <CheckCircle2
-                                size={15}
-                                className="mt-0.5 flex-shrink-0"
-                              />
-
-                              <div>
-                                <span className="font-semibold">
-                                  Partner pharmacy
-                                  selected
-                                </span>
-
-                                {selectedPharmacy.address && (
-                                  <p className="text-gray-500 mt-0.5">
-                                    {
-                                      selectedPharmacy.address
-                                    }
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {isLoadingPharmacies && (
-                            <p className="text-xs text-gray-500 mt-2">
-                              Loading partner
-                              pharmacies...
-                            </p>
-                          )}
-
-                          {showPharmacySuggestions &&
-                            !isLoadingPharmacies &&
-                            pharmacySuggestions.length >
-                              0 && (
-                              <div className="mt-2 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
-                                {pharmacySuggestions.map(
-                                  (
-                                    pharmacy
-                                  ) => (
-                                    <button
-                                      key={
-                                        pharmacy.pharmacy_id
-                                      }
-                                      type="button"
-                                      onClick={() =>
-                                        handleSelectPharmacy(
-                                          pharmacy
-                                        )
-                                      }
-                                      className="w-full px-3 py-3 text-left border-b border-gray-100 last:border-b-0 hover:bg-teal-50 transition-colors"
-                                    >
-                                      <p className="text-sm font-semibold text-gray-900">
-                                        {
-                                          pharmacy.name
-                                        }
-                                      </p>
-
-                                      {pharmacy.address && (
-                                        <p className="text-xs text-gray-500 mt-0.5">
-                                          {
-                                            pharmacy.address
-                                          }
-                                        </p>
-                                      )}
-                                    </button>
-                                  )
-                                )}
-                              </div>
-                            )}
-
-                          {showPharmacySuggestions &&
-                            pharmacySearch.trim() &&
-                            !isLoadingPharmacies &&
-                            pharmacySuggestions.length ===
-                              0 &&
-                            !selectedPharmacy && (
-                              <div className="mt-2 px-3 py-3 bg-amber-50 border border-amber-100 rounded-lg">
-                                <p className="text-xs text-amber-800 leading-relaxed">
-                                  We couldn't find that
-                                  pharmacy among our
-                                  current PharmaLink
-                                  partners. Please
-                                  choose a partner
-                                  pharmacy.
-                                </p>
-                              </div>
-                            )}
-                        </div>
-
-                        {/* Subject */}
-
-                        <label className="flex flex-col gap-1.5">
-                          <span className="text-xs font-semibold text-gray-700">
-                            Subject{' '}
-                            <span className="font-normal text-gray-400">
-                              (Optional)
-                            </span>
-                          </span>
-
-                          <input
-                            name="subject"
-                            type="text"
-                            value={
-                              reportForm.subject
-                            }
-                            onChange={
-                              handleReportChange
-                            }
-                            placeholder="Brief subject..."
-                            maxLength={150}
-                            className="profile-input px-3 py-2.5 rounded-lg text-sm"
-                          />
-                        </label>
-
-                        {/* Description */}
-
-                        <label className="flex flex-col gap-1.5">
-                          <span className="text-xs font-semibold text-gray-700">
-                            Description{' '}
-                            <span className="text-red-500">
-                              *
-                            </span>
-                          </span>
-
-                          <textarea
-                            name="description"
-                            value={
-                              reportForm.description
-                            }
-                            onChange={
-                              handleReportChange
-                            }
-                            placeholder="Describe your concern or feedback..."
-                            required
-                            rows={5}
-                            maxLength={2000}
-                            className="profile-input px-3 py-2.5 rounded-lg text-sm resize-y"
-                          />
-
-                          <span className="text-[11px] text-gray-400 text-right">
-                            {
-                              reportForm.description
-                                .length
-                            }
-                            /2000
-                          </span>
-                        </label>
-
-                        {/* Report status */}
-
-                        {reportStatus.message && (
-                          <div
-                            className={`p-3 rounded-lg text-xs leading-relaxed ${
-                              reportStatus.type ===
-                              'success'
-                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
-                                : 'bg-red-50 text-red-800 border border-red-100'
-                            }`}
-                            role="status"
-                          >
-                            {
-                              reportStatus.message
-                            }
-                          </div>
-                        )}
-
-                        {/* Actions */}
-
-                        <div className="flex gap-3 pt-1">
-                          <button
-                            type="button"
-                            onClick={
-                              handleToggleReport
-                            }
-                            disabled={
-                              isSubmittingReport
-                            }
-                            className="profile-secondary-button flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                          >
-                            Cancel
-                          </button>
-
-                          <button
-                            type="submit"
-                            disabled={
-                              isSubmittingReport
-                            }
-                            className="profile-primary-button flex-1 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:cursor-not-allowed"
-                          >
-                            <Send size={15} />
-
-                            {isSubmittingReport
-                              ? 'Submitting...'
-                              : 'Submit Report'}
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* About */}
 
               <button
                 type="button"
-                onClick={() =>
-                  navigate('/about')
-                }
+                onClick={() => navigate('/about')}
                 className="w-full py-4 flex items-center justify-between text-left"
               >
                 <div>
@@ -1776,18 +1352,289 @@ function ProfilePage() {
                   </p>
 
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Application information and
-                    version.
+                    Application information and version.
                   </p>
                 </div>
 
-                <ChevronRight
-                  size={17}
-                  className="text-gray-400"
-                />
+                <ChevronRight size={17} className="text-gray-400" />
               </button>
             </div>
           </div>
+
+          {/* =====================================================
+              REPORT MODAL
+          ====================================================== */}
+
+          {isReporting && (
+            <div
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="report-modal-title"
+            >
+              <button
+                type="button"
+                className="absolute inset-0 bg-black/50 backdrop-blur-[1px]"
+                onClick={handleCloseReport}
+                aria-label="Close report form"
+              />
+
+              <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl">
+                <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-gray-100 bg-white px-5 py-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-600">
+                        <Flag size={17} />
+                      </div>
+
+                      <div>
+                        <h2
+                          id="report-modal-title"
+                          className="text-base font-bold text-gray-900"
+                        >
+                          Report an Issue
+                        </h2>
+
+                        <p className="mt-0.5 text-xs text-gray-500">
+                          Send feedback to a partner pharmacy.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleCloseReport}
+                    disabled={isSubmittingReport}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed"
+                    aria-label="Close report form"
+                  >
+                    <X size={19} />
+                  </button>
+                </div>
+
+                <form
+                  onSubmit={handleReportSubmit}
+                  className="flex flex-col gap-5 p-5"
+                >
+                  <div>
+                    <label
+                      htmlFor="report-pharmacy"
+                      className="mb-1.5 block text-xs font-semibold text-gray-700"
+                    >
+                      Pharmacy{' '}
+                      <span className="text-red-500">*</span>
+                    </label>
+
+                    <div className="relative">
+                      <Search
+                        size={16}
+                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                      />
+
+                      <input
+                        id="report-pharmacy"
+                        type="text"
+                        value={pharmacySearch}
+                        onChange={handlePharmacySearchChange}
+                        onFocus={() => {
+                          if (
+                            pharmacySearch.trim() &&
+                            !selectedPharmacy
+                          ) {
+                            setShowPharmacySuggestions(true)
+                          }
+                        }}
+                        placeholder="Type a pharmacy name..."
+                        autoComplete="off"
+                        disabled={isSubmittingReport}
+                        className="profile-input w-full rounded-lg py-2.5 pl-9 pr-10 text-sm"
+                      />
+
+                      {pharmacySearch && (
+                        <button
+                          type="button"
+                          onClick={handleClearPharmacy}
+                          disabled={isSubmittingReport}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                          aria-label="Clear selected pharmacy"
+                        >
+                          <X size={16} />
+                        </button>
+                      )}
+                    </div>
+
+                    {selectedPharmacy && (
+                      <div className="mt-2 flex items-start gap-2 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-700">
+                        <CheckCircle2
+                          size={15}
+                          className="mt-0.5 flex-shrink-0"
+                        />
+
+                        <div>
+                          <p className="font-semibold">
+                            {selectedPharmacy.name}
+                          </p>
+
+                          {selectedPharmacy.address && (
+                            <p className="mt-0.5 text-gray-500">
+                              {selectedPharmacy.address}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {isLoadingPharmacies && (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Loading partner pharmacies...
+                      </p>
+                    )}
+
+                    {showPharmacySuggestions &&
+                      !isLoadingPharmacies &&
+                      pharmacySuggestions.length > 0 && (
+                        <div className="mt-2 max-h-52 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+                          {pharmacySuggestions.map((pharmacy) => (
+                            <button
+                              key={pharmacy.pharmacy_id}
+                              type="button"
+                              onClick={() =>
+                                handleSelectPharmacy(pharmacy)
+                              }
+                              className="w-full border-b border-gray-100 px-3 py-3 text-left transition-colors last:border-b-0 hover:bg-teal-50"
+                            >
+                              <p className="text-sm font-semibold text-gray-900">
+                                {pharmacy.name}
+                              </p>
+
+                              {pharmacy.address && (
+                                <p className="mt-0.5 text-xs text-gray-500">
+                                  {pharmacy.address}
+                                </p>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                    {showPharmacySuggestions &&
+                      pharmacySearch.trim() &&
+                      !isLoadingPharmacies &&
+                      pharmacySuggestions.length === 0 &&
+                      !selectedPharmacy && (
+                        <div className="mt-2 rounded-lg border border-amber-100 bg-amber-50 px-3 py-3">
+                          <p className="text-xs leading-relaxed text-amber-800">
+                            Apologies, that pharmacy is not one of our
+                            current PharmaLink partners. Please select
+                            a partner pharmacy from the suggestions.
+                          </p>
+                        </div>
+                      )}
+                  </div>
+
+                  <label className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold text-gray-700">
+                      Subject{' '}
+                      <span className="font-normal text-gray-400">
+                        (Optional)
+                      </span>
+                    </span>
+
+                    <input
+                      name="subject"
+                      type="text"
+                      value={reportForm.subject}
+                      onChange={handleReportChange}
+                      placeholder="Brief subject..."
+                      maxLength={150}
+                      disabled={isSubmittingReport}
+                      className="profile-input rounded-lg px-3 py-2.5 text-sm"
+                    />
+
+                    <span className="text-right text-[11px] text-gray-400">
+                      {reportForm.subject.length}/150
+                    </span>
+                  </label>
+
+                  <label className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold text-gray-700">
+                      Description{' '}
+                      <span className="text-red-500">*</span>
+                    </span>
+
+                    <textarea
+                      name="description"
+                      value={reportForm.description}
+                      onChange={handleReportChange}
+                      placeholder="Describe your concern or feedback..."
+                      required
+                      rows={6}
+                      maxLength={2000}
+                      disabled={isSubmittingReport}
+                      className="profile-input resize-y rounded-lg px-3 py-2.5 text-sm"
+                    />
+
+                    <span className="text-right text-[11px] text-gray-400">
+                      {reportForm.description.length}/2000
+                    </span>
+                  </label>
+
+                  {reportStatus.message && (
+                    <div
+                      className={`rounded-lg border p-3 text-sm leading-relaxed ${
+                        reportStatus.type === 'success'
+                          ? 'border-emerald-100 bg-emerald-50 text-emerald-800'
+                          : 'border-red-100 bg-red-50 text-red-800'
+                      }`}
+                      role="status"
+                    >
+                      {reportStatus.type === 'success' && (
+                        <div className="flex items-start gap-2">
+                          <CheckCircle2
+                            size={17}
+                            className="mt-0.5 flex-shrink-0"
+                          />
+
+                          <span>{reportStatus.message}</span>
+                        </div>
+                      )}
+
+                      {reportStatus.type !== 'success' &&
+                        reportStatus.message}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 border-t border-gray-100 pt-4">
+                    <button
+                      type="button"
+                      onClick={handleCloseReport}
+                      disabled={isSubmittingReport}
+                      className="profile-secondary-button flex-1 rounded-xl py-2.5 text-sm font-semibold"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={
+                        isSubmittingReport ||
+                        !selectedPharmacy ||
+                        !reportForm.description.trim()
+                      }
+                      className="profile-primary-button flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <Send size={15} />
+
+                      {isSubmittingReport
+                        ? 'Submitting...'
+                        : 'Submit Report'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
 
           {/* =====================================================
               PHARMALINK AI
@@ -1803,22 +1650,17 @@ function ProfilePage() {
                 PharmaLink AI
               </h3>
 
-              <Info
-                size={16}
-                className="opacity-70"
-              />
+              <Info size={16} className="opacity-70" />
             </div>
 
             <p className="text-xs opacity-80 mb-4 leading-relaxed">
-              All assistance is for informational
-              purposes. Consult a pharmacist.
+              All assistance is for informational purposes. Consult a
+              pharmacist.
             </p>
 
             <button
               type="button"
-              onClick={() =>
-                navigate('/assistant')
-              }
+              onClick={() => navigate('/assistant')}
               className="profile-ai-button w-full py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
             >
               <MessageSquare size={16} />

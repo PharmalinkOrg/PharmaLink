@@ -23,6 +23,7 @@ const prescriptionRoutes = require('./routes/prescriptionRoutes')
 const salesRoutes = require('./routes/salesRoutes')
 const aiRoutes = require('./routes/aiRoutes')
 const notificationRoutes = require('./routes/notificationRoutes')
+const reportRoutes = require('./routes/reportRoutes')
 
 const app = express()
 
@@ -181,6 +182,11 @@ app.use(
 app.use(
   '/api/notifications',
   notificationRoutes,
+)
+
+app.use(
+  '/api/reports',
+  reportRoutes,
 )
 
 app.use(

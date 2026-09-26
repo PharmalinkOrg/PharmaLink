@@ -225,6 +225,19 @@ export const api = {
       return response?.data || null
     },
 
+    // Reports
+
+createReport: async (
+  reportData,
+) => {
+  return apiRequest(
+    '/reports',
+    {
+      method: 'POST',
+      body: reportData,
+    },
+  )
+},
   // Authentication
 
   signIn: async (
@@ -299,4 +312,6 @@ export const api = {
 
     return data
   },
+
+  
 }
