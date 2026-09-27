@@ -82,24 +82,28 @@ export function UsersPage() {
   }
 
   return (
-    <section className="users-page">
-      <div className="users-header">
-        <div>
-          <div className="users-title">
-            <Users size={24} />
-            <h2>Users</h2>
+    <>
+      <div className="page-header-sticky">
+        <div className="users-header">
+          <div>
+            <div className="users-title">
+              <h2>Users</h2>
+            </div>
+
+            <p>
+              Manage pharmacy administrators and customers.
+            </p>
           </div>
 
-          <p>
-            Manage pharmacy administrators and customers.
-          </p>
-        </div>
-
-        <div className="users-count">
-          <strong>{users.length}</strong>
-          <span>Total Users</span>
+          <div className="users-count">
+            <strong>{users.length}</strong>
+            <span>Total Users</span>
+          </div>
         </div>
       </div>
+
+      <div className="page-content-wrapper">
+        <section className="users-page">
 
       <div className="users-toolbar">
         <div className="users-search">
@@ -249,6 +253,8 @@ export function UsersPage() {
           </div>
         </div>
       )}
-    </section>
+        </section>
+      </div>
+    </>
   )
 }

@@ -8,17 +8,21 @@ export function SettingsPage() {
   const [emailNotifications, setEmailNotifications] = useState(true)
 
   return (
-    <div className="settings-page">
-      <div className="page-header">
-        <div className="page-title-row">
-          <Settings size={24} />
-          <h1>Settings</h1>
-        </div>
+    <>
+      <div className="page-header-sticky">
+        <div className="page-header">
+          <div className="page-title-row">
+            <h1>Settings</h1>
+          </div>
 
-        <p>
-          Manage general system settings and Super Admin account preferences.
-        </p>
+          <p>
+            Manage general system settings and Super Admin account preferences.
+          </p>
+        </div>
       </div>
+
+      <div className="page-content-wrapper">
+        <div className="settings-page">
 
       <div className="settings-section">
         <h3>General Settings</h3>
@@ -64,6 +68,8 @@ export function SettingsPage() {
           Reset Password
         </button>
       </div>
-    </div>
+        </div>
+      </div>
+    </>
   )
 }

@@ -96,23 +96,27 @@ export function ReportsPage() {
   }
 
   return (
-    <div className="reports-page">
-      <div className="page-header">
-        <div>
-          <div className="page-title-row">
-            <FileText size={24} />
-            <h1>Reports</h1>
+    <>
+      <div className="page-header-sticky">
+        <div className="page-header">
+          <div>
+            <div className="page-title-row">
+              <h1>Reports</h1>
+            </div>
+
+            <p>
+              View generated reports and system information.
+            </p>
           </div>
 
-          <p>
-            View generated reports and system information.
-          </p>
-        </div>
-
-        <div className="report-count">
-          {reports.length} reports
+          <div className="report-count">
+            {reports.length} reports
+          </div>
         </div>
       </div>
+
+      <div className="page-content-wrapper">
+        <div className="reports-page">
 
       <div className="reports-toolbar">
         <div className="search-box">
@@ -217,6 +221,8 @@ export function ReportsPage() {
           </div>
         </div>
       )}
-    </div>
+        </div>
+      </div>
+    </>
   )
 }

@@ -25,24 +25,22 @@ const signIn = async (email, password) => {
     },
   })
 
-  const accessToken = loginResponse.data.session.access_token
+  // Backend returns: { success, message, data: { user, pharmaUser, session } }
+  const { session, pharmaUser } = loginResponse.data
+  const accessToken = session.access_token
 
-  const profileResponse = await apiRequest('/auth/me', {
-    token: accessToken,
-  })
-
-  const user = profileResponse.data
-
+  // The backend already validates role and pharmacy_id, 
+  // but we double-check here for safety
   if (
-    user.role !== 'PHARMACY_ADMIN' &&
-    user.role !== 'PHARMACY_STAFF'
+    pharmaUser.role !== 'PHARMACY_ADMIN' &&
+    pharmaUser.role !== 'PHARMACY_STAFF'
   ) {
     throw new Error(
       'This account is not authorized to access Pharmacy Admin'
     )
   }
 
-  if (!user.pharmacy_id) {
+  if (!pharmaUser.pharmacy_id) {
     throw new Error(
       'This pharmacy account is not assigned to a pharmacy'
     )
@@ -50,7 +48,7 @@ const signIn = async (email, password) => {
 
   const nextSession = {
     accessToken,
-    user,
+    user: pharmaUser,
   }
 
   localStorage.setItem(

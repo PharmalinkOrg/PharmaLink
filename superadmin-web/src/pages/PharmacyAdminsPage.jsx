@@ -375,82 +375,82 @@ export function PharmacyAdminsPage() {
   ============================================================ */
 
   return (
-    <div className="pharmacies-page">
-      {/* HEADER */}
+    <>
+      <div className="page-header-sticky">
+        <div className="page-header">
+          <div>
+            <div className="page-title-row">
+              <h1>
+                Pharmacy Admins
+              </h1>
+            </div>
 
-      <div className="page-header">
-        <div>
-          <div className="page-title-row">
-            <UserRound size={24} />
-
-            <h1>
-              Pharmacy Admins
-            </h1>
+            <p>
+              Manage administrator accounts assigned
+              to PharmaLink partner pharmacies.
+            </p>
           </div>
 
-          <p>
-            Manage administrator accounts assigned
-            to PharmaLink partner pharmacies.
-          </p>
-        </div>
+          <div className="page-header-actions">
+            <div className="pharmacy-count">
+              {admins.length}{' '}
+              {admins.length === 1
+                ? 'admin'
+                : 'admins'}
+            </div>
 
-        <div className="page-header-actions">
-          <div className="pharmacy-count">
-            {admins.length}{' '}
-            {admins.length === 1
-              ? 'admin'
-              : 'admins'}
+            <button
+              type="button"
+              className="add-pharmacy-button"
+              onClick={openModal}
+            >
+              <Plus size={18} />
+
+              Add Pharmacy Admin
+            </button>
           </div>
-
-          <button
-            type="button"
-            className="add-pharmacy-button"
-            onClick={openModal}
-          >
-            <Plus size={18} />
-
-            Add Pharmacy Admin
-          </button>
         </div>
       </div>
 
-      {/* TOOLBAR */}
+      <div className="page-content-wrapper">
+        <div className="pharmacies-page">
+          {/* TOOLBAR */}
+          
+          <div className="pharmacy-toolbar">
+            <div className="search-box">
+              <Search size={18} />
 
-      <div className="pharmacy-toolbar">
-        <div className="search-box">
-          <Search size={18} />
+              <input
+                type="text"
+                placeholder="Search pharmacy admins..."
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value)
+                  setCurrentPage(1)
+                }}
+              />
+            </div>
 
-          <input
-            type="text"
-            placeholder="Search pharmacy admins..."
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value)
-              setCurrentPage(1)
-            }}
-          />
-        </div>
+            <div className="sort-box">
+              <ArrowUpDown size={17} />
 
-        <div className="sort-box">
-          <ArrowUpDown size={17} />
+              <select
+                value={sort}
+                onChange={(event) => {
+                  setSort(event.target.value)
+                  setCurrentPage(1)
+                }}
+              >
+                <option value="newest">
+                  Newest to Oldest
+                </option>
 
-          <select
-            value={sort}
-            onChange={(event) => {
-              setSort(event.target.value)
-              setCurrentPage(1)
-            }}
-          >
-            <option value="newest">
-              Newest to Oldest
-            </option>
-
-            <option value="az">
-              A–Z
-            </option>
-          </select>
-        </div>
-      </div>
+                <option value="az">
+                  A–Z
+                </option>
+              </select>
+            </div>
+          </div>
 
       {/* TABLE */}
 
@@ -864,5 +864,7 @@ export function PharmacyAdminsPage() {
         </div>
       )}
     </div>
+  </div>
+    </>
   )
 }

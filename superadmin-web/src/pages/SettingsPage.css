@@ -1,23 +1,16 @@
 /* File: superadmin-web/src/pages/SettingsPage.css */
 
 .settings-page {
-  padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
 }
 
 .settings-page .page-header {
-  margin-bottom: 24px;
 }
 
 .settings-page .page-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.settings-page .page-title-row svg {
-  color: #172A3A;
 }
 
 .settings-page .page-title-row h1 {

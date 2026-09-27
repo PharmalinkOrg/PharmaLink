@@ -589,57 +589,63 @@ export function PharmaciesPage() {
   ========================================================== */
 
   return (
-    <div className="pharmacies-page">
+    <>
       {/* ======================================================
-          PAGE HEADER
+          STICKY PAGE HEADER
       ====================================================== */}
 
-      <div className="page-header">
-        <div>
-          <div className="page-title-row">
-            <Building2 size={24} />
+      <div className="page-header-sticky">
+        <div className="page-header">
+          <div>
+            <div className="page-title-row">
+              <h1>
+                Pharmacies
+              </h1>
+            </div>
 
-            <h1>
-              Pharmacies
-            </h1>
+            <p>
+              Manage partner pharmacies
+              registered in PharmaLink.
+            </p>
           </div>
 
-          <p>
-            Manage partner pharmacies
-            registered in PharmaLink.
-          </p>
-        </div>
+          <div className="page-header-actions">
+            <div className="pharmacy-count">
+              {pharmacies.length}{' '}
 
-        <div className="page-header-actions">
-          <div className="pharmacy-count">
-            {pharmacies.length}{' '}
+              {pharmacies.length === 1
+                ? 'pharmacy'
+                : 'pharmacies'}
+            </div>
 
-            {pharmacies.length === 1
-              ? 'pharmacy'
-              : 'pharmacies'}
+            <button
+              type="button"
+              className="add-pharmacy-button"
+              onClick={
+                openAddModal
+              }
+            >
+              <Plus size={18} />
+
+              <span>
+                Add Partner Pharmacy
+              </span>
+            </button>
           </div>
-
-          <button
-            type="button"
-            className="add-pharmacy-button"
-            onClick={
-              openAddModal
-            }
-          >
-            <Plus size={18} />
-
-            <span>
-              Add Partner Pharmacy
-            </span>
-          </button>
         </div>
       </div>
 
       {/* ======================================================
-          TOOLBAR
+          PAGE CONTENT
       ====================================================== */}
 
-      <div className="pharmacy-toolbar">
+      <div className="page-content-wrapper">
+        <div className="pharmacies-page">
+          {/* ======================================================
+              TOOLBAR
+          ====================================================== */}
+
+          <div className="pharmacy-toolbar">
         <div className="search-box">
           <Search size={18} />
 
@@ -1326,6 +1332,8 @@ export function PharmaciesPage() {
           </div>
         </div>
       )}
-    </div>
+        </div>
+      </div>
+    </>
   )
 }

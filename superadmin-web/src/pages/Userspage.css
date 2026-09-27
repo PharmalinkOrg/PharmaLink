@@ -1,5 +1,4 @@
 .users-page {
-  padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -9,17 +8,11 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 24px;
 }
 
 .users-title {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.users-title svg {
-  color: #172A3A;
 }
 
 .users-title h2 {

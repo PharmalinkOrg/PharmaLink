@@ -68,23 +68,27 @@ export function AuditLogsPage() {
   }
 
   return (
-    <div className="audit-logs-page">
-      <div className="page-header">
-        <div>
-          <div className="page-title-row">
-            <ClipboardList size={24} />
-            <h1>Audit Logs</h1>
+    <>
+      <div className="page-header-sticky">
+        <div className="page-header">
+          <div>
+            <div className="page-title-row">
+              <h1>Audit Logs</h1>
+            </div>
+
+            <p>
+              View system activities and administrative actions.
+            </p>
           </div>
 
-          <p>
-            View system activities and administrative actions.
-          </p>
-        </div>
-
-        <div className="audit-log-count">
-          {filteredLogs.length} logs
+          <div className="audit-log-count">
+            {filteredLogs.length} logs
+          </div>
         </div>
       </div>
+
+      <div className="page-content-wrapper">
+        <div className="audit-logs-page">
 
       <div className="audit-toolbar">
         <div className="search-box">
@@ -176,6 +180,8 @@ export function AuditLogsPage() {
           </div>
         </div>
       )}
-    </div>
+        </div>
+      </div>
+    </>
   )
 }
