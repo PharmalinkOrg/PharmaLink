@@ -195,8 +195,8 @@ function PrescriptionsPage() {
   // --------------------------------------------------
 
   return (
-    <section className="prescriptions-page">
-      <div className="page-heading">
+    <>
+      <div className="page-header-sticky">
         <div>
           <h2 className="page-title">Prescription Verification Queue</h2>
           <p className="page-copy">
@@ -204,6 +204,9 @@ function PrescriptionsPage() {
           </p>
         </div>
       </div>
+
+      <div className="page-content-wrapper">
+        <section className="prescriptions-page-content">
 
       {error && (
         <p className="form-error" role="alert">
@@ -434,7 +437,9 @@ function PrescriptionsPage() {
           </div>
         </div>
       )}
-    </section>
+        </section>
+      </div>
+    </>
   )
 }
 

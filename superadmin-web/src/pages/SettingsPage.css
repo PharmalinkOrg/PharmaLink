@@ -6,23 +6,29 @@
 }
 
 .settings-page .page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .settings-page .page-title-row {
   display: flex;
   align-items: center;
+  margin-bottom: 0;
 }
 
 .settings-page .page-title-row h1 {
   margin: 0;
   font-size: 24px;
   font-weight: 700;
+  color: #1e293b;
 }
 
 .settings-page .page-header p {
   margin: 6px 0 0;
   color: #64748b;
   font-size: 14px;
+  line-height: 1.5;
 }
 
 .settings-section {
@@ -69,23 +75,56 @@
 .settings-toggle input {
   width: 16px;
   height: 16px;
-  accent-color: #172A3A;
+  accent-color: #74B3CE;
   cursor: pointer;
+}
+
+.settings-toggle input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e1;
+  border-radius: 4px;
+  background: #ffffff;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.settings-toggle input[type="checkbox"]:checked {
+  background: #74B3CE;
+  border-color: #74B3CE;
+}
+
+.settings-toggle input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 .password-reset-button {
   padding: 9px 16px;
-  border: 1px solid #172A3A;
+  border: 1px solid #74B3CE;
   border-radius: 8px;
-  background: #172A3A;
+  background: #74B3CE;
   color: #fff;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .password-reset-button:hover {
-  background: #508991;
+  background: #5a9bb8;
+  border-color: #5a9bb8;
 }
 
 @media (max-width: 768px) {

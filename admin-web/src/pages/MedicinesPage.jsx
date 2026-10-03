@@ -233,18 +233,20 @@ function MedicinesPage() {
   }
 
   return (
-    <section className="medicines-page">
-      <div className="page-heading">
+    <>
+      <div className="page-header-sticky">
         <div>
           <h2 className="page-title">Medicines</h2>
           <p className="page-copy">Manage your pharmacy's medicine catalog.</p>
         </div>
       </div>
 
-      {error && <p className="form-error" role="alert">{error}</p>}
-      {notice && <p className="form-notice">{notice}</p>}
+      <div className="page-content-wrapper">
+        <section className="medicines-page">
+          {error && <p className="form-error" role="alert">{error}</p>}
+          {notice && <p className="form-notice">{notice}</p>}
 
-      <div className="medicines-layout">
+          <div className="medicines-layout">
         {/* Form Panel - Always Visible */}
         <div className="medicine-form-panel">
           <form className="medicine-form" onSubmit={handleSubmit}>
@@ -548,7 +550,9 @@ function MedicinesPage() {
           </div>
         </div>
       </div>
-    </section>
+        </section>
+      </div>
+    </>
   )
 }
 

@@ -180,10 +180,9 @@ function ReportsPage() {
   // --------------------------------------------------
 
   return (
-    <section className="reports-page">
-      <div className="page-heading">
+    <>
+      <div className="page-header-sticky">
         <div>
-          <span className="eyebrow">Customer Feedback</span>
           <h2 className="page-title">Reports</h2>
           <p className="page-copy">
             View and manage reports, complaints, side effects, and suggestions from customers
@@ -191,6 +190,9 @@ function ReportsPage() {
           </p>
         </div>
       </div>
+
+      <div className="page-content-wrapper">
+        <section className="reports-page-content">
 
       {error && (
         <p className="form-error" role="alert">
@@ -361,7 +363,9 @@ function ReportsPage() {
           getReportCode={getReportCode}
         />
       )}
-    </section>
+        </section>
+      </div>
+    </>
   )
 }
 

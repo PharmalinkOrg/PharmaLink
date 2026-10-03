@@ -293,16 +293,18 @@ function SettingsPage() {
   // --------------------------------------------------
 
   return (
-    <section className="settings-page">
-      <div className="page-heading">
+    <>
+      <div className="page-header-sticky">
         <div>
-          <span className="eyebrow">Account Management</span>
           <h2 className="page-title">Settings</h2>
           <p className="page-copy">
             Manage your profile, pharmacy information, and notification preferences.
           </p>
         </div>
       </div>
+
+      <div className="page-content-wrapper">
+        <section className="settings-page-content">
 
       {error && (
         <p className="form-error" role="alert">
@@ -1000,7 +1002,9 @@ function SettingsPage() {
           )}
         </div>
       </div>
-    </section>
+        </section>
+      </div>
+    </>
   )
 }
 

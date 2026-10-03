@@ -673,11 +673,10 @@ function MedicineRequestsPage() {
   // =========================================================
 
   return (
-    <section className="medicine-requests-page">
+    <>
+      {/* PAGE HEADER */}
 
-      {/* PAGE HEADING */}
-
-      <div className="page-heading">
+      <div className="page-header-sticky">
         <div>
           <h2 className="page-title">
             Medicine Requests
@@ -690,6 +689,9 @@ function MedicineRequestsPage() {
           </p>
         </div>
       </div>
+
+      <div className="page-content-wrapper">
+        <section className="medicine-requests-page-content">
 
       {/* ALERTS */}
 
@@ -1416,7 +1418,9 @@ function MedicineRequestsPage() {
           </div>
         </div>
       )}
-    </section>
+        </section>
+      </div>
+    </>
   )
 }
 

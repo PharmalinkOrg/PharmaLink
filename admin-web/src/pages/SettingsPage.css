@@ -246,10 +246,35 @@
 }
 
 .checkbox-label input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   width: 18px;
   height: 18px;
+  border: 2px solid #cbd5e1;
+  border-radius: 4px;
+  background: #ffffff;
   cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
   margin: 0;
+}
+
+.checkbox-label input[type='checkbox']:checked {
+  background: #74B3CE;
+  border-color: #74B3CE;
+}
+
+.checkbox-label input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 .checkbox-label span {

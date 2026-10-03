@@ -328,13 +328,16 @@ function InventoryPage() {
      ========================================================= */
 
   return (
-    <section className="inventory-page">
-      <div className="page-heading">
+    <>
+      <div className="page-header-sticky">
         <div>
           <h2 className="page-title">Inventory</h2>
           <p className="page-copy">Manage batches for your assigned pharmacy.</p>
         </div>
       </div>
+
+      <div className="page-content-wrapper">
+        <section className="inventory-page-content">
 
       {error && <p className="form-error" role="alert">{error}</p>}
       {notice && <p className="form-notice">{notice}</p>}
@@ -648,7 +651,9 @@ function InventoryPage() {
           </div>
         </div>
       </div>
-    </section>
+        </section>
+      </div>
+    </>
   )
 }
 

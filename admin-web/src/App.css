@@ -44,11 +44,12 @@
 .sidebar a {
   padding: 10px 12px;
   border-radius: 8px;
-  color: #dce9e5;
+  color: #D6F3F4;
   text-decoration: none;
   display: flex;
   align-items: center;
   gap: 12px;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .sidebar a svg {
@@ -66,17 +67,41 @@
 }
 
 .main-content {
+  padding: 0;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+/* Sticky Page Header */
+.page-header-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 24px 40px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.page-content-wrapper {
   padding: 40px;
 }
 
 .page-title {
   margin: 0;
   color: #18332d;
-  font-size: 2rem;
+  font-size: 1.5rem;
+  font-weight: 700;
 }
 
 .page-copy {
-  color: #5f6c68;
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 6px 0 0;
 }
 
 .sidebar-account {

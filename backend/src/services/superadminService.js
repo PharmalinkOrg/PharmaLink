@@ -311,30 +311,32 @@ async function getMetrics() {
 /**
  * Get Activity Logs
  *
- * Pharmacy verification events from the last 48 hours.
+ * Pharmacy admin audit logs (from audit_logs table) from the last 7 days.
  *
- * Actual activity_logs schema:
- * - id
- * - superadmin_id
+ * Schema:
+ * - audit_log_id
+ * - user_id (pharmacy admin)
+ * - pharmacy_id
  * - action
- * - details
+ * - entity_type
+ * - entity_id
+ * - description
  * - created_at
  */
 async function getActivityLogs(limit = 10, offset = 0) {
   const now = new Date()
 
-  const fortyEightHoursAgo = new Date(
-    now.getTime() - 48 * 60 * 60 * 1000
+  const sevenDaysAgo = new Date(
+    now.getTime() - 7 * 24 * 60 * 60 * 1000
   )
 
   try {
     // Get total count
     const { count: total, error: countError } =
       await supabaseAdmin
-        .from('activity_logs')
-        .select('id', { count: 'exact' })
-        .eq('action', 'pharmacy_verification_changed')
-        .gte('created_at', fortyEightHoursAgo.toISOString())
+        .from('audit_logs')
+        .select('audit_log_id', { count: 'exact' })
+        .gte('created_at', sevenDaysAgo.toISOString())
 
     if (countError) {
       throw new Error(
@@ -342,19 +344,21 @@ async function getActivityLogs(limit = 10, offset = 0) {
       )
     }
 
-    // Get paginated activity data
-    const { data: activities, error: dataError } =
+    // Get paginated audit log data
+    const { data: auditLogs, error: dataError } =
       await supabaseAdmin
-        .from('activity_logs')
+        .from('audit_logs')
         .select(`
-          id,
-          superadmin_id,
+          audit_log_id,
+          user_id,
+          pharmacy_id,
           action,
-          details,
+          entity_type,
+          entity_id,
+          description,
           created_at
         `)
-        .eq('action', 'pharmacy_verification_changed')
-        .gte('created_at', fortyEightHoursAgo.toISOString())
+        .gte('created_at', sevenDaysAgo.toISOString())
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
 
@@ -364,43 +368,59 @@ async function getActivityLogs(limit = 10, offset = 0) {
       )
     }
 
-    // Enrich activity logs with pharmacy information
+    // Enrich audit logs with user and pharmacy information
     const enrichedActivities = await Promise.all(
-      (activities || []).map(async (activity) => {
-        const pharmacyId =
-          activity.details?.pharmacy_id ||
-          activity.details?.entity_id ||
-          activity.details?.pharmacyId
-
-        let pharmacy = null
-
-        if (pharmacyId) {
-          const { data } = await supabaseAdmin
-            .from('pharmacies')
-            .select('pharmacy_id, name')
-            .eq('pharmacy_id', pharmacyId)
+      (auditLogs || []).map(async (log) => {
+        // Fetch user (pharmacy admin) details
+        let user = null
+        if (log.user_id) {
+          const { data: userData } = await supabaseAdmin
+            .from('users')
+            .select('user_id, first_name, last_name, email, role')
+            .eq('user_id', log.user_id)
             .maybeSingle()
 
-          pharmacy = data
+          user = userData
+        }
+
+        // Fetch pharmacy details
+        let pharmacy = null
+        if (log.pharmacy_id) {
+          const { data: pharmacyData } = await supabaseAdmin
+            .from('pharmacies')
+            .select('pharmacy_id, name')
+            .eq('pharmacy_id', log.pharmacy_id)
+            .maybeSingle()
+
+          pharmacy = pharmacyData
         }
 
         return {
-          id: activity.id,
-          timestamp: activity.created_at,
-          type:
-            activity.details?.event_type ||
-            activity.action,
+          id: log.audit_log_id,
+          timestamp: log.created_at,
+          action: log.action,
+          description: log.description,
+          entityType: log.entity_type,
+          entityId: log.entity_id,
+          user: user
+            ? {
+                id: user.user_id,
+                name: `${user.first_name} ${user.last_name}`.trim() || user.email,
+                email: user.email,
+                role: user.role,
+              }
+            : null,
           pharmacy: pharmacy
             ? {
                 id: pharmacy.pharmacy_id,
                 name: pharmacy.name,
               }
-            : {
-                id: pharmacyId || null,
+            : log.pharmacy_id
+            ? {
+                id: log.pharmacy_id,
                 name: 'Unknown Pharmacy',
-              },
-          actor: activity.superadmin_id,
-          details: activity.details,
+              }
+            : null,
         }
       })
     )

@@ -11,13 +11,15 @@ export function SettingsPage() {
     <>
       <div className="page-header-sticky">
         <div className="page-header">
-          <div className="page-title-row">
-            <h1>Settings</h1>
-          </div>
+          <div>
+            <div className="page-title-row">
+              <h1>Settings</h1>
+            </div>
 
-          <p>
-            Manage general system settings and Super Admin account preferences.
-          </p>
+            <p>
+              Manage general system settings and Super Admin account preferences.
+            </p>
+          </div>
         </div>
       </div>
 

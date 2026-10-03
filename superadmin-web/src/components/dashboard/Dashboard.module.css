@@ -18,15 +18,15 @@
 
 .pageTitle {
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--color-text);
 }
 
 .pageCopy {
   margin: 0.35rem 0 0;
-  color: var(--color-text-secondary);
-  font-size: 0.95rem;
+  color: #64748b;
+  font-size: 0.875rem;
 }
 
 .dashboardContent {
@@ -406,6 +406,19 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.userName {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.entityInfo {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  margin: 0.25rem 0 0 0;
+  font-style: italic;
 }
 
 
@@ -534,7 +547,7 @@
   }
 
   .pageTitle {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
 
   .brandTitle {

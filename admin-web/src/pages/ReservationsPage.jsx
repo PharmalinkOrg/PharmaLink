@@ -528,14 +528,9 @@ function ReservationsPage() {
 
   return (
     <section className="reservations-page">
-      {/* Page Heading */}
-
-      <div className="page-heading">
+      {/* Page Header */}
+      <div className="page-header-sticky">
         <div>
-          <span className="eyebrow">
-            Pharmacy Operations
-          </span>
-
           <h2 className="page-title">
             Reservations
           </h2>
@@ -546,6 +541,9 @@ function ReservationsPage() {
           </p>
         </div>
       </div>
+
+      <div className="page-content-wrapper">
+        <section className="reservations-page-content">
 
       {/* Error */}
 
@@ -1459,6 +1457,8 @@ function ReservationsPage() {
           </div>
         </div>
       )}
+        </section>
+      </div>
     </section>
   )
 }

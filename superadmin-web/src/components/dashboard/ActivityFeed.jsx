@@ -11,18 +11,37 @@ function formatTimeAgo(timestamp) {
   const diffMs = now - eventTime
   const diffMins = Math.floor(diffMs / 60000)
   const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
 
   if (diffMins < 1) return 'Just now'
   if (diffMins < 60) return `${diffMins} min ago`
   if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
 
   return eventTime.toLocaleDateString()
 }
 
-function getEventBadgeClass(eventType) {
-  if (eventType === 'approved') return 'approved'
-  if (eventType === 'rejected') return 'rejected'
+function getActionBadgeClass(action) {
+  const actionLower = (action || '').toLowerCase()
+  
+  if (actionLower.includes('create') || actionLower.includes('add')) return 'approved'
+  if (actionLower.includes('delete') || actionLower.includes('remove')) return 'rejected'
+  if (actionLower.includes('update') || actionLower.includes('edit')) return 'pending'
+  
   return 'pending'
+}
+
+function formatActionName(action) {
+  if (!action) return 'Unknown Action'
+  
+  // Convert snake_case or camelCase to Title Case
+  return action
+    .replace(/_/g, ' ')
+    .replace(/([A-Z])/g, ' $1')
+    .trim()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
 }
 
 export function ActivityFeed() {
@@ -77,7 +96,7 @@ export function ActivityFeed() {
               <div className={styles.activityContent}>
                 <div className={styles.topRow}>
                   <span className={styles.pharmacy}>
-                    {activity.pharmacy.name}
+                    {activity.pharmacy?.name || activity.user?.name || 'System'}
                   </span>
 
                   <span className={styles.time}>
@@ -86,24 +105,31 @@ export function ActivityFeed() {
                 </div>
 
                 <p className={styles.description}>
-                  Verification{' '}
-
+                  {activity.user && (
+                    <span className={styles.userName}>
+                      {activity.user.name}
+                    </span>
+                  )}
+                  {' '}
                   <span
                     className={`${styles.activityBadge} ${
-                      styles[
-                        getEventBadgeClass(
-                          activity.details?.event_type
-                        )
-                      ]
+                      styles[getActionBadgeClass(activity.action)]
                     }`}
                   >
-                    {activity.details?.event_type || 'updated'}
+                    {formatActionName(activity.action)}
                   </span>
                 </p>
 
-                {activity.details?.reason && (
+                {activity.description && (
                   <p className={styles.reason}>
-                    {activity.details.reason}
+                    {activity.description}
+                  </p>
+                )}
+
+                {activity.entityType && (
+                  <p className={styles.entityInfo}>
+                    {activity.entityType}
+                    {activity.entityId && ` #${activity.entityId}`}
                   </p>
                 )}
               </div>

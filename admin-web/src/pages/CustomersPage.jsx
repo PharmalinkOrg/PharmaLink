@@ -142,13 +142,16 @@ function CustomersPage() {
   const totalReservations = reservations.length;
 
   return (
-    <div className="customers-page">
-      <div className="customers-header">
+    <>
+      <div className="page-header-sticky">
         <div>
-          <h1>Customers</h1>
-          <p>Customers who have made reservations at your pharmacy.</p>
+          <h2 className="page-title" style={{ fontSize: '1.5rem' }}>Customers</h2>
+          <p className="page-copy">Customers who have made reservations at your pharmacy.</p>
         </div>
       </div>
+
+      <div className="page-content-wrapper">
+        <div className="customers-page-content">
 
       <div className="customer-stats">
         <div className="customer-stat-card">
@@ -275,7 +278,9 @@ function CustomersPage() {
           </div>
         )}
       </div>
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
 

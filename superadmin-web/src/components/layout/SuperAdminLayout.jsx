@@ -19,7 +19,6 @@ const navigation = [
   { label: 'Dashboard', to: '/', icon: LayoutGrid },
   { label: 'Pharmacies', to: '/pharmacies', icon: Store },
   { label: 'Pharmacy Admins', to: '/pharmacy-admins', icon: UserCog },
-  { label: 'Customers', to: '/customers', icon: Users },
   { label: 'Users', to: '/users', icon: UserCheck },
   { label: 'Reports', to: '/reports', icon: BarChart3 },
   { label: 'Audit Logs', to: '/audit-logs', icon: ScrollText },

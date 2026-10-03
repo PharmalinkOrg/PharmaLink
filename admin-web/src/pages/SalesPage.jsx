@@ -191,10 +191,9 @@ function SalesPage() {
   // --------------------------------------------------
 
   return (
-    <section className="sales-page">
-      <div className="page-heading">
+    <>
+      <div className="page-header-sticky">
         <div>
-          <span className="eyebrow">Pharmacy Operations</span>
           <h2 className="page-title">Sales</h2>
           <p className="page-copy">
             Record in-person sales and view your pharmacy's sales history.
@@ -209,10 +208,14 @@ function SalesPage() {
             setError('')
             setIsRecordModalOpen(true)
           }}
+          style={{ marginLeft: 'auto' }}
         >
           + Record Sale
         </button>
       </div>
+
+      <div className="page-content-wrapper">
+        <section className="sales-page-content">
 
       {error && (
         <p className="form-error" role="alert">
@@ -400,7 +403,9 @@ function SalesPage() {
           onError={(message) => setError(message)}
         />
       )}
-    </section>
+        </section>
+      </div>
+    </>
   )
 }
 

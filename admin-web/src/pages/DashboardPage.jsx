@@ -140,21 +140,24 @@ function DashboardPage() {
   // ----- loading / error states -----
   if (isLoading) {
     return (
-      <section className="dashboard-page">
-        <div className="page-heading">
-          <span className="eyebrow">Pharmacy Overview</span>
-          <h2 className="page-title">Dashboard</h2>
-          <p className="page-copy">Loading dashboard data…</p>
+      <>
+        <div className="page-header-sticky">
+          <div>
+            <h2 className="page-title">Dashboard</h2>
+            <p className="page-copy">Loading dashboard data…</p>
+          </div>
         </div>
-      </section>
+        <div className="page-content-wrapper">
+          <section className="dashboard-page"></section>
+        </div>
+      </>
     );
   }
 
   return (
-    <section className="dashboard-page">
-      <div className="page-heading">
+    <>
+      <div className="page-header-sticky">
         <div>
-          <span className="eyebrow">Pharmacy Overview</span>
           <h2 className="page-title">Dashboard</h2>
           <p className="page-copy">
             Monitor your pharmacy inventory and customer reservations.
@@ -162,11 +165,13 @@ function DashboardPage() {
         </div>
       </div>
 
-      {error && (
-        <p className="form-error" role="alert">
-          {error}
-        </p>
-      )}
+      <div className="page-content-wrapper">
+        <section className="dashboard-page">
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
 
       {dashboard && (
         <>
@@ -247,7 +252,9 @@ function DashboardPage() {
           </div>
         </>
       )}
-    </section>
+        </section>
+      </div>
+    </>
   );
 }
 

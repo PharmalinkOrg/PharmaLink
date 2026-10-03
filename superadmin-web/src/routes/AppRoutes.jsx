@@ -22,8 +22,6 @@ import { ReportsPage } from '../pages/ReportsPage'
 
 import { NotificationsPage } from '../pages/NotificationsPage'
 
-import { CustomersPage } from '../pages/CustomersPage'
-
 function AppRoutes() {
   return (
     <Routes>
@@ -66,11 +64,6 @@ function AppRoutes() {
         <Route
           path="users"
           element={<UsersPage />}
-        />
-
-        <Route
-          path="customers"
-          element={<CustomersPage />}
         />
 
         <Route

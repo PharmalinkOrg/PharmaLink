@@ -34,7 +34,7 @@ exports.getMetrics = async (req, res) => {
 
 /**
  * GET /api/superadmin/activity-logs?limit=10&offset=0
- * Returns paginated activity logs (pharmacy verification events from last 48 hours)
+ * Returns paginated activity logs (pharmacy admin audit logs from last 7 days)
  * Response: { activities, pagination }
  */
 exports.getActivityLogs = async (req, res) => {
