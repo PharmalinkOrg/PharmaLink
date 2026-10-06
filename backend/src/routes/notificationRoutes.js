@@ -3,55 +3,26 @@ const express = require('express')
 const {
   getMyNotifications,
   getUnreadCount,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification,
 } = require('../controllers/notificationController')
 
-// These middleware files use:
-// module.exports = authenticateUser
-// module.exports = loadPharmaUser
-//
-// Therefore, DO NOT destructure these imports.
 const authenticateUser = require('../middleware/authMiddleware')
 const loadPharmaUser = require('../middleware/userMiddleware')
 
 const router = express.Router()
 
-/**
- * Every notification endpoint requires:
- *
- * 1. Valid Supabase authentication
- * 2. Corresponding PharmaLink users row
- */
-router.use(
-  authenticateUser,
-  loadPharmaUser
-)
+// Any logged-in user (customer or pharmacy admin) can read
+// their own notifications, so there is no requireRole here.
+router.use(authenticateUser, loadPharmaUser)
 
-/**
- * IMPORTANT:
- * Static routes must come before
- * /:notificationId/read.
- */
+// Static paths MUST come before the '/:id' routes.
+router.get('/', getMyNotifications)
+router.get('/unread-count', getUnreadCount)
+router.patch('/read-all', markAllAsRead)
 
-router.get(
-  '/',
-  getMyNotifications
-)
-
-router.get(
-  '/unread-count',
-  getUnreadCount
-)
-
-router.patch(
-  '/read-all',
-  markAllNotificationsAsRead
-)
-
-router.patch(
-  '/:notificationId/read',
-  markNotificationAsRead
-)
+router.patch('/:id/read', markAsRead)
+router.delete('/:id', deleteNotification)
 
 module.exports = router

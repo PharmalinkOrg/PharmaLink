@@ -265,18 +265,6 @@ const createNotifications = async ({
 // HELPERS FOR MESSAGES
 // =========================================================
 
-/**
- * Today's date (YYYY-MM-DD) in Philippine time, so
- * same-day pickups can say "today" instead of a date.
- */
-const getManilaDateString = () =>
-  new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Manila',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date())
-
 const formatPickupDate = (date) => {
   if (!date) return ''
 
@@ -408,37 +396,18 @@ const notifyReservationStatusChange = async (
       reservation.pharmacies?.name ||
       (await getPharmacyName(reservation.pharmacy_id))
 
-    // e.g. "today at 3:00 PM" or "on Oct 8, 2026 at 3:00 PM"
-    const pickupTime = formatPickupTime(
-      reservation.pickup_time,
-    )
-
-    const isToday =
-      reservation.pickup_date === getManilaDateString()
-
-    const pickupDate = formatPickupDate(
-      reservation.pickup_date,
-    )
-
-    let pickupPhrase = ''
-
-    if (isToday) {
-      pickupPhrase = 'today'
-    } else if (pickupDate) {
-      pickupPhrase = `on ${pickupDate}`
-    }
-
-    if (pickupTime) {
-      pickupPhrase = pickupPhrase
-        ? `${pickupPhrase} at ${pickupTime}`
-        : `at ${pickupTime}`
-    }
+    const pickupWhen = [
+      formatPickupDate(reservation.pickup_date),
+      formatPickupTime(reservation.pickup_time),
+    ]
+      .filter(Boolean)
+      .join(' at ')
 
     const templates = {
       CONFIRMED: {
         title: 'Reservation confirmed',
-        message: pickupPhrase
-          ? `${pharmacy} confirmed reservation #${id}. Please pick up your medicine ${pickupPhrase}.`
+        message: pickupWhen
+          ? `${pharmacy} confirmed reservation #${id}. Please pick up your medicine on ${pickupWhen}.`
           : `${pharmacy} confirmed reservation #${id}. You can now pick up your medicine.`,
       },
       CANCELLED: {
@@ -536,13 +505,10 @@ const notifyMedicineRequestResponse = async ({
       response.status || '',
     ).toUpperCase()
 
-    // Use the name already joined on the response when present.
-    const pharmacy =
-      response.pharmacies?.name ||
-      (await getPharmacyName(
-        response.pharmacy_id,
-        'A partner pharmacy',
-      ))
+    const pharmacy = await getPharmacyName(
+      response.pharmacy_id,
+      'A partner pharmacy',
+    )
 
     const item = request.medicine_request_items?.[0]
     const medicine = getRequestItemName(item)

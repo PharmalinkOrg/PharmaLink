@@ -3,6 +3,7 @@ const supabaseAdmin = require('../config/supabaseAdmin')
 const {
   createNotification,
   createNotifications,
+  notifyMedicineRequestResponse,
 } = require('../services/notificationService')
 
 // ============================================================
@@ -595,9 +596,17 @@ const createMedicineRequest = async (req, res) => {
         title: 'New medicine request',
 
         message:
-          'A customer submitted a new medicine request. Open PharmaLink to review and respond.',
+          `A customer submitted medicine request #${request.medicine_request_id}. Open PharmaLink to review and respond.`,
 
         type: 'MEDICINE_REQUEST',
+
+        referenceType: 'medicine_request',
+
+        referenceId: request.medicine_request_id,
+
+        metadata: {
+          status: 'OPEN',
+        },
       })
     }
 
@@ -1451,6 +1460,37 @@ const respondToMedicineRequest = async (
     }
 
     // --------------------------------------------------------
+    // Did this pharmacy already respond?
+    //
+    // Checked BEFORE the upsert so the customer notification
+    // can say "Updated: ..." when a pharmacy edits its answer.
+    // --------------------------------------------------------
+
+    const {
+      data: existingResponse,
+      error: existingResponseError,
+    } = await supabaseAdmin
+      .from('medicine_request_responses')
+      .select('response_id')
+      .eq(
+        'medicine_request_id',
+        requestId
+      )
+      .eq(
+        'pharmacy_id',
+        pharmacyId
+      )
+      .maybeSingle()
+
+    if (existingResponseError) {
+      // Not fatal: only affects the notification wording.
+      console.error(
+        'Existing response lookup error:',
+        existingResponseError
+      )
+    }
+
+    // --------------------------------------------------------
     // Create/update pharmacy response
     // --------------------------------------------------------
     //
@@ -1539,18 +1579,18 @@ const respondToMedicineRequest = async (
     // --------------------------------------------------------
     // Notify the customer
     //
+    // Message includes the medicine, availability, quantity,
+    // price and pharmacy name, and opens My Requests when
+    // tapped.
+    //
     // The pharmacy response has already been saved.
     // Notification failures do NOT undo the response.
     // --------------------------------------------------------
 
-    await createNotification({
-      userId: request.customer_id,
-
-      title: 'Pharmacy responded to your request',
-
-      message: `${pharmacy.name} has responded to your medicine request. Open PharmaLink to view availability and pricing.`,
-
-      type: 'MEDICINE_REQUEST',
+    await notifyMedicineRequestResponse({
+      requestId,
+      response,
+      isUpdate: Boolean(existingResponse),
     })
 
     return res.status(200).json({
@@ -1748,9 +1788,18 @@ const cancelMedicineRequest = async (
               'Medicine request cancelled by customer',
 
             message:
-              'A customer cancelled a medicine request you responded to.',
+              `A customer cancelled medicine request #${requestId}, which you responded to.`,
 
             type: 'MEDICINE_REQUEST',
+
+            referenceType: 'medicine_request',
+
+            referenceId: requestId,
+
+            metadata: {
+              status: 'CANCELLED',
+              cancelled_by: 'CUSTOMER',
+            },
           })
         }
       }
@@ -1867,15 +1916,15 @@ const updateMedicineRequestStatus = async (
       if (status === 'FULFILLED') {
         title = 'Medicine request fulfilled'
         message =
-          'Your medicine request has been fulfilled. Please check PharmaLink for details.'
+          `Your medicine request #${requestId} has been fulfilled. Please check PharmaLink for details.`
       } else if (status === 'CANCELLED') {
         title = 'Medicine request cancelled'
         message =
-          'Your medicine request has been cancelled. Please check PharmaLink for details.'
+          `Your medicine request #${requestId} has been cancelled. Please check PharmaLink for details.`
       } else if (status === 'EXPIRED') {
         title = 'Medicine request expired'
         message =
-          'Your medicine request has expired. Please submit a new request if you still need the medicine.'
+          `Your medicine request #${requestId} has expired. Please submit a new request if you still need the medicine.`
       }
 
       if (title && message) {
@@ -1887,6 +1936,14 @@ const updateMedicineRequestStatus = async (
           message,
 
           type: 'MEDICINE_REQUEST',
+
+          referenceType: 'medicine_request',
+
+          referenceId: requestId,
+
+          metadata: {
+            status,
+          },
         })
       }
     }

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 
 import { usePharmacies } from '../hooks/queries/usePharmacies'
+import { useUnreadNotificationCount } from '../hooks/queries/useNotifications'
 
 const categories = [
   'All',
@@ -32,6 +33,10 @@ function HomePage() {
     error: pharmaciesError,
   } = usePharmacies()
 
+  // Real unread count from the backend (refreshes every 30s)
+  const { data: unreadCount = 0 } =
+    useUnreadNotificationCount()
+
   const featuredPharmacies =
     partnerPharmacies.slice(0, 2)
 
@@ -39,7 +44,8 @@ function HomePage() {
     pharmaciesError?.message ||
     'Unable to load partner pharmacies.'
 
-
+  const badgeLabel =
+    unreadCount > 99 ? '99+' : String(unreadCount)
 
   return (
     <section className="home-page">
@@ -65,14 +71,21 @@ function HomePage() {
 
         <button
           type="button"
-          aria-label="Notifications"
+          onClick={() => navigate('/notifications')}
+          aria-label={
+            unreadCount > 0
+              ? `Notifications, ${unreadCount} unread`
+              : 'Notifications'
+          }
           className="home-notification-button"
         >
           <Bell size={21} strokeWidth={2} />
 
-          <span className="home-notification-badge">
-            2
-          </span>
+          {unreadCount > 0 && (
+            <span className="home-notification-badge">
+              {badgeLabel}
+            </span>
+          )}
         </button>
       </header>
 

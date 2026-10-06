@@ -1,8 +1,8 @@
 const supabaseAdmin = require('../config/supabaseAdmin')
 
 const {
-  createNotification,
   createNotifications,
+  notifyReservationStatusChange,
 } = require('../services/notificationService')
 
 /* ============================================================
@@ -745,10 +745,24 @@ const createReservation =
             'New reservation received',
 
           message:
-            'A customer submitted a new pickup reservation for review.',
+            `A customer submitted pickup reservation #${reservationId} for review.`,
 
           type:
             'RESERVATION',
+
+          referenceType:
+            'reservation',
+
+          referenceId:
+            reservationId,
+
+          metadata: {
+            status: 'PENDING',
+            pickup_date:
+              pickupDate,
+            pickup_time:
+              pickupTime,
+          },
         })
       }
 
@@ -1362,6 +1376,8 @@ const updateReservationStatus =
           reservation_id,
           customer_id,
           pharmacy_id,
+          pickup_date,
+          pickup_time,
           status,
           confirmed_by,
           confirmed_at,
@@ -1531,20 +1547,12 @@ const updateReservationStatus =
 
         /* ------------------------------------------------------
            Notify customer
+           (opens the reservation when tapped)
         ------------------------------------------------------ */
 
-        await createNotification({
-          userId:
-            reservation.customer_id,
-
-          title:
-            'Reservation cancelled',
-
-          message:
-            'Your reservation was cancelled by the pharmacy. Reserved stock has been released.',
-
-          type:
-            'RESERVATION',
+        await notifyReservationStatusChange({
+          ...reservation,
+          status: 'CANCELLED',
         })
 
         return res
@@ -1640,46 +1648,15 @@ const updateReservationStatus =
       }
 
       /* --------------------------------------------------------
-         Notify customer
+         Notify customer (CONFIRMED or COMPLETED)
+
+         The message includes the pharmacy name and pickup
+         time, and opens the reservation when tapped.
       -------------------------------------------------------- */
 
-      if (
-        status ===
-        'CONFIRMED'
-      ) {
-        await createNotification({
-          userId:
-            reservation.customer_id,
-
-          title:
-            'Reservation confirmed',
-
-          message:
-            'Your reservation has been confirmed by the pharmacy and is being prepared for pickup.',
-
-          type:
-            'RESERVATION',
-        })
-      }
-
-      if (
-        status ===
-        'COMPLETED'
-      ) {
-        await createNotification({
-          userId:
-            reservation.customer_id,
-
-          title:
-            'Reservation completed',
-
-          message:
-            'Your reservation has been completed. Thank you for using PharmaLink.',
-
-          type:
-            'RESERVATION',
-        })
-      }
+      await notifyReservationStatusChange(
+        updatedReservation
+      )
 
       return res
         .status(200)
@@ -1786,6 +1763,8 @@ const completeReservationWithSale =
           reservation_id,
           customer_id,
           pharmacy_id,
+          pickup_date,
+          pickup_time,
           status
         `)
         .eq(
@@ -1915,21 +1894,20 @@ const completeReservationWithSale =
 
       /* --------------------------------------------------------
          Notify customer after successful atomic completion
+         (includes the total paid when the RPC returns it)
       -------------------------------------------------------- */
 
-      await createNotification({
-        userId:
-          reservation.customer_id,
-
-        title:
-          'Reservation completed',
-
-        message:
-          'Your reservation has been completed. Thank you for using PharmaLink.',
-
-        type:
-          'RESERVATION',
-      })
+      await notifyReservationStatusChange(
+        {
+          ...reservation,
+          status: 'COMPLETED',
+        },
+        {
+          saleTotal:
+            data?.total_amount ??
+            null,
+        }
+      )
 
       return res
         .status(200)
@@ -2178,10 +2156,21 @@ const cancelReservation =
             'Reservation cancelled by customer',
 
           message:
-            'A customer cancelled a pickup reservation. Reserved stock has been released.',
+            `A customer cancelled pickup reservation #${reservationId}. Reserved stock has been released.`,
 
           type:
             'RESERVATION',
+
+          referenceType:
+            'reservation',
+
+          referenceId:
+            reservationId,
+
+          metadata: {
+            status: 'CANCELLED',
+            cancelled_by: 'CUSTOMER',
+          },
         })
       }
 

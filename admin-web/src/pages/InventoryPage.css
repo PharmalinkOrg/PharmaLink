@@ -1,0 +1,177 @@
+/* =========================================================
+   INVENTORY PAGE — extras on top of MedicinesPage.css (med-*)
+   ========================================================= */
+
+/* Toolbar: search + medicine filter + status filter */
+
+.inv-toolbar {
+  grid-template-columns:
+    minmax(240px, 1fr)
+    minmax(200px, 280px)
+    minmax(150px, 200px);
+}
+
+/* Table cells */
+
+.inv-batch {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  background: #f4f7f6;
+  color: #334155;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.inv-stock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.inv-stock strong {
+  color: #1e293b;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.inv-stock span {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.inv-expiry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.inv-tag {
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.inv-tag-soon {
+  background: #fff4e5;
+  color: #b45309;
+}
+
+.inv-tag-expired {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+/* Status pills (Available reuses .med-pill-active) */
+
+.inv-pill-low,
+.inv-pill-out {
+  padding-left: 0.5rem;
+}
+
+.inv-pill-low::before,
+.inv-pill-out::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.inv-pill-low {
+  background: #fff4e5;
+  color: #b45309;
+}
+
+.inv-pill-out {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+/* Modal form extras */
+
+.inv-qty-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.inv-money {
+  position: relative;
+}
+
+.inv-money > span {
+  position: absolute;
+  top: 50%;
+  left: 0.875rem;
+  color: #64748b;
+  font-size: 0.9375rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.inv-money .med-input {
+  padding-left: 1.85rem;
+}
+
+.inv-hint {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.inv-warning {
+  margin: 0;
+  color: #b45309;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+/* Date + number inputs */
+
+.med-input[type='date'] {
+  color-scheme: light;
+}
+
+.med-input[type='date']::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.med-input[type='date']::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+.inv-qty-row .med-input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.inv-qty-row .med-input[type='number']::-webkit-outer-spin-button,
+.inv-qty-row .med-input[type='number']::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+  .inv-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .inv-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .inv-qty-row {
+    grid-template-columns: 1fr;
+  }
+}

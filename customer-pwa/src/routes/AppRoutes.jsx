@@ -20,6 +20,7 @@ import AIAssistantPage from '../pages/AIAssistantPage'
 import ReservationsPage from '../pages/ReservationsPage'
 import MyReservationsPage from '../pages/MyReservationsPage'
 import ReservationDetailsPage from '../pages/ReservationDetailsPage'
+import NotificationsPage from '../pages/NotificationsPage'
 import NotFoundPage from '../pages/NotFoundPage'
 
 function AppRoutes() {
@@ -66,6 +67,15 @@ function AppRoutes() {
           <Route
             path="pharmacy/:pharmacyId"
             element={<PharmacyDetailsPage />}
+          />
+
+          {/* =========================
+              NOTIFICATIONS
+          ========================== */}
+
+          <Route
+            path="notifications"
+            element={<NotificationsPage />}
           />
 
           {/* =========================

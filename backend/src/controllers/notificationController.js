@@ -1,382 +1,299 @@
 const supabaseAdmin = require('../config/supabaseAdmin')
 
-/* ============================================================
-   HELPERS
-============================================================ */
+// ASSUMPTION: the primary key of your notifications table.
+// Your other tables use reservation_id / medicine_request_id,
+// so this is probably notification_id. Change to 'id' if not.
+const ID_COLUMN = 'notification_id'
 
-const getAuthenticatedUserId = (req) => {
-  const userId = Number(
-    req.pharmaUser?.user_id,
+const DEFAULT_LIMIT = 20
+const MAX_LIMIT = 50
+
+/**
+ * loadPharmaUser (userMiddleware) puts the PharmaLink user
+ * row on req.pharmaUser, same as your other controllers use.
+ */
+const getUserId = (req) => {
+  const id = Number(
+    req.pharmaUser?.user_id ?? req.user?.user_id,
   )
 
-  if (
-    !Number.isInteger(userId) ||
-    userId <= 0
-  ) {
-    return null
-  }
-
-  return userId
+  return Number.isInteger(id) && id > 0
+    ? id
+    : null
 }
 
-/* ============================================================
-   GET MY NOTIFICATIONS
-   GET /api/notifications
-============================================================ */
+const parseId = (value) => {
+  const id = Number(value)
+
+  return Number.isInteger(id) && id > 0
+    ? id
+    : null
+}
+
+const unauthorized = (res) =>
+  res.status(401).json({
+    success: false,
+    message: 'Unauthorized',
+  })
+
+// =========================================================
+// GET /notifications?limit=20&offset=0&unread=true
+// =========================================================
 
 const getMyNotifications = async (req, res) => {
+  const userId = getUserId(req)
+
+  if (!userId) return unauthorized(res)
+
+  const limit = Math.min(
+    Math.max(
+      Number(req.query.limit) || DEFAULT_LIMIT,
+      1,
+    ),
+    MAX_LIMIT,
+  )
+
+  const offset = Math.max(
+    Number(req.query.offset) || 0,
+    0,
+  )
+
+  const unreadOnly = req.query.unread === 'true'
+
   try {
-    const userId =
-      getAuthenticatedUserId(req)
+    let query = supabaseAdmin
+      .from('notifications')
+      .select('*', { count: 'exact' })
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
 
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message:
-          'Authenticated user not found',
-      })
+    if (unreadOnly) {
+      query = query.eq('is_read', false)
     }
 
-    const { data, error } =
-      await supabaseAdmin
-        .from('notifications')
-        .select(`
-          notification_id,
-          user_id,
-          title,
-          message,
-          type,
-          is_read,
-          created_at,
-          read_at
-        `)
-        .eq('user_id', userId)
-        .order('created_at', {
-          ascending: false,
-        })
+    const { data, error, count } = await query
 
-    if (error) {
-      console.error(
-        'Get notifications error:',
-        error,
-      )
+    if (error) throw error
 
-      return res.status(500).json({
-        success: false,
-        message:
-          'Failed to load notifications',
-      })
-    }
+    const total = count ?? 0
 
-    return res.status(200).json({
+    return res.json({
       success: true,
-      message:
-        'Notifications loaded successfully',
       data: data || [],
-    })
-  } catch (error) {
-    console.error(
-      'Get notifications server error:',
-      error,
-    )
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error',
-    })
-  }
-}
-
-/* ============================================================
-   GET UNREAD COUNT
-   GET /api/notifications/unread-count
-============================================================ */
-
-const getUnreadCount = async (req, res) => {
-  try {
-    const userId =
-      getAuthenticatedUserId(req)
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message:
-          'Authenticated user not found',
-      })
-    }
-
-    const { count, error } =
-      await supabaseAdmin
-        .from('notifications')
-        .select('notification_id', {
-          count: 'exact',
-          head: true,
-        })
-        .eq('user_id', userId)
-        .eq('is_read', false)
-
-    if (error) {
-      console.error(
-        'Get unread notification count error:',
-        error,
-      )
-
-      return res.status(500).json({
-        success: false,
-        message:
-          'Failed to load unread notification count',
-      })
-    }
-
-    return res.status(200).json({
-      success: true,
-      data: {
-        unread_count: count || 0,
+      pagination: {
+        total,
+        limit,
+        offset,
+        has_more: offset + limit < total,
       },
     })
   } catch (error) {
     console.error(
-      'Get unread notification count server error:',
+      'Get notifications error:',
       error,
     )
 
     return res.status(500).json({
       success: false,
-      message: 'Server error',
+      message: 'Unable to load notifications.',
     })
   }
 }
 
-/* ============================================================
-   MARK ONE NOTIFICATION AS READ
-   PATCH /api/notifications/:notificationId/read
-============================================================ */
+// =========================================================
+// GET /notifications/unread-count
+// =========================================================
 
-const markNotificationAsRead =
-  async (req, res) => {
-    try {
-      const userId =
-        getAuthenticatedUserId(req)
+const getUnreadCount = async (req, res) => {
+  const userId = getUserId(req)
 
-      const notificationId = Number(
-        req.params.notificationId,
-      )
+  if (!userId) return unauthorized(res)
 
-      if (!userId) {
-        return res.status(401).json({
-          success: false,
-          message:
-            'Authenticated user not found',
-        })
-      }
-
-      if (
-        !Number.isInteger(
-          notificationId,
-        ) ||
-        notificationId <= 0
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            'Valid notification ID is required',
-        })
-      }
-
-      /*
-       * First make sure this notification
-       * belongs to the authenticated user.
-       */
-      const {
-        data: notification,
-        error: lookupError,
-      } = await supabaseAdmin
-        .from('notifications')
-        .select(`
-          notification_id,
-          user_id,
-          is_read,
-          read_at
-        `)
-        .eq(
-          'notification_id',
-          notificationId,
-        )
-        .eq('user_id', userId)
-        .maybeSingle()
-
-      if (lookupError) {
-        console.error(
-          'Notification lookup error:',
-          lookupError,
-        )
-
-        return res.status(500).json({
-          success: false,
-          message:
-            'Failed to load notification',
-        })
-      }
-
-      if (!notification) {
-        return res.status(404).json({
-          success: false,
-          message:
-            'Notification not found',
-        })
-      }
-
-      /*
-       * Already read: return it without
-       * changing read_at again.
-       */
-      if (notification.is_read) {
-        return res.status(200).json({
-          success: true,
-          message:
-            'Notification is already read',
-          data: notification,
-        })
-      }
-
-      const {
-        data: updated,
-        error: updateError,
-      } = await supabaseAdmin
-        .from('notifications')
-        .update({
-          is_read: true,
-          read_at:
-            new Date().toISOString(),
-        })
-        .eq(
-          'notification_id',
-          notificationId,
-        )
-        .eq('user_id', userId)
-        .select(`
-          notification_id,
-          user_id,
-          title,
-          message,
-          type,
-          is_read,
-          created_at,
-          read_at
-        `)
-        .single()
-
-      if (updateError) {
-        console.error(
-          'Mark notification read error:',
-          updateError,
-        )
-
-        return res.status(500).json({
-          success: false,
-          message:
-            'Failed to mark notification as read',
-        })
-      }
-
-      return res.status(200).json({
-        success: true,
-        message:
-          'Notification marked as read',
-        data: updated,
+  try {
+    const { count, error } = await supabaseAdmin
+      .from('notifications')
+      .select(ID_COLUMN, {
+        count: 'exact',
+        head: true,
       })
-    } catch (error) {
-      console.error(
-        'Mark notification read server error:',
-        error,
-      )
+      .eq('user_id', userId)
+      .eq('is_read', false)
 
-      return res.status(500).json({
-        success: false,
-        message: 'Server error',
-      })
-    }
+    if (error) throw error
+
+    return res.json({
+      success: true,
+      data: {
+        unread_count: count ?? 0,
+      },
+    })
+  } catch (error) {
+    console.error(
+      'Get unread notification count error:',
+      error,
+    )
+
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to load unread count.',
+    })
+  }
+}
+
+// =========================================================
+// PATCH /notifications/:id/read
+// =========================================================
+
+const markAsRead = async (req, res) => {
+  const userId = getUserId(req)
+  const notificationId = parseId(req.params.id)
+
+  if (!userId) return unauthorized(res)
+
+  if (!notificationId) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid notification ID.',
+    })
   }
 
-/* ============================================================
-   MARK ALL MY NOTIFICATIONS AS READ
-   PATCH /api/notifications/read-all
-============================================================ */
-
-const markAllNotificationsAsRead =
-  async (req, res) => {
-    try {
-      const userId =
-        getAuthenticatedUserId(req)
-
-      if (!userId) {
-        return res.status(401).json({
-          success: false,
-          message:
-            'Authenticated user not found',
-        })
-      }
-
-      const readAt =
-        new Date().toISOString()
-
-      /*
-       * Only update unread rows.
-       *
-       * This is important because your DB constraint requires:
-       *
-       * is_read = false -> read_at IS NULL
-       * is_read = true  -> read_at IS NOT NULL
-       */
-      const { data, error } =
-        await supabaseAdmin
-          .from('notifications')
-          .update({
-            is_read: true,
-            read_at: readAt,
-          })
-          .eq('user_id', userId)
-          .eq('is_read', false)
-          .select('notification_id')
-
-      if (error) {
-        console.error(
-          'Mark all notifications read error:',
-          error,
-        )
-
-        return res.status(500).json({
-          success: false,
-          message:
-            'Failed to mark notifications as read',
-        })
-      }
-
-      return res.status(200).json({
-        success: true,
-        message:
-          'All notifications marked as read',
-        data: {
-          updated_count:
-            data?.length || 0,
-        },
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('notifications')
+      .update({
+        is_read: true,
+        read_at: new Date().toISOString(),
       })
-    } catch (error) {
-      console.error(
-        'Mark all notifications read server error:',
-        error,
-      )
+      .eq(ID_COLUMN, notificationId)
+      .eq('user_id', userId)
+      .select('*')
+      .maybeSingle()
 
-      return res.status(500).json({
+    if (error) throw error
+
+    if (!data) {
+      return res.status(404).json({
         success: false,
-        message: 'Server error',
+        message: 'Notification not found.',
       })
     }
+
+    return res.json({
+      success: true,
+      data,
+    })
+  } catch (error) {
+    console.error(
+      'Mark notification as read error:',
+      error,
+    )
+
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to update notification.',
+    })
   }
+}
+
+// =========================================================
+// PATCH /notifications/read-all
+// =========================================================
+
+const markAllAsRead = async (req, res) => {
+  const userId = getUserId(req)
+
+  if (!userId) return unauthorized(res)
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('notifications')
+      .update({
+        is_read: true,
+        read_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId)
+      .eq('is_read', false)
+      .select(ID_COLUMN)
+
+    if (error) throw error
+
+    return res.json({
+      success: true,
+      message: 'All notifications marked as read.',
+      data: {
+        updated: data?.length ?? 0,
+      },
+    })
+  } catch (error) {
+    console.error(
+      'Mark all notifications as read error:',
+      error,
+    )
+
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to update notifications.',
+    })
+  }
+}
+
+// =========================================================
+// DELETE /notifications/:id
+// =========================================================
+
+const deleteNotification = async (req, res) => {
+  const userId = getUserId(req)
+  const notificationId = parseId(req.params.id)
+
+  if (!userId) return unauthorized(res)
+
+  if (!notificationId) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid notification ID.',
+    })
+  }
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('notifications')
+      .delete()
+      .eq(ID_COLUMN, notificationId)
+      .eq('user_id', userId)
+      .select(ID_COLUMN)
+      .maybeSingle()
+
+    if (error) throw error
+
+    if (!data) {
+      return res.status(404).json({
+        success: false,
+        message: 'Notification not found.',
+      })
+    }
+
+    return res.json({
+      success: true,
+      message: 'Notification deleted.',
+    })
+  } catch (error) {
+    console.error(
+      'Delete notification error:',
+      error,
+    )
+
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to delete notification.',
+    })
+  }
+}
 
 module.exports = {
   getMyNotifications,
   getUnreadCount,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification,
 }

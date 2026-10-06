@@ -34,7 +34,6 @@ export async function fetchDashboardMetrics() {
     const now = Date.now()
 
     if (cache.metrics && now < cache.metricsExpiry) {
-      console.log('Returning cached metrics')
       return cache.metrics
     }
 
@@ -63,7 +62,8 @@ export async function fetchDashboardMetrics() {
 }
 
 // ============================================================
-// ACTIVITY LOGS
+// ACTIVITY LOGS (audit log)
+// Used by both the dashboard Activity feed and Audit Logs page.
 // ============================================================
 
 export async function fetchActivityLogs(limit = 10, offset = 0) {
@@ -85,6 +85,49 @@ export async function fetchActivityLogs(limit = 10, offset = 0) {
     return result.data
   } catch (error) {
     console.error('fetchActivityLogs error:', error)
+    throw error
+  }
+}
+
+// ============================================================
+// MEDICINE REQUESTS
+//
+// Existing backend endpoint. For SUPER_ADMIN the controller
+// returns every request with its items and pharmacy responses.
+// Used for: unanswered requests, response rate, request trend,
+// and unmet demand on the dashboard.
+// ============================================================
+
+export async function fetchMedicineRequests() {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/medicine-requests/pharmacy`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      }
+    )
+
+    let result = null
+
+    try {
+      result = await response.json()
+    } catch {
+      // Non-JSON body; handled below.
+    }
+
+    if (!response.ok || result?.success === false) {
+      throw new Error(
+        result?.message ||
+          `API error: ${response.status}`
+      )
+    }
+
+    return Array.isArray(result?.data)
+      ? result.data
+      : []
+  } catch (error) {
+    console.error('fetchMedicineRequests error:', error)
     throw error
   }
 }
