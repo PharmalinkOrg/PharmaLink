@@ -7,6 +7,7 @@ const {
   getPharmacyReservations,
   updateReservationStatus,
   completeReservationWithSale,
+  markReservationNoShow,
   cancelReservation,
 } = require('../controllers/reservationController')
 
@@ -40,6 +41,15 @@ router.post(
   loadPharmaUser,
   requireRole('PHARMACY_ADMIN'),
   completeReservationWithSale
+)
+
+// Customer didn't pick up: release stock, mark EXPIRED, notify
+router.post(
+  '/:reservationId/no-show',
+  authenticateUser,
+  loadPharmaUser,
+  requireRole('PHARMACY_ADMIN'),
+  markReservationNoShow
 )
 
 // Pharmacy reservation status update

@@ -1934,6 +1934,381 @@ const completeReservationWithSale =
   }
 
 /* ============================================================
+   MARK RESERVATION AS NO-SHOW — PHARMACY
+   POST /api/reservations/:reservationId/no-show
+
+   The customer didn't come to pick up.
+
+   1. Reuses cancel_pharmacy_reservation_atomic() so the
+      reserved stock goes back to inventory atomically.
+   2. Records the final status as EXPIRED so reports can tell
+      no-shows apart from cancellations.
+   3. Notifies the customer.
+
+   Only allowed for PENDING / CONFIRMED reservations whose
+   pickup time has already passed (use Cancel otherwise).
+============================================================ */
+
+const formatTime12h = (time) => {
+  const [hours, minutes] = String(time || '')
+    .split(':')
+    .map(Number)
+
+  if (
+    Number.isNaN(hours) ||
+    Number.isNaN(minutes)
+  ) {
+    return String(time || '')
+  }
+
+  const suffix = hours >= 12 ? 'PM' : 'AM'
+
+  return `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${suffix}`
+}
+
+const markReservationNoShow =
+  async (req, res) => {
+    try {
+      const pharmacyId =
+        req.pharmaUser
+          ?.pharmacy_id
+
+      const pharmacyAdminUserId =
+        req.pharmaUser
+          ?.user_id
+
+      if (!pharmacyId) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              'Pharmacy account is not assigned to a pharmacy',
+          })
+      }
+
+      if (
+        !pharmacyAdminUserId
+      ) {
+        return res
+          .status(401)
+          .json({
+            success: false,
+            message:
+              'Authenticated pharmacy administrator not found',
+          })
+      }
+
+      const reservationId =
+        Number(
+          req.params
+            .reservationId
+        )
+
+      if (
+        !isValidId(
+          reservationId
+        )
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              'Valid reservation ID is required',
+          })
+      }
+
+      /* --------------------------------------------------------
+         Load reservation (must belong to this pharmacy)
+      -------------------------------------------------------- */
+
+      const {
+        data: reservation,
+        error:
+          reservationLookupError,
+      } = await supabaseAdmin
+        .from('reservations')
+        .select(`
+          reservation_id,
+          customer_id,
+          pharmacy_id,
+          pickup_date,
+          pickup_time,
+          status
+        `)
+        .eq(
+          'reservation_id',
+          reservationId
+        )
+        .eq(
+          'pharmacy_id',
+          Number(pharmacyId)
+        )
+        .maybeSingle()
+
+      if (
+        reservationLookupError
+      ) {
+        console.error(
+          'No-show reservation lookup error:',
+          reservationLookupError
+        )
+
+        return res
+          .status(500)
+          .json({
+            success: false,
+            message:
+              'Failed to load reservation',
+          })
+      }
+
+      if (!reservation) {
+        return res
+          .status(404)
+          .json({
+            success: false,
+            message:
+              'Reservation not found',
+          })
+      }
+
+      /* --------------------------------------------------------
+         Only open reservations can become a no-show
+      -------------------------------------------------------- */
+
+      if (
+        ![
+          'PENDING',
+          'CONFIRMED',
+        ].includes(
+          reservation.status
+        )
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message:
+              `Only pending or confirmed reservations can be marked as no-show. This reservation is ${String(
+                reservation.status
+              ).toLowerCase()}.`,
+          })
+      }
+
+      /* --------------------------------------------------------
+         Pickup time must have passed (Philippine time)
+      -------------------------------------------------------- */
+
+      const today =
+        getPharmaLinkDateString()
+
+      const nowTime =
+        getPharmaLinkTimeString()
+
+      const pickupDate =
+        String(
+          reservation.pickup_date ||
+            ''
+        ).slice(0, 10)
+
+      const pickupTime =
+        String(
+          reservation.pickup_time ||
+            ''
+        ).slice(0, 5)
+
+      const pickupStillAhead =
+        pickupDate > today ||
+        (pickupDate === today &&
+          pickupTime !== '' &&
+          pickupTime > nowTime)
+
+      if (pickupStillAhead) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            code:
+              'PICKUP_TIME_NOT_PASSED',
+            message:
+              `The pickup time (${formatTime12h(
+                pickupTime
+              )}) hasn't passed yet. Use Cancel instead if the customer won't come.`,
+          })
+      }
+
+      /* --------------------------------------------------------
+         1. Release reserved stock atomically
+      -------------------------------------------------------- */
+
+      const {
+        error: cancelError,
+      } =
+        await supabaseAdmin.rpc(
+          'cancel_pharmacy_reservation_atomic',
+          {
+            p_pharmacy_id:
+              Number(
+                pharmacyId
+              ),
+
+            p_reservation_id:
+              reservationId,
+
+            p_cancelled_by:
+              Number(
+                pharmacyAdminUserId
+              ),
+          }
+        )
+
+      if (cancelError) {
+        console.error(
+          'No-show stock release error:',
+          cancelError
+        )
+
+        const message =
+          getRpcErrorMessage(
+            cancelError
+          )
+
+        const normalizedMessage =
+          message.toLowerCase()
+
+        if (
+          normalizedMessage.includes(
+            'not found'
+          )
+        ) {
+          return res
+            .status(404)
+            .json({
+              success: false,
+              message:
+                'Reservation not found',
+            })
+        }
+
+        if (
+          normalizedMessage.includes(
+            'cannot be cancelled'
+          ) ||
+          normalizedMessage.includes(
+            'already cancelled'
+          )
+        ) {
+          return res
+            .status(400)
+            .json({
+              success: false,
+              message:
+                message ||
+                'Reservation can no longer be changed',
+            })
+        }
+
+        return res
+          .status(500)
+          .json({
+            success: false,
+            message:
+              'Failed to mark reservation as no-show',
+          })
+      }
+
+      /* --------------------------------------------------------
+         2. Record the final status as EXPIRED
+      -------------------------------------------------------- */
+
+      const {
+        data: expiredReservation,
+        error: expireError,
+      } = await supabaseAdmin
+        .from('reservations')
+        .update({
+          status: 'EXPIRED',
+          updated_at:
+            new Date().toISOString(),
+        })
+        .eq(
+          'reservation_id',
+          reservationId
+        )
+        .eq(
+          'pharmacy_id',
+          Number(pharmacyId)
+        )
+        .select(`
+          reservation_id,
+          customer_id,
+          pharmacy_id,
+          pickup_date,
+          pickup_time,
+          status,
+          updated_at
+        `)
+        .single()
+
+      /* --------------------------------------------------------
+         3. Notify customer (either way, they didn't pick up)
+      -------------------------------------------------------- */
+
+      await notifyReservationStatusChange({
+        ...reservation,
+        status: 'EXPIRED',
+      })
+
+      if (expireError) {
+        // Stock is already back in inventory; the reservation
+        // stays CANCELLED. Usually means the status column
+        // doesn't allow 'EXPIRED' (check constraint).
+        console.error(
+          'No-show status update error:',
+          expireError
+        )
+
+        return res
+          .status(200)
+          .json({
+            success: true,
+            message:
+              'Stock restored. The reservation was recorded as cancelled because it could not be marked as expired.',
+            data: {
+              ...reservation,
+              status: 'CANCELLED',
+            },
+          })
+      }
+
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message:
+            'Reservation marked as no-show. Stock restored to inventory.',
+          data:
+            expiredReservation,
+        })
+    } catch (error) {
+      console.error(
+        'Mark no-show server error:',
+        error
+      )
+
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message:
+            'Server error',
+        })
+    }
+  }
+
+/* ============================================================
    CANCEL RESERVATION — CUSTOMER
    PATCH /api/reservations/:reservationId/cancel
 
@@ -2209,5 +2584,6 @@ module.exports = {
   getPharmacyReservations,
   updateReservationStatus,
   completeReservationWithSale,
+  markReservationNoShow,
   cancelReservation,
 }

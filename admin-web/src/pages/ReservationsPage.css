@@ -1,0 +1,586 @@
+/* =========================================================
+   RESERVATIONS PAGE — extras on top of MedicinesPage.css
+   Palette: navy #172A3A, teal #508991.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   SHARED MODAL BITS (used by components/ui/Modal.jsx)
+   --------------------------------------------------------- */
+
+.ui-modal-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ui-modal-body {
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+}
+
+.med-modal .med-modal-footer {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.med-modal.rsv-modal-lg {
+  width: min(760px, 100%);
+}
+
+.med-modal.rsv-modal-sm {
+  width: min(460px, 100%);
+}
+
+/* ---------------------------------------------------------
+   STATUS TABS
+   --------------------------------------------------------- */
+
+.rsv-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 1.25rem 0;
+  overflow-x: auto;
+  border-bottom: 1px solid #edf2f1;
+  scrollbar-width: none;
+}
+
+.rsv-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.rsv-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 -1px;
+  padding: 0.7rem 0.75rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: #64748b;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.rsv-tab:hover {
+  color: #172a3a;
+}
+
+.rsv-tab:focus-visible {
+  outline: 2px solid #508991;
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+.rsv-tab-count {
+  min-width: 1.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.72rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.rsv-tab.has-attention .rsv-tab-count {
+  background: #fff4e5;
+  color: #b45309;
+}
+
+.rsv-tab.is-active {
+  border-bottom-color: #508991;
+  color: #172a3a;
+}
+
+.rsv-tab.is-active .rsv-tab-count {
+  background: #172a3a;
+  color: #ffffff;
+}
+
+/* ---------------------------------------------------------
+   TOOLBAR (search + pickup date)
+   --------------------------------------------------------- */
+
+.rsv-toolbar {
+  grid-template-columns: minmax(240px, 1fr) minmax(170px, 220px);
+}
+
+/* ---------------------------------------------------------
+   TABLE
+   --------------------------------------------------------- */
+
+.rsv-row-closed td {
+  color: #94a3b8;
+}
+
+.rsv-row-closed .med-name strong {
+  color: #64748b;
+}
+
+.rsv-items-cell strong {
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rsv-late {
+  color: #b42318;
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.rsv-row-primary {
+  min-height: 2rem;
+  margin: 0;
+  padding: 0 0.85rem;
+  border: 0;
+  border-radius: 8px;
+  background: #508991;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.rsv-row-primary:hover:not(:disabled) {
+  background: #417179;
+}
+
+.rsv-row-primary:focus-visible {
+  outline: 2px solid #172a3a;
+  outline-offset: 2px;
+}
+
+.rsv-row-primary:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* ---------------------------------------------------------
+   STATUS PILLS
+   --------------------------------------------------------- */
+
+.rsv-pill-pending,
+.rsv-pill-confirmed,
+.rsv-pill-completed,
+.rsv-pill-cancelled,
+.rsv-pill-expired {
+  padding-left: 0.5rem;
+}
+
+.rsv-pill-pending::before,
+.rsv-pill-confirmed::before,
+.rsv-pill-completed::before,
+.rsv-pill-cancelled::before,
+.rsv-pill-expired::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.rsv-pill-pending {
+  background: #fff4e5;
+  color: #b45309;
+}
+
+.rsv-pill-confirmed {
+  background: rgba(80, 137, 145, 0.14);
+  color: #2f5f66;
+}
+
+.rsv-pill-completed {
+  background: #e7f6ee;
+  color: #15803d;
+}
+
+.rsv-pill-cancelled {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.rsv-pill-expired {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* "Rx required" tag reuses the amber colours without the dot */
+.rsv-rx {
+  align-self: flex-start;
+  margin-top: 0.35rem;
+  padding-left: 0.6rem;
+}
+
+.rsv-rx::before {
+  display: none;
+}
+
+/* ---------------------------------------------------------
+   BUTTONS
+   --------------------------------------------------------- */
+
+.rsv-btn-danger {
+  background: #b42318;
+  color: #ffffff;
+}
+
+.rsv-btn-danger:hover:not(:disabled) {
+  background: #912018;
+}
+
+.rsv-btn-ghost-danger {
+  min-height: 2.5rem;
+  margin: 0;
+  padding: 0 0.9rem;
+  border: 1px solid #fecdd3;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #b42318;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.rsv-btn-ghost-danger:hover:not(:disabled) {
+  background: #fef3f2;
+}
+
+.rsv-btn-ghost-danger:focus-visible {
+  outline: 2px solid #b42318;
+  outline-offset: 2px;
+}
+
+.rsv-btn-ghost-danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.rsv-footer-left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-right: auto;
+}
+
+/* ---------------------------------------------------------
+   DETAILS MODAL
+   --------------------------------------------------------- */
+
+.rsv-modal-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1.35rem;
+  min-height: 0;
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+}
+
+.rsv-modal-body .med-banner {
+  margin: 0;
+}
+
+/* Key facts strip */
+
+.rsv-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid #dce8e3;
+  border-radius: 12px;
+  background: #f6faf9;
+}
+
+.rsv-strip > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+}
+
+.rsv-strip > div + div {
+  border-left: 1px solid #dce8e3;
+}
+
+.rsv-strip span {
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rsv-strip strong {
+  overflow: hidden;
+  color: #172a3a;
+  font-size: 0.975rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Sections */
+
+.rsv-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.65rem;
+  color: #527168;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rsv-count {
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.7rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.rsv-dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1.5rem;
+  margin: 0;
+}
+
+.rsv-dl dt {
+  margin: 0 0 0.15rem;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.rsv-dl dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #18332d;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.rsv-dl a {
+  color: #2f5f66;
+  text-decoration: none;
+}
+
+.rsv-dl a:hover {
+  text-decoration: underline;
+}
+
+.rsv-note {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid #508991;
+  border-radius: 0 10px 10px 0;
+  background: #f0f7f6;
+  color: #334155;
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+/* Items */
+
+.rsv-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #e5ece9;
+  border-radius: 12px;
+}
+
+.rsv-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+}
+
+.rsv-item + .rsv-item {
+  border-top: 1px solid #edf2f1;
+}
+
+.rsv-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.rsv-item-main strong {
+  color: #18332d;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.rsv-item-main > span:not(.med-pill) {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.rsv-item-qty {
+  color: #64748b;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.rsv-item-total {
+  color: #172a3a;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.rsv-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  padding: 0 1rem;
+  color: #527168;
+  font-size: 0.875rem;
+}
+
+.rsv-total strong {
+  color: #172a3a;
+  font-size: 1.125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.rsv-empty {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+/* ---------------------------------------------------------
+   ACTION DIALOG
+   --------------------------------------------------------- */
+
+.rsv-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+}
+
+.rsv-dialog-body .med-banner {
+  margin: 0;
+}
+
+.rsv-dialog-text {
+  margin: 0;
+  color: #334155;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.rsv-dialog-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  border: 1px solid #dce8e3;
+  border-radius: 12px;
+  background: #f6faf9;
+  color: #527168;
+  font-size: 0.875rem;
+}
+
+.rsv-dialog-total strong {
+  color: #172a3a;
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------
+   RESPONSIVE
+   --------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+  .rsv-toolbar .med-search {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .rsv-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .rsv-tabs {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .rsv-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .rsv-strip > div + div {
+    border-top: 1px solid #dce8e3;
+    border-left: 0;
+  }
+
+  .rsv-dl {
+    grid-template-columns: 1fr;
+  }
+
+  .rsv-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.25rem 0.75rem;
+  }
+
+  .rsv-item-qty {
+    grid-column: 1;
+  }
+
+  .rsv-item-total {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+  }
+
+  .rsv-footer-left {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .rsv-footer-left .rsv-btn-ghost-danger {
+    flex: 1;
+  }
+
+  .rsv-modal-body,
+  .rsv-dialog-body,
+  .ui-modal-body {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}

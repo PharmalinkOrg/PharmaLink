@@ -1,1465 +1,1317 @@
-import { useEffect, useMemo, useState } from 'react'
+// File: admin-web/src/pages/ReservationsPage.jsx
+//
+// Reservations for the pharmacy admin.
+// - Status tabs with counts (replace the summary cards)
+// - Search + pickup-date filter
+// - Table with one clear next action per row
+// - Details modal; Cancel / No-show / Complete open a styled
+//   confirm dialog (no more browser prompt/confirm boxes)
+//
+// Shares table, button, banner and modal styles (med-*) with
+// the Medicines page, plus reservation-only styles (rsv-*).
+
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+
 import { useAuth } from '../components/auth/useAuth'
 import { apiRequest } from '../lib/api'
+import Modal from '../components/ui/Modal'
+import Select from '../components/ui/Select'
+
+import './MedicinesPage.css'
+import './ReservationsPage.css'
+
+// =========================================================
+// CONSTANTS
+// =========================================================
+
+const ITEMS_PER_PAGE = 10
+
+const STATUS_TABS = [
+  { value: 'ALL', label: 'All' },
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'CONFIRMED', label: 'Confirmed' },
+  { value: 'COMPLETED', label: 'Completed' },
+  { value: 'CANCELLED', label: 'Cancelled' },
+  { value: 'EXPIRED', label: 'Expired' },
+]
+
+const DATE_OPTIONS = [
+  { value: 'ALL', label: 'All pickup dates' },
+  { value: 'TODAY', label: 'Today' },
+  { value: 'UPCOMING', label: 'Upcoming' },
+  { value: 'PAST', label: 'Past' },
+]
+
+const PAYMENT_OPTIONS = [
+  { value: 'CASH', label: 'Cash' },
+  { value: 'GCASH', label: 'GCash' },
+  { value: 'MAYA', label: 'Maya' },
+  { value: 'CARD', label: 'Card' },
+  { value: 'BANK_TRANSFER', label: 'Bank transfer' },
+  { value: 'OTHER', label: 'Other' },
+]
+
+const STATUS_PILL = {
+  PENDING: { label: 'Pending', className: 'rsv-pill-pending' },
+  CONFIRMED: { label: 'Confirmed', className: 'rsv-pill-confirmed' },
+  COMPLETED: { label: 'Completed', className: 'rsv-pill-completed' },
+  CANCELLED: { label: 'Cancelled', className: 'rsv-pill-cancelled' },
+  EXPIRED: { label: 'Expired', className: 'rsv-pill-expired' },
+}
+
+const OPEN_STATUSES = ['PENDING', 'CONFIRMED']
+
+// =========================================================
+// HELPERS
+// =========================================================
+
+function dateOnly(value) {
+  return value ? String(value).slice(0, 10) : ''
+}
+
+function timeOnly(value) {
+  return value ? String(value).slice(0, 5) : ''
+}
+
+function localDayKey(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function formatDate(value) {
+  const key = dateOnly(value)
+
+  if (!key) return '—'
+
+  const date = new Date(`${key}T00:00:00`)
+
+  if (Number.isNaN(date.getTime())) return '—'
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function formatPickupDay(value) {
+  const key = dateOnly(value)
+
+  if (!key) return '—'
+
+  const today = new Date()
+  const tomorrow = new Date()
+  tomorrow.setDate(today.getDate() + 1)
+
+  if (key === localDayKey(today)) return 'Today'
+  if (key === localDayKey(tomorrow)) return 'Tomorrow'
+
+  return formatDate(key)
+}
+
+function formatTime(value) {
+  const text = timeOnly(value)
+
+  if (!text) return '—'
+
+  const [hours, minutes] = text.split(':').map(Number)
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return text
+
+  return `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${
+    hours >= 12 ? 'PM' : 'AM'
+  }`
+}
+
+function formatPeso(amount) {
+  return `₱${Number(amount || 0).toLocaleString('en-PH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`
+}
+
+/** Pickup date/time is now or earlier (browser local time). */
+function hasPickupPassed(reservation) {
+  const day = dateOnly(reservation.pickup_date)
+  const time = timeOnly(reservation.pickup_time)
+  const today = localDayKey()
+  const now = new Date().toTimeString().slice(0, 5)
+
+  if (!day) return false
+
+  return day < today || (day === today && (!time || time <= now))
+}
+
+function getCustomer(reservation) {
+  return reservation.users || reservation.customer || null
+}
+
+function getCustomerName(reservation) {
+  const customer = getCustomer(reservation)
+
+  const name = [customer?.first_name, customer?.last_name]
+    .filter(Boolean)
+    .join(' ')
+    .trim()
+
+  return name || `Customer #${reservation.customer_id}`
+}
+
+function getItems(reservation) {
+  return reservation.reservation_items || reservation.items || []
+}
+
+function getMedicineName(item) {
+  const medicine = item.medicines
+
+  return (
+    medicine?.brand_name ||
+    medicine?.generic_name ||
+    `Medicine #${item.medicine_id}`
+  )
+}
+
+function getMedicineDetail(item) {
+  const medicine = item.medicines
+
+  if (!medicine) return ''
+
+  return [
+    medicine.brand_name && medicine.generic_name
+      ? medicine.generic_name
+      : null,
+    medicine.dosage,
+    medicine.dosage_form,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+
+function lineTotal(item) {
+  return (Number(item.quantity) || 0) * (Number(item.unit_price) || 0)
+}
+
+function reservationTotal(reservation) {
+  return getItems(reservation).reduce(
+    (sum, item) => sum + lineTotal(item),
+    0
+  )
+}
+
+function itemSummary(reservation) {
+  const items = getItems(reservation)
+
+  if (items.length === 0) return 'No items'
+
+  const first = `${getMedicineName(items[0])} × ${items[0].quantity ?? 1}`
+
+  return items.length === 1
+    ? first
+    : `${first} + ${items.length - 1} more`
+}
+
+// =========================================================
+// ICONS
+// =========================================================
+
+const iconProps = {
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 2,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+  'aria-hidden': true,
+}
+
+function SearchIcon() {
+  return (
+    <svg {...iconProps}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  )
+}
+
+function CloseIcon() {
+  return (
+    <svg {...iconProps}>
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  )
+}
+
+function ChevronLeftIcon() {
+  return (
+    <svg {...iconProps}>
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+  )
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg {...iconProps}>
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  )
+}
+
+function StatusPill({ status }) {
+  const pill = STATUS_PILL[status] || {
+    label: status || 'Unknown',
+    className: 'rsv-pill-expired',
+  }
+
+  return (
+    <span className={`med-pill ${pill.className}`}>{pill.label}</span>
+  )
+}
+
+// =========================================================
+// DETAILS MODAL
+// =========================================================
+
+function ReservationDetails({
+  reservation,
+  busy,
+  error,
+  onClose,
+  onConfirm,
+  onRequestAction,
+}) {
+  if (!reservation) return null
+
+  const customer = getCustomer(reservation)
+  const items = getItems(reservation)
+  const total = reservationTotal(reservation)
+  const isOpen = OPEN_STATUSES.includes(reservation.status)
+  const pickupPassed = hasPickupPassed(reservation)
+  const isLate = isOpen && pickupPassed
+
+  const footer = (
+    <>
+      {isOpen && (
+        <div className="rsv-footer-left">
+          <button
+            type="button"
+            className="rsv-btn-ghost-danger"
+            onClick={() => onRequestAction('cancel', reservation)}
+            disabled={busy}
+          >
+            Cancel reservation
+          </button>
+
+          <button
+            type="button"
+            className="rsv-btn-ghost-danger"
+            onClick={() => onRequestAction('noshow', reservation)}
+            disabled={busy || !pickupPassed}
+            title={
+              pickupPassed
+                ? undefined
+                : 'Available after the pickup time'
+            }
+          >
+            No-show
+          </button>
+        </div>
+      )}
+
+      <button
+        type="button"
+        className="med-btn med-btn-secondary"
+        onClick={onClose}
+        disabled={busy}
+      >
+        Close
+      </button>
+
+      {reservation.status === 'PENDING' && (
+        <button
+          type="button"
+          className="med-btn med-btn-primary"
+          onClick={() => onConfirm(reservation)}
+          disabled={busy}
+        >
+          {busy ? 'Confirming…' : 'Confirm reservation'}
+        </button>
+      )}
+
+      {reservation.status === 'CONFIRMED' && (
+        <button
+          type="button"
+          className="med-btn med-btn-primary"
+          onClick={() => onRequestAction('complete', reservation)}
+          disabled={busy}
+        >
+          Complete pickup
+        </button>
+      )}
+    </>
+  )
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      closeDisabled={busy}
+      className="rsv-modal-lg"
+      bodyClassName="rsv-modal-body"
+      title={`Reservation #${reservation.reservation_id}`}
+      titleAddon={<StatusPill status={reservation.status} />}
+      description={`Reserved ${formatDate(
+        reservation.reservation_date || reservation.created_at
+      )}`}
+      footer={footer}
+    >
+      {error && (
+        <p className="med-banner med-banner-error" role="alert">
+          {error}
+        </p>
+      )}
+
+      {/* Key facts */}
+      <div className="rsv-strip">
+        <div>
+          <span>Pickup</span>
+          <strong>
+            {formatPickupDay(reservation.pickup_date)} ·{' '}
+            {formatTime(reservation.pickup_time)}
+          </strong>
+          {isLate && <em className="rsv-late">Past pickup time</em>}
+        </div>
+
+        <div>
+          <span>Customer</span>
+          <strong>{getCustomerName(reservation)}</strong>
+        </div>
+
+        <div>
+          <span>Estimated total</span>
+          <strong>{formatPeso(total)}</strong>
+        </div>
+      </div>
+
+      {/* Contact + details */}
+      <section className="rsv-section">
+        <h4>Contact</h4>
+
+        <dl className="rsv-dl">
+          <div>
+            <dt>Email</dt>
+            <dd>
+              {customer?.email ? (
+                <a href={`mailto:${customer.email}`}>{customer.email}</a>
+              ) : (
+                '—'
+              )}
+            </dd>
+          </div>
+
+          <div>
+            <dt>Phone</dt>
+            <dd>
+              {customer?.phone ? (
+                <a href={`tel:${customer.phone}`}>{customer.phone}</a>
+              ) : (
+                '—'
+              )}
+            </dd>
+          </div>
+
+          <div>
+            <dt>Pickup date</dt>
+            <dd>{formatDate(reservation.pickup_date)}</dd>
+          </div>
+
+          <div>
+            <dt>Prescription</dt>
+            <dd>
+              {reservation.prescription_id
+                ? `Attached (#${reservation.prescription_id})`
+                : 'Not attached'}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      {/* Note */}
+      {reservation.notes && (
+        <section className="rsv-section">
+          <h4>Customer note</h4>
+          <blockquote className="rsv-note">{reservation.notes}</blockquote>
+        </section>
+      )}
+
+      {/* Items */}
+      <section className="rsv-section">
+        <h4>
+          Reserved medicines
+          <span className="rsv-count">
+            {items.length} item{items.length === 1 ? '' : 's'}
+          </span>
+        </h4>
+
+        {items.length === 0 ? (
+          <p className="rsv-empty">No medicine items found.</p>
+        ) : (
+          <ul className="rsv-items">
+            {items.map((item, index) => (
+              <li
+                key={item.reservation_item_id ?? index}
+                className="rsv-item"
+              >
+                <div className="rsv-item-main">
+                  <strong>{getMedicineName(item)}</strong>
+
+                  {getMedicineDetail(item) && (
+                    <span>{getMedicineDetail(item)}</span>
+                  )}
+
+                  {item.medicines?.requires_prescription && (
+                    <span className="med-pill rsv-pill-pending rsv-rx">
+                      Rx required
+                    </span>
+                  )}
+                </div>
+
+                <span className="rsv-item-qty">
+                  {item.quantity} × {formatPeso(item.unit_price)}
+                </span>
+
+                <strong className="rsv-item-total">
+                  {formatPeso(lineTotal(item))}
+                </strong>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="rsv-total">
+          <span>Estimated total</span>
+          <strong>{formatPeso(total)}</strong>
+        </div>
+      </section>
+    </Modal>
+  )
+}
+
+// =========================================================
+// ACTION DIALOG (cancel / no-show / complete)
+// =========================================================
+
+function ActionDialog({ dialog, busy, error, onClose, onSubmit }) {
+  const [paymentMethod, setPaymentMethod] = useState('CASH')
+
+  useEffect(() => {
+    if (dialog) setPaymentMethod('CASH')
+  }, [dialog])
+
+  if (!dialog) return null
+
+  const { type, reservation } = dialog
+  const id = reservation.reservation_id
+  const name = getCustomerName(reservation)
+  const total = reservationTotal(reservation)
+
+  const config = {
+    cancel: {
+      title: `Cancel reservation #${id}?`,
+      description: `${name} will be notified.`,
+      confirmLabel: 'Cancel reservation',
+      busyLabel: 'Cancelling…',
+      tone: 'danger',
+      body: (
+        <p className="rsv-dialog-text">
+          The reserved stock goes back to inventory. This can&apos;t
+          be undone.
+        </p>
+      ),
+    },
+    noshow: {
+      title: `Mark #${id} as no-show?`,
+      description: `${name} didn't pick up.`,
+      confirmLabel: 'Mark as no-show',
+      busyLabel: 'Saving…',
+      tone: 'danger',
+      body: (
+        <p className="rsv-dialog-text">
+          The reservation becomes <strong>Expired</strong>, the
+          reserved stock goes back to inventory, and the customer is
+          notified.
+        </p>
+      ),
+    },
+    complete: {
+      title: `Complete pickup #${id}`,
+      description: `Record the sale for ${name}.`,
+      confirmLabel: 'Record sale',
+      busyLabel: 'Recording…',
+      tone: 'primary',
+      body: (
+        <>
+          <div className="rsv-dialog-total">
+            <span>Amount to collect</span>
+            <strong>{formatPeso(total)}</strong>
+          </div>
+
+          <div className="med-field">
+            <label
+              className="med-label"
+              id="rsv-payment-label"
+              htmlFor="rsv-payment"
+            >
+              Payment method
+            </label>
+
+            <Select
+              id="rsv-payment"
+              aria-labelledby="rsv-payment-label"
+              value={paymentMethod}
+              onChange={setPaymentMethod}
+              options={PAYMENT_OPTIONS}
+            />
+          </div>
+        </>
+      ),
+    },
+  }[type]
+
+  if (!config) return null
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      closeDisabled={busy}
+      className="rsv-modal-sm"
+      bodyClassName="rsv-dialog-body"
+      title={config.title}
+      description={config.description}
+      footer={
+        <>
+          <button
+            type="button"
+            className="med-btn med-btn-secondary"
+            onClick={onClose}
+            disabled={busy}
+          >
+            {type === 'complete' ? 'Not yet' : 'Keep reservation'}
+          </button>
+
+          <button
+            type="button"
+            className={`med-btn ${
+              config.tone === 'danger' ? 'rsv-btn-danger' : 'med-btn-primary'
+            }`}
+            onClick={() =>
+              onSubmit(type, reservation, { paymentMethod })
+            }
+            disabled={busy}
+          >
+            {busy ? config.busyLabel : config.confirmLabel}
+          </button>
+        </>
+      }
+    >
+      {error && (
+        <p className="med-banner med-banner-error" role="alert">
+          {error}
+        </p>
+      )}
+
+      {config.body}
+    </Modal>
+  )
+}
+
+// =========================================================
+// PAGE
+// =========================================================
 
 function ReservationsPage() {
   const { accessToken } = useAuth()
 
   const [reservations, setReservations] = useState([])
-  const [selectedReservation, setSelectedReservation] = useState(null)
-
-  const [error, setError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
-  const [updatingReservationId, setUpdatingReservationId] = useState(null)
+  const [loadError, setLoadError] = useState('')
 
-  // Search and filter state
+  const [notice, setNotice] = useState('')
+  const [actionError, setActionError] = useState('')
+  const [busyId, setBusyId] = useState(null)
+
+  const [selectedId, setSelectedId] = useState(null)
+  const [dialog, setDialog] = useState(null)
+  const [dialogError, setDialogError] = useState('')
+
+  // Filters
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [dateFilter, setDateFilter] = useState('ALL')
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(10)
 
-  // --------------------------------------------------
-  // Load reservations
-  // --------------------------------------------------
+  // -------------------------------------------------------
+  // Load
+  // -------------------------------------------------------
 
-  useEffect(() => {
-    let isCurrent = true
+  const loadReservations = useCallback(async () => {
+    if (!accessToken) return
 
-    if (!accessToken) {
-      setReservations([])
+    try {
+      const response = await apiRequest('/reservations/pharmacy', {
+        token: accessToken,
+      })
+
+      setReservations(
+        Array.isArray(response?.data) ? response.data : []
+      )
+      setLoadError('')
+    } catch (requestError) {
+      setLoadError(
+        requestError.message || 'Failed to load reservations.'
+      )
+    } finally {
       setIsLoading(false)
-      return undefined
-    }
-
-    setIsLoading(true)
-    setError('')
-
-    apiRequest('/reservations/pharmacy', {
-      token: accessToken,
-    })
-      .then((response) => {
-        if (isCurrent) {
-          setReservations(response.data || [])
-        }
-      })
-      .catch((requestError) => {
-        if (isCurrent) {
-          setError(
-            requestError.message ||
-              'Failed to load reservations',
-          )
-        }
-      })
-      .finally(() => {
-        if (isCurrent) {
-          setIsLoading(false)
-        }
-      })
-
-    return () => {
-      isCurrent = false
     }
   }, [accessToken])
 
-  // --------------------------------------------------
-  // Update reservation status
-  // --------------------------------------------------
+  useEffect(() => {
+    loadReservations()
+  }, [loadReservations])
 
-  const updateReservationStatus = async (
-    reservationId,
-    status,
-  ) => {
+  // Auto-hide success messages
+  useEffect(() => {
+    if (!notice) return undefined
+
+    const timer = window.setTimeout(() => setNotice(''), 5000)
+
+    return () => window.clearTimeout(timer)
+  }, [notice])
+
+  // The open details modal always shows the latest data
+  const selectedReservation = useMemo(
+    () =>
+      reservations.find(
+        (reservation) => reservation.reservation_id === selectedId
+      ) || null,
+    [reservations, selectedId]
+  )
+
+  // -------------------------------------------------------
+  // Actions
+  // -------------------------------------------------------
+
+  const confirmReservation = async (reservation) => {
+    const id = reservation.reservation_id
+
+    setBusyId(id)
+    setActionError('')
+    setNotice('')
+
     try {
-      setUpdatingReservationId(reservationId)
-      setError('')
-      setSuccessMessage('')
+      await apiRequest(`/reservations/${id}/status`, {
+        method: 'PATCH',
+        token: accessToken,
+        body: { status: 'CONFIRMED' },
+      })
 
-      const response = await apiRequest(
-        `/reservations/${reservationId}/status`,
-        {
+      setNotice(
+        `Reservation #${id} confirmed. The customer has been notified.`
+      )
+
+      await loadReservations()
+    } catch (requestError) {
+      setActionError(
+        requestError.message || 'Failed to confirm reservation.'
+      )
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const openDialog = (type, reservation) => {
+    setDialogError('')
+    setDialog({ type, reservation })
+  }
+
+  const closeDialog = () => {
+    if (busyId) return
+
+    setDialog(null)
+    setDialogError('')
+  }
+
+  const submitDialog = async (type, reservation, { paymentMethod }) => {
+    const id = reservation.reservation_id
+
+    setBusyId(id)
+    setDialogError('')
+    setActionError('')
+    setNotice('')
+
+    try {
+      if (type === 'cancel') {
+        await apiRequest(`/reservations/${id}/status`, {
           method: 'PATCH',
           token: accessToken,
-          body: {
-            status,
-          },
-        },
-      )
+          body: { status: 'CANCELLED' },
+        })
 
-      const updatedReservation = response.data
+        setNotice(
+          `Reservation #${id} cancelled. Stock returned to inventory.`
+        )
+      }
 
-      setReservations((currentReservations) =>
-        currentReservations.map((reservation) =>
-          reservation.reservation_id === reservationId
-            ? {
-                ...reservation,
-                ...updatedReservation,
-              }
-            : reservation,
-        ),
-      )
+      if (type === 'noshow') {
+        const response = await apiRequest(
+          `/reservations/${id}/no-show`,
+          { method: 'POST', token: accessToken }
+        )
 
-      // Also update the currently open modal.
-      setSelectedReservation((currentReservation) => {
-        if (
-          !currentReservation ||
-          currentReservation.reservation_id !==
-            reservationId
-        ) {
-          return currentReservation
-        }
+        setNotice(
+          response?.message ||
+            `Reservation #${id} marked as no-show. Stock returned to inventory.`
+        )
+      }
 
-        return {
-          ...currentReservation,
-          ...updatedReservation,
-        }
-      })
+      if (type === 'complete') {
+        const response = await apiRequest(
+          `/reservations/${id}/complete`,
+          {
+            method: 'POST',
+            token: accessToken,
+            body: { payment_method: paymentMethod },
+          }
+        )
 
-      setSuccessMessage(
-        response.message ||
-          `Reservation ${status.toLowerCase()} successfully`,
-      )
+        const sale = response?.data
+
+        setNotice(
+          sale?.sale_id
+            ? `Pickup completed. Sale #${sale.sale_id} recorded · ${formatPeso(
+                sale.total_amount
+              )}.`
+            : 'Pickup completed and sale recorded.'
+        )
+      }
+
+      setDialog(null)
+      await loadReservations()
     } catch (requestError) {
-      setError(
-        requestError.message ||
-          'Failed to update reservation status',
+      setDialogError(
+        requestError.message || 'Something went wrong. Try again.'
       )
     } finally {
-      setUpdatingReservationId(null)
+      setBusyId(null)
     }
   }
 
-  // --------------------------------------------------
-  // Status actions
-  // --------------------------------------------------
-
-  const handleConfirm = (reservationId) => {
-    updateReservationStatus(
-      reservationId,
-      'CONFIRMED',
-    )
+  const openDetails = (reservation) => {
+    setActionError('')
+    setSelectedId(reservation.reservation_id)
   }
 
-  const handleCancel = (reservationId) => {
-    const confirmed = window.confirm(
-      'Are you sure you want to cancel this reservation?',
-    )
+  const closeDetails = () => {
+    if (busyId) return
 
-    if (!confirmed) {
-      return
-    }
-
-    updateReservationStatus(
-      reservationId,
-      'CANCELLED',
-    )
+    setSelectedId(null)
   }
 
-  const handleComplete = async (reservationId) => {
-    const paymentMethod = window.prompt(
-      'Payment method? (CASH, CARD, GCASH, MAYA, BANK_TRANSFER, OTHER)',
-      'CASH',
-    )
+  // -------------------------------------------------------
+  // Filtering
+  // -------------------------------------------------------
 
-    if (!paymentMethod) return
+  const statusCounts = useMemo(() => {
+    const counts = { ALL: reservations.length }
 
-    try {
-      setUpdatingReservationId(reservationId)
-      setError('')
-      setSuccessMessage('')
-
-      const response = await apiRequest(
-        `/reservations/${reservationId}/complete`,
-        {
-          method: 'POST',
-          token: accessToken,
-          body: {
-            payment_method: paymentMethod.trim().toUpperCase(),
-          },
-        },
-      )
-
-      const refreshed = await apiRequest('/reservations/pharmacy', {
-        token: accessToken,
-      })
-      setReservations(refreshed.data || [])
-
-      setSuccessMessage(
-        `Sale #${response.data.sale_id} recorded — ₱${Number(
-          response.data.total_amount,
-        ).toFixed(2)}`,
-      )
-    } catch (requestError) {
-      setError(
-        requestError.message ||
-          'Failed to complete reservation',
-      )
-    } finally {
-      setUpdatingReservationId(null)
-    }
-  }
-
-  const handleExpire = async (reservationId) => {
-    const confirmed = window.confirm(
-      'Mark this reservation as EXPIRED (no-show)? Stock will be restored to inventory.',
-    )
-
-    if (!confirmed) return
-
-    try {
-      setUpdatingReservationId(reservationId)
-      setError('')
-      setSuccessMessage('')
-
-      await apiRequest(`/reservations/${reservationId}/no-show`, {
-        method: 'POST',
-        token: accessToken,
-      })
-
-      const refreshed = await apiRequest('/reservations/pharmacy', {
-        token: accessToken,
-      })
-      setReservations(refreshed.data || [])
-
-      setSuccessMessage(
-        'Reservation expired. Stock restored to inventory.',
-      )
-    } catch (requestError) {
-      setError(
-        requestError.message ||
-          'Failed to mark reservation as expired',
-      )
-    } finally {
-      setUpdatingReservationId(null)
-    }
-  }
-
-  // --------------------------------------------------
-  // Modal
-  // --------------------------------------------------
-
-  const openReservationDetails = (reservation) => {
-    setSelectedReservation(reservation)
-    setError('')
-    setSuccessMessage('')
-  }
-
-  const closeReservationDetails = () => {
-    setSelectedReservation(null)
-  }
-
-  // --------------------------------------------------
-  // Formatting helpers
-  // --------------------------------------------------
-
-  const getStatusClass = (status) => {
-    return `reservation-status ${
-      status?.toLowerCase().replaceAll('_', '-') ||
-      'unknown'
-    }`
-  }
-
-  const formatStatus = (status) => {
-    if (!status) return 'Unknown'
-
-    return status
-      .replaceAll('_', ' ')
-      .toLowerCase()
-      .replace(/\b\w/g, (character) =>
-        character.toUpperCase(),
-      )
-  }
-
-  const formatDate = (date) => {
-    if (!date) return '—'
-
-    return new Date(
-      `${date}T00:00:00`,
-    ).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    reservations.forEach((reservation) => {
+      counts[reservation.status] = (counts[reservation.status] || 0) + 1
     })
+
+    return counts
+  }, [reservations])
+
+  const hasFilters =
+    searchTerm.trim() !== '' ||
+    statusFilter !== 'ALL' ||
+    dateFilter !== 'ALL'
+
+  const clearFilters = () => {
+    setSearchTerm('')
+    setStatusFilter('ALL')
+    setDateFilter('ALL')
   }
-
-  const formatTime = (time) => {
-    if (!time) return '—'
-
-    const [hours, minutes] = time.split(':')
-
-    if (
-      hours === undefined ||
-      minutes === undefined
-    ) {
-      return time
-    }
-
-    const date = new Date()
-
-    date.setHours(
-      Number(hours),
-      Number(minutes),
-      0,
-      0,
-    )
-
-    return date.toLocaleTimeString([], {
-      hour: 'numeric',
-      minute: '2-digit',
-    })
-  }
-
-  const getCustomerName = (reservation) => {
-    const customer =
-      reservation.users || reservation.customer
-
-    if (!customer) {
-      return `Customer #${reservation.customer_id}`
-    }
-
-    return (
-      `${customer.first_name || ''} ${
-        customer.last_name || ''
-      }`.trim() ||
-      `Customer #${reservation.customer_id}`
-    )
-  }
-
-  const getCustomerEmail = (reservation) => {
-    const customer =
-      reservation.users || reservation.customer
-
-    return customer?.email || ''
-  }
-
-  const getCustomerPhone = (reservation) => {
-    const customer =
-      reservation.users || reservation.customer
-
-    return customer?.phone || ''
-  }
-
-  const getItems = (reservation) => {
-    return (
-      reservation.reservation_items ||
-      reservation.items ||
-      []
-    )
-  }
-
-  const getMedicineName = (item) => {
-    const medicine = item.medicines
-
-    if (!medicine) {
-      return `Medicine #${item.medicine_id}`
-    }
-
-    return (
-      medicine.brand_name ||
-      medicine.generic_name ||
-      `Medicine #${item.medicine_id}`
-    )
-  }
-
-  const getMedicineDescription = (item) => {
-    const medicine = item.medicines
-
-    if (!medicine) {
-      return ''
-    }
-
-    const parts = [
-      medicine.generic_name,
-      medicine.dosage,
-      medicine.dosage_form,
-    ].filter(Boolean)
-
-    return parts.join(' • ')
-  }
-
-  const calculateItemTotal = (item) => {
-    const quantity = Number(item.quantity) || 0
-    const unitPrice = Number(item.unit_price) || 0
-
-    return quantity * unitPrice
-  }
-
-  const calculateReservationTotal = (reservation) => {
-    return getItems(reservation).reduce(
-      (total, item) =>
-        total + calculateItemTotal(item),
-      0,
-    )
-  }
-
-  const formatCurrency = (amount) => {
-    return Number(amount || 0).toLocaleString(
-      undefined,
-      {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      },
-    )
-  }
-
-  // --------------------------------------------------
-  // Filtering and search
-  // --------------------------------------------------
 
   const filteredReservations = useMemo(() => {
-    let filtered = [...reservations]
+    const term = searchTerm.trim().toLowerCase()
+    const today = localDayKey()
 
-    // Apply search filter
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase()
-      filtered = filtered.filter((reservation) => {
-        const id = reservation.reservation_id.toString()
-        const customerName = getCustomerName(reservation).toLowerCase()
-        const customerEmail = getCustomerEmail(reservation).toLowerCase()
-        const status = formatStatus(reservation.status).toLowerCase()
+    return reservations
+      .filter((reservation) => {
+        if (term) {
+          const customer = getCustomer(reservation)
 
-        return (
-          id.includes(term) ||
-          customerName.includes(term) ||
-          customerEmail.includes(term) ||
-          status.includes(term)
-        )
-      })
-    }
+          const haystack = [
+            String(reservation.reservation_id),
+            `#${reservation.reservation_id}`,
+            getCustomerName(reservation),
+            customer?.email,
+            customer?.phone,
+            ...getItems(reservation).map(getMedicineName),
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase()
 
-    // Apply status filter
-    if (statusFilter !== 'ALL') {
-      filtered = filtered.filter(
-        (reservation) => reservation.status === statusFilter
-      )
-    }
-
-    // Apply date filter
-    if (dateFilter !== 'ALL') {
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-
-      filtered = filtered.filter((reservation) => {
-        const pickupDate = new Date(reservation.pickup_date)
-        pickupDate.setHours(0, 0, 0, 0)
-
-        switch (dateFilter) {
-          case 'TODAY':
-            return pickupDate.getTime() === today.getTime()
-          case 'UPCOMING':
-            return pickupDate >= today
-          case 'PAST':
-            return pickupDate < today
-          default:
-            return true
+          if (!haystack.includes(term)) return false
         }
+
+        if (
+          statusFilter !== 'ALL' &&
+          reservation.status !== statusFilter
+        ) {
+          return false
+        }
+
+        if (dateFilter !== 'ALL') {
+          const day = dateOnly(reservation.pickup_date)
+
+          if (dateFilter === 'TODAY' && day !== today) return false
+          if (dateFilter === 'UPCOMING' && !(day >= today)) return false
+          if (dateFilter === 'PAST' && !(day < today)) return false
+        }
+
+        return true
       })
-    }
-
-    // Sort by pickup date (upcoming first)
-    filtered.sort((a, b) => {
-      const dateA = new Date(a.pickup_date)
-      const dateB = new Date(b.pickup_date)
-      return dateB - dateA
-    })
-
-    return filtered
+      .sort(
+        (a, b) =>
+          dateOnly(b.pickup_date).localeCompare(dateOnly(a.pickup_date)) ||
+          timeOnly(a.pickup_time).localeCompare(timeOnly(b.pickup_time))
+      )
   }, [reservations, searchTerm, statusFilter, dateFilter])
 
-  // --------------------------------------------------
+  // -------------------------------------------------------
   // Pagination
-  // --------------------------------------------------
+  // -------------------------------------------------------
 
-  const totalPages = Math.ceil(filteredReservations.length / itemsPerPage)
-  const paginatedReservations = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    const endIndex = startIndex + itemsPerPage
-    return filteredReservations.slice(startIndex, endIndex)
-  }, [filteredReservations, currentPage, itemsPerPage])
-
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
   }, [searchTerm, statusFilter, dateFilter])
 
-  const goToPage = (page) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)))
-  }
+  const totalPages = Math.max(
+    Math.ceil(filteredReservations.length / ITEMS_PER_PAGE),
+    1
+  )
 
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1)
-    }
-  }
+  const page = Math.min(currentPage, totalPages)
+  const startIndex = (page - 1) * ITEMS_PER_PAGE
 
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
-    }
-  }
+  const paginatedReservations = filteredReservations.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  )
 
-  // --------------------------------------------------
-  // Summary
-  // --------------------------------------------------
+  const pageNumbers = Array.from(
+    { length: totalPages },
+    (_, index) => index + 1
+  ).filter(
+    (number) =>
+      number === 1 ||
+      number === totalPages ||
+      Math.abs(number - page) <= 1
+  )
 
-  const totalReservations = reservations.length
-
-  const pendingReservations = reservations.filter(
-    (reservation) =>
-      reservation.status === 'PENDING',
-  ).length
-
-  const confirmedReservations = reservations.filter(
-    (reservation) =>
-      reservation.status === 'CONFIRMED',
-  ).length
-
-  const completedReservations = reservations.filter(
-    (reservation) =>
-      reservation.status === 'COMPLETED',
-  ).length
-
-  // --------------------------------------------------
+  // -------------------------------------------------------
   // Render
-  // --------------------------------------------------
+  // -------------------------------------------------------
 
   return (
-    <section className="reservations-page">
-      {/* Page Header */}
+    <>
       <div className="page-header-sticky">
         <div>
-          <h2 className="page-title">
-            Reservations
-          </h2>
-
+          <h2 className="page-title">Reservations</h2>
           <p className="page-copy">
-            Manage customer pickup reservations for
-            your pharmacy.
+            Confirm, hand over and track customer pickups.
           </p>
         </div>
       </div>
 
       <div className="page-content-wrapper">
-        <section className="reservations-page-content">
-
-      {/* Error */}
-
-      {error && (
-        <p
-          className="form-error"
-          role="alert"
-        >
-          {error}
-        </p>
-      )}
-
-      {/* Success */}
-
-      {successMessage && (
-        <p
-          className="form-success"
-          role="status"
-        >
-          {successMessage}
-        </p>
-      )}
-
-      {/* Summary */}
-
-      <div className="reservation-summary">
-        <article className="reservation-summary-card">
-          <span>Total Reservations</span>
-          <strong>{totalReservations}</strong>
-        </article>
-
-        <article className="reservation-summary-card">
-          <span>Pending</span>
-          <strong>{pendingReservations}</strong>
-        </article>
-
-        <article className="reservation-summary-card">
-          <span>Confirmed</span>
-          <strong>{confirmedReservations}</strong>
-        </article>
-
-        <article className="reservation-summary-card">
-          <span>Completed</span>
-          <strong>{completedReservations}</strong>
-        </article>
-      </div>
-
-      {/* Reservation Table */}
-
-      <div className="reservation-table-wrap">
-        <div className="reservation-table-header">
-          <div>
-            <h3>
-              Customer Reservations
-            </h3>
-
-            <p>
-              Reservations submitted to your
-              pharmacy.
+        <section className="med-page">
+          {loadError && (
+            <p className="med-banner med-banner-error" role="alert">
+              {loadError}
             </p>
-          </div>
-        </div>
+          )}
 
-        {/* Search and Filters */}
-        <div className="reservation-filters">
-          <div className="reservation-search">
-            <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search by ID, customer name, email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            {searchTerm && (
+          {actionError && !selectedReservation && (
+            <p className="med-banner med-banner-error" role="alert">
+              {actionError}
               <button
                 type="button"
-                className="clear-search"
-                onClick={() => setSearchTerm('')}
-                aria-label="Clear search"
+                className="med-banner-close"
+                onClick={() => setActionError('')}
+                aria-label="Dismiss"
               >
-                ×
+                <CloseIcon />
               </button>
-            )}
-          </div>
+            </p>
+          )}
 
-          <div className="reservation-filter-group">
-            <label>
-              <span>Status</span>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="ALL">All Statuses</option>
-                <option value="PENDING">Pending</option>
-                <option value="CONFIRMED">Confirmed</option>
-                <option value="COMPLETED">Completed</option>
-                <option value="CANCELLED">Cancelled</option>
-                <option value="EXPIRED">Expired</option>
-              </select>
-            </label>
-
-            <label>
-              <span>Pickup Date</span>
-              <select
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-              >
-                <option value="ALL">All Dates</option>
-                <option value="TODAY">Today</option>
-                <option value="UPCOMING">Upcoming</option>
-                <option value="PAST">Past</option>
-              </select>
-            </label>
-
-            {(searchTerm || statusFilter !== 'ALL' || dateFilter !== 'ALL') && (
+          {notice && (
+            <p className="med-banner med-banner-success" role="status">
+              {notice}
               <button
                 type="button"
-                className="clear-filters-btn"
-                onClick={() => {
-                  setSearchTerm('')
-                  setStatusFilter('ALL')
-                  setDateFilter('ALL')
-                }}
+                className="med-banner-close"
+                onClick={() => setNotice('')}
+                aria-label="Dismiss"
               >
-                Clear Filters
+                <CloseIcon />
               </button>
-            )}
-          </div>
-        </div>
-
-        {/* Results Info */}
-        {!isLoading && (
-          <div className="reservation-results-info">
-            <span>
-              Showing {paginatedReservations.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} -{' '}
-              {Math.min(currentPage * itemsPerPage, filteredReservations.length)} of{' '}
-              {filteredReservations.length} reservation{filteredReservations.length !== 1 ? 's' : ''}
-            </span>
-            {(searchTerm || statusFilter !== 'ALL' || dateFilter !== 'ALL') && (
-              <span className="filtered-indicator">
-                (filtered from {reservations.length} total)
-              </span>
-            )}
-          </div>
-        )}
-
-        {isLoading ? (
-          <div className="reservation-state">
-            <p>
-              Loading reservations…
             </p>
-          </div>
-        ) : filteredReservations.length === 0 ? (
-          <div className="reservation-state">
-            <h3>
-              {searchTerm || statusFilter !== 'ALL' || dateFilter !== 'ALL'
-                ? 'No matching reservations'
-                : 'No reservations yet'}
-            </h3>
+          )}
 
-            <p>
-              {searchTerm || statusFilter !== 'ALL' || dateFilter !== 'ALL'
-                ? 'Try adjusting your search or filters'
-                : 'Customer reservations will appear here when they are submitted.'}
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="reservation-table-scroll">
-              <table className="reservation-table">
-                <thead>
-                  <tr>
-                    <th>Reservation</th>
-                    <th>Customer</th>
-                    <th>Pickup</th>
-                    <th>Items</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
+          <div className="med-card">
+            {/* Status tabs */}
+            <div
+              className="rsv-tabs"
+              role="tablist"
+              aria-label="Filter by status"
+            >
+              {STATUS_TABS.map((tab) => {
+                const count = statusCounts[tab.value] || 0
+                const isActive = statusFilter === tab.value
 
-                <tbody>
-                  {paginatedReservations.map(
-                    (reservation) => {
-                      const items =
-                        getItems(reservation)
-
-                      const isUpdating =
-                        updatingReservationId ===
-                        reservation.reservation_id
-
-                      return (
-                        <tr
-                          key={
-                            reservation.reservation_id
-                          }
-                        >
-                          {/* Reservation */}
-
-                          <td>
-                            <strong>
-                              #
-                              {
-                                reservation.reservation_id
-                              }
-                            </strong>
-
-                            <span className="reservation-subtext">
-                              {formatDate(
-                                reservation.reservation_date,
-                              )}
-                            </span>
-                          </td>
-
-                          {/* Customer */}
-
-                          <td>
-                            <strong>
-                              {getCustomerName(
-                                reservation,
-                              )}
-                            </strong>
-
-                            {getCustomerEmail(
-                              reservation,
-                            ) && (
-                              <span className="reservation-subtext">
-                                {getCustomerEmail(
-                                  reservation,
-                                )}
-                              </span>
-                            )}
-                          </td>
-
-                          {/* Pickup */}
-
-                          <td>
-                            <strong>
-                              {formatDate(
-                                reservation.pickup_date,
-                              )}
-                            </strong>
-
-                            <span className="reservation-subtext">
-                              {formatTime(
-                                reservation.pickup_time,
-                              )}
-                            </span>
-                          </td>
-
-                          {/* Items */}
-
-                          <td>
-                            {items.length}{' '}
-                            {items.length === 1
-                              ? 'item'
-                              : 'items'}
-                          </td>
-
-                          {/* Status */}
-
-                          <td>
-                            <span
-                              className={getStatusClass(
-                                reservation.status,
-                              )}
-                            >
-                              {formatStatus(
-                                reservation.status,
-                              )}
-                            </span>
-                          </td>
-
-                          {/* Actions */}
-
-                          <td className="table-actions">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openReservationDetails(
-                                  reservation,
-                                )
-                              }
-                            >
-                              View Details
-                            </button>
-
-                            {reservation.status ===
-                              'PENDING' && (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleConfirm(
-                                      reservation.reservation_id,
-                                    )
-                                  }
-                                  disabled={isUpdating}
-                                >
-                                  {isUpdating
-                                    ? 'Updating…'
-                                    : 'Confirm'}
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleCancel(
-                                      reservation.reservation_id,
-                                    )
-                                  }
-                                  disabled={isUpdating}
-                                >
-                                  Cancel
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleExpire(
-                                      reservation.reservation_id,
-                                    )
-                                  }
-                                  disabled={isUpdating}
-                                >
-                                  {isUpdating
-                                    ? 'Updating…'
-                                    : 'No-Show'}
-                                </button>
-                              </>
-                            )}
-
-                            {reservation.status ===
-                              'CONFIRMED' && (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleComplete(
-                                      reservation.reservation_id,
-                                    )
-                                  }
-                                  disabled={isUpdating}
-                                >
-                                  {isUpdating
-                                    ? 'Updating…'
-                                    : 'Complete'}
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleCancel(
-                                      reservation.reservation_id,
-                                    )
-                                  }
-                                  disabled={isUpdating}
-                                >
-                                  Cancel
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleExpire(
-                                      reservation.reservation_id,
-                                    )
-                                  }
-                                  disabled={isUpdating}
-                                >
-                                  {isUpdating
-                                    ? 'Updating…'
-                                    : 'No-Show'}
-                                </button>
-                              </>
-                            )}
-
-                            {reservation.status ===
-                              'COMPLETED' && (
-                              <span className="reservation-action-complete">
-                                Completed
-                              </span>
-                            )}
-
-                            {reservation.status ===
-                              'CANCELLED' && (
-                              <span className="reservation-action-cancelled">
-                                Cancelled
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      )
-                    },
-                  )}
-                </tbody>
-              </table>
+                return (
+                  <button
+                    key={tab.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    className={`rsv-tab${isActive ? ' is-active' : ''}${
+                      tab.value === 'PENDING' && count > 0
+                        ? ' has-attention'
+                        : ''
+                    }`}
+                    onClick={() => setStatusFilter(tab.value)}
+                  >
+                    {tab.label}
+                    <span className="rsv-tab-count">{count}</span>
+                  </button>
+                )
+              })}
             </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="reservation-pagination">
-                <button
-                  type="button"
-                  onClick={goToPreviousPage}
-                  disabled={currentPage === 1}
-                  className="pagination-btn"
-                  aria-label="Previous page"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="15 18 9 12 15 6" />
-                  </svg>
-                  Previous
-                </button>
+            {/* Toolbar */}
+            <div className="med-toolbar rsv-toolbar">
+              <div className="med-search">
+                <SearchIcon />
 
-                <div className="pagination-pages">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter((page) => {
-                      // Show first page, last page, current page, and pages around current
-                      return (
-                        page === 1 ||
-                        page === totalPages ||
-                        Math.abs(page - currentPage) <= 1
-                      )
-                    })
-                    .map((page, index, array) => {
-                      // Add ellipsis if there's a gap
-                      const showEllipsis = index > 0 && page - array[index - 1] > 1
+                <input
+                  type="search"
+                  placeholder="Search ID, customer, email, phone or medicine…"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  aria-label="Search reservations"
+                />
 
-                      return (
-                        <span key={page}>
-                          {showEllipsis && <span className="pagination-ellipsis">...</span>}
-                          <button
-                            type="button"
-                            onClick={() => goToPage(page)}
-                            className={`pagination-page ${
-                              currentPage === page ? 'active' : ''
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        </span>
-                      )
-                    })}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={goToNextPage}
-                  disabled={currentPage === totalPages}
-                  className="pagination-btn"
-                  aria-label="Next page"
-                >
-                  Next
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* ==================================================
-          RESERVATION DETAILS MODAL
-          ================================================== */}
-
-      {selectedReservation && (
-        <div
-          className="reservation-modal-overlay"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (
-              event.target === event.currentTarget
-            ) {
-              closeReservationDetails()
-            }
-          }}
-        >
-          <div
-            className="reservation-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="reservation-modal-title"
-          >
-            {/* Modal Header */}
-
-            <div className="reservation-modal-header">
-              <div>
-                <span className="eyebrow">
-                  Reservation Details
-                </span>
-
-                <h3 id="reservation-modal-title">
-                  Reservation #
-                  {
-                    selectedReservation.reservation_id
-                  }
-                </h3>
-              </div>
-
-              <button
-                type="button"
-                className="reservation-modal-close"
-                onClick={
-                  closeReservationDetails
-                }
-                aria-label="Close reservation details"
-              >
-                ×
-              </button>
-            </div>
-
-            {/* Modal Body */}
-
-            <div className="reservation-modal-body">
-              {/* Status */}
-
-              <div className="reservation-detail-status">
-                <span>Status</span>
-
-                <span
-                  className={getStatusClass(
-                    selectedReservation.status,
-                  )}
-                >
-                  {formatStatus(
-                    selectedReservation.status,
-                  )}
-                </span>
-              </div>
-
-              {/* Customer Information */}
-
-              <div className="reservation-detail-section">
-                <h4>
-                  Customer Information
-                </h4>
-
-                <div className="reservation-detail-grid">
-                  <div>
-                    <span className="reservation-detail-label">
-                      Name
-                    </span>
-
-                    <strong>
-                      {getCustomerName(
-                        selectedReservation,
-                      )}
-                    </strong>
-                  </div>
-
-                  <div>
-                    <span className="reservation-detail-label">
-                      Email
-                    </span>
-
-                    <strong>
-                      {getCustomerEmail(
-                        selectedReservation,
-                      ) || '—'}
-                    </strong>
-                  </div>
-
-                  <div>
-                    <span className="reservation-detail-label">
-                      Phone
-                    </span>
-
-                    <strong>
-                      {getCustomerPhone(
-                        selectedReservation,
-                      ) || '—'}
-                    </strong>
-                  </div>
-
-                  <div>
-                    <span className="reservation-detail-label">
-                      Customer ID
-                    </span>
-
-                    <strong>
-                      #
-                      {
-                        selectedReservation.customer_id
-                      }
-                    </strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* Pickup Information */}
-
-              <div className="reservation-detail-section">
-                <h4>
-                  Pickup Information
-                </h4>
-
-                <div className="reservation-detail-grid">
-                  <div>
-                    <span className="reservation-detail-label">
-                      Reservation Date
-                    </span>
-
-                    <strong>
-                      {formatDate(
-                        selectedReservation.reservation_date,
-                      )}
-                    </strong>
-                  </div>
-
-                  <div>
-                    <span className="reservation-detail-label">
-                      Pickup Date
-                    </span>
-
-                    <strong>
-                      {formatDate(
-                        selectedReservation.pickup_date,
-                      )}
-                    </strong>
-                  </div>
-
-                  <div>
-                    <span className="reservation-detail-label">
-                      Pickup Time
-                    </span>
-
-                    <strong>
-                      {formatTime(
-                        selectedReservation.pickup_time,
-                      )}
-                    </strong>
-                  </div>
-
-                  <div>
-                    <span className="reservation-detail-label">
-                      Pharmacy ID
-                    </span>
-
-                    <strong>
-                      #
-                      {
-                        selectedReservation.pharmacy_id
-                      }
-                    </strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* Customer Notes */}
-
-              <div className="reservation-detail-section">
-                <h4>
-                  Customer Notes
-                </h4>
-
-                <p className="reservation-notes">
-                  {selectedReservation.notes ||
-                    'No notes provided.'}
-                </p>
-              </div>
-
-              {/* Medicines */}
-
-              <div className="reservation-detail-section">
-                <div className="reservation-detail-section-heading">
-                  <h4>
-                    Reserved Medicines
-                  </h4>
-
-                  <span>
-                    {getItems(
-                      selectedReservation,
-                    ).length}{' '}
-                    {getItems(
-                      selectedReservation,
-                    ).length === 1
-                      ? 'item'
-                      : 'items'}
-                  </span>
-                </div>
-
-                {getItems(
-                  selectedReservation,
-                ).length === 0 ? (
-                  <p className="reservation-notes">
-                    No medicine items found.
-                  </p>
-                ) : (
-                  <div className="reservation-items-list">
-                    {getItems(
-                      selectedReservation,
-                    ).map((item) => (
-                      <div
-                        className="reservation-item"
-                        key={
-                          item.reservation_item_id
-                        }
-                      >
-                        <div className="reservation-item-info">
-                          <strong>
-                            {getMedicineName(
-                              item,
-                            )}
-                          </strong>
-
-                          <span>
-                            {getMedicineDescription(
-                              item,
-                            )}
-                          </span>
-
-                          {item.medicines
-                            ?.requires_prescription && (
-                            <small>
-                              Prescription Required
-                            </small>
-                          )}
-                        </div>
-
-                        <div className="reservation-item-quantity">
-                          <span>
-                            Quantity
-                          </span>
-
-                          <strong>
-                            {item.quantity}
-                          </strong>
-                        </div>
-
-                        <div className="reservation-item-price">
-                          <span>
-                            Unit Price
-                          </span>
-
-                          <strong>
-                            ₱
-                            {formatCurrency(
-                              item.unit_price,
-                            )}
-                          </strong>
-                        </div>
-
-                        <div className="reservation-item-total">
-                          <span>
-                            Total
-                          </span>
-
-                          <strong>
-                            ₱
-                            {formatCurrency(
-                              calculateItemTotal(
-                                item,
-                              ),
-                            )}
-                          </strong>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                {searchTerm && (
+                  <button
+                    type="button"
+                    className="med-search-clear"
+                    onClick={() => setSearchTerm('')}
+                    aria-label="Clear search"
+                  >
+                    <CloseIcon />
+                  </button>
                 )}
               </div>
 
-              {/* Reservation Total */}
+              <Select
+                size="sm"
+                aria-label="Filter by pickup date"
+                value={dateFilter}
+                onChange={setDateFilter}
+                options={DATE_OPTIONS}
+              />
+            </div>
 
-              <div className="reservation-detail-total">
+            {/* Summary */}
+            {!isLoading && reservations.length > 0 && (
+              <div className="med-summary">
                 <span>
-                  Estimated Reservation Total
+                  {filteredReservations.length === 0
+                    ? 'No reservations match'
+                    : `Showing ${startIndex + 1}–${Math.min(
+                        startIndex + ITEMS_PER_PAGE,
+                        filteredReservations.length
+                      )} of ${filteredReservations.length} reservation${
+                        filteredReservations.length === 1 ? '' : 's'
+                      }`}
+                  {hasFilters && ` · filtered from ${reservations.length}`}
                 </span>
 
-                <strong>
-                  ₱
-                  {formatCurrency(
-                    calculateReservationTotal(
-                      selectedReservation,
-                    ),
-                  )}
-                </strong>
+                {hasFilters && (
+                  <button
+                    type="button"
+                    className="med-link-btn"
+                    onClick={clearFilters}
+                  >
+                    Clear filters
+                  </button>
+                )}
               </div>
-            </div>
+            )}
 
-            {/* Modal Footer */}
+            {/* Table / states */}
+            {isLoading ? (
+              <div className="med-state">
+                <p>Loading reservations…</p>
+              </div>
+            ) : filteredReservations.length === 0 ? (
+              <div className="med-state">
+                <h3>
+                  {hasFilters
+                    ? 'No matching reservations'
+                    : 'No reservations yet'}
+                </h3>
 
-            <div className="reservation-modal-footer">
-              <button
-                type="button"
-                onClick={
-                  closeReservationDetails
-                }
-              >
-                Close
-              </button>
+                <p>
+                  {hasFilters
+                    ? 'Try a different search or clear the filters.'
+                    : 'Customer reservations will appear here when they are submitted.'}
+                </p>
 
-              {selectedReservation.status ===
-                'PENDING' && (
-                <>
+                {hasFilters && (
                   <button
                     type="button"
-                    onClick={() =>
-                      handleConfirm(
-                        selectedReservation.reservation_id,
-                      )
-                    }
-                    disabled={
-                      updatingReservationId ===
-                      selectedReservation.reservation_id
-                    }
+                    className="med-btn med-btn-secondary"
+                    onClick={clearFilters}
                   >
-                    {updatingReservationId ===
-                    selectedReservation.reservation_id
-                      ? 'Updating…'
-                      : 'Confirm Reservation'}
+                    Clear filters
                   </button>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="med-table-scroll">
+                  <table className="med-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Reservation</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Pickup</th>
+                        <th scope="col">Items</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" className="med-col-actions">
+                          <span className="med-sr-only">Actions</span>
+                        </th>
+                      </tr>
+                    </thead>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleCancel(
-                        selectedReservation.reservation_id,
-                      )
-                    }
-                    disabled={
-                      updatingReservationId ===
-                      selectedReservation.reservation_id
-                    }
-                  >
-                    Cancel Reservation
-                  </button>
+                    <tbody>
+                      {paginatedReservations.map((reservation) => {
+                        const id = reservation.reservation_id
+                        const customer = getCustomer(reservation)
+                        const isBusy = busyId === id
+                        const isOpen = OPEN_STATUSES.includes(
+                          reservation.status
+                        )
+                        const isLate =
+                          isOpen && hasPickupPassed(reservation)
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleExpire(
-                        selectedReservation.reservation_id,
-                      )
-                    }
-                    disabled={
-                      updatingReservationId ===
-                      selectedReservation.reservation_id
-                    }
-                  >
-                    {updatingReservationId ===
-                    selectedReservation.reservation_id
-                      ? 'Updating…'
-                      : 'No-Show'}
-                  </button>
-                </>
-              )}
+                        return (
+                          <tr
+                            key={id}
+                            className={isOpen ? '' : 'rsv-row-closed'}
+                          >
+                            <td>
+                              <div className="med-name">
+                                <strong>#{id}</strong>
+                                <span>
+                                  {formatDate(
+                                    reservation.reservation_date ||
+                                      reservation.created_at
+                                  )}
+                                </span>
+                              </div>
+                            </td>
 
-              {selectedReservation.status ===
-                'CONFIRMED' && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleComplete(
-                        selectedReservation.reservation_id,
-                      )
-                    }
-                    disabled={
-                      updatingReservationId ===
-                      selectedReservation.reservation_id
-                    }
-                  >
-                    {updatingReservationId ===
-                    selectedReservation.reservation_id
-                      ? 'Updating…'
-                      : 'Mark as Completed'}
-                  </button>
+                            <td>
+                              <div className="med-name">
+                                <strong>{getCustomerName(reservation)}</strong>
+                                {(customer?.email || customer?.phone) && (
+                                  <span>
+                                    {customer?.email || customer?.phone}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleCancel(
-                        selectedReservation.reservation_id,
-                      )
-                    }
-                    disabled={
-                      updatingReservationId ===
-                      selectedReservation.reservation_id
-                    }
-                  >
-                    Cancel Reservation
-                  </button>
+                            <td>
+                              <div className="med-name">
+                                <strong>
+                                  {formatPickupDay(reservation.pickup_date)}
+                                </strong>
+                                <span>
+                                  {formatTime(reservation.pickup_time)}
+                                  {isLate && (
+                                    <em className="rsv-late"> · Past pickup time</em>
+                                  )}
+                                </span>
+                              </div>
+                            </td>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleExpire(
-                        selectedReservation.reservation_id,
-                      )
-                    }
-                    disabled={
-                      updatingReservationId ===
-                      selectedReservation.reservation_id
-                    }
+                            <td>
+                              <div className="med-name rsv-items-cell">
+                                <strong>{itemSummary(reservation)}</strong>
+                                <span>{formatPeso(reservationTotal(reservation))}</span>
+                              </div>
+                            </td>
+
+                            <td>
+                              <StatusPill status={reservation.status} />
+                            </td>
+
+                            <td className="med-col-actions">
+                              <div className="med-actions">
+                                <button
+                                  type="button"
+                                  className="med-action"
+                                  onClick={() => openDetails(reservation)}
+                                  aria-label={`View reservation #${id}`}
+                                >
+                                  View
+                                </button>
+
+                                {reservation.status === 'PENDING' && (
+                                  <button
+                                    type="button"
+                                    className="rsv-row-primary"
+                                    onClick={() =>
+                                      confirmReservation(reservation)
+                                    }
+                                    disabled={isBusy}
+                                  >
+                                    {isBusy ? 'Confirming…' : 'Confirm'}
+                                  </button>
+                                )}
+
+                                {reservation.status === 'CONFIRMED' && (
+                                  <button
+                                    type="button"
+                                    className="rsv-row-primary"
+                                    onClick={() =>
+                                      openDialog('complete', reservation)
+                                    }
+                                    disabled={isBusy}
+                                  >
+                                    Complete
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {totalPages > 1 && (
+                  <nav
+                    className="med-pagination"
+                    aria-label="Reservation pages"
                   >
-                    {updatingReservationId ===
-                    selectedReservation.reservation_id
-                      ? 'Updating…'
-                      : 'No-Show'}
-                  </button>
-                </>
-              )}
-            </div>
+                    <span>
+                      Page {page} of {totalPages}
+                    </span>
+
+                    <div className="med-pages">
+                      <button
+                        type="button"
+                        className="med-page-btn"
+                        onClick={() => setCurrentPage(page - 1)}
+                        disabled={page === 1}
+                        aria-label="Previous page"
+                      >
+                        <ChevronLeftIcon />
+                      </button>
+
+                      {pageNumbers.map((number, index) => (
+                        <span key={number} className="med-page-group">
+                          {index > 0 &&
+                            number - pageNumbers[index - 1] > 1 && (
+                              <span className="med-ellipsis">…</span>
+                            )}
+
+                          <button
+                            type="button"
+                            className={`med-page-btn${
+                              number === page ? ' is-current' : ''
+                            }`}
+                            onClick={() => setCurrentPage(number)}
+                            aria-current={
+                              number === page ? 'page' : undefined
+                            }
+                          >
+                            {number}
+                          </button>
+                        </span>
+                      ))}
+
+                      <button
+                        type="button"
+                        className="med-page-btn"
+                        onClick={() => setCurrentPage(page + 1)}
+                        disabled={page === totalPages}
+                        aria-label="Next page"
+                      >
+                        <ChevronRightIcon />
+                      </button>
+                    </div>
+                  </nav>
+                )}
+              </>
+            )}
           </div>
-        </div>
-      )}
         </section>
       </div>
-    </section>
+
+      <ReservationDetails
+        reservation={selectedReservation}
+        busy={Boolean(
+          selectedReservation &&
+            busyId === selectedReservation.reservation_id
+        )}
+        error={actionError}
+        onClose={closeDetails}
+        onConfirm={confirmReservation}
+        onRequestAction={openDialog}
+      />
+
+      <ActionDialog
+        dialog={dialog}
+        busy={Boolean(
+          dialog && busyId === dialog.reservation.reservation_id
+        )}
+        error={dialogError}
+        onClose={closeDialog}
+        onSubmit={submitDialog}
+      />
+    </>
   )
 }
 
