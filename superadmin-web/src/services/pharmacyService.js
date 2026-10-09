@@ -222,3 +222,32 @@ export async function createPharmacyAdmin(payload) {
 
   return result.data
 }
+/* ============================================================
+   PHARMACY STATUS (APPROVE / REJECT / ACTIVATE / DEACTIVATE)
+============================================================ */
+
+/**
+ * Change a pharmacy's status. The reason is stored in the
+ * audit log on the server.
+ *
+ * PATCH /api/superadmin/pharmacies/:id/status
+ * body: { status: 'ACTIVE' | 'INACTIVE' | 'REJECTED', reason }
+ */
+export async function updatePharmacyStatus(pharmacyId, status, reason = null) {
+  if (!pharmacyId) {
+    throw new Error('Pharmacy ID is required')
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/superadmin/pharmacies/${pharmacyId}/status`,
+    {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ status, reason }),
+    }
+  )
+
+  const result = await parseResponse(response)
+
+  return result.data
+}

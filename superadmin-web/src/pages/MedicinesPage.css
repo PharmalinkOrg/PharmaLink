@@ -1,0 +1,231 @@
+/* Reuses the table, toolbar and modal styles from the Pharmacies page. */
+
+@import './PharmaciesPage.css';
+
+/* ============================================================
+   TABS
+============================================================ */
+
+.catalog-tabs {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.catalog-tab {
+  height: 38px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #475569;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.catalog-tab svg {
+  color: #94a3b8;
+}
+
+.catalog-tab:hover:not(.is-active) {
+  border-color: #508991;
+  color: #172a3a;
+}
+
+.catalog-tab.is-active {
+  border-color: #172a3a;
+  background: #172a3a;
+  color: #ffffff;
+}
+
+.catalog-tab.is-active svg {
+  color: #74b3ce;
+}
+
+.catalog-tab-count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.catalog-tab.is-active .catalog-tab-count {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.catalog-summary {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.catalog-error-text {
+  color: #b91c1c;
+}
+
+/* ============================================================
+   TABLE CELLS
+============================================================ */
+
+.medicine-brand,
+.medicine-form {
+  display: block;
+  margin-top: 3px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.medicine-dosage {
+  display: block;
+  color: #1e293b;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.medicine-category {
+  display: inline-flex;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rx-badge,
+.otc-badge {
+  display: inline-flex;
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.rx-badge {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.otc-badge {
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.pharmacy-table tbody tr.is-archived td {
+  opacity: 0.6;
+}
+
+.pharmacy-table tbody tr.is-archived td.actions-cell {
+  opacity: 1;
+}
+
+.category-count-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #508991;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.category-count-link:hover:not(:disabled) {
+  color: #172a3a;
+  text-decoration: underline;
+}
+
+.category-count-link:disabled {
+  color: #94a3b8;
+  cursor: default;
+}
+
+.row-action-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   FORM EXTRAS
+============================================================ */
+
+.medicine-checkbox {
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.medicine-checkbox input {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  accent-color: #508991;
+  cursor: pointer;
+}
+
+.medicine-checkbox strong {
+  display: block;
+  color: #1e293b;
+  font-size: 13px;
+}
+
+.medicine-checkbox small {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.add-pharmacy-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .catalog-summary {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+.medicine-source {
+  margin-top: 5px;
+  max-width: 220px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.medicine-source.is-catalog {
+  background: #eef7f4;
+  color: #172a3a;
+}

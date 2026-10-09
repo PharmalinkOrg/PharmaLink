@@ -1,6 +1,6 @@
 const express = require('express')
 
-const { login, customerLogin, registerCustomer, getCurrentUser } = require('../controllers/authController')
+const { login, customerLogin, registerCustomer, getCurrentUser, changePassword } = require('../controllers/authController')
 const authenticateUser = require('../middleware/authMiddleware')
 const loadPharmaUser = require('../middleware/userMiddleware')
 
@@ -17,5 +17,6 @@ router.get('/register', (req, res) => {
 	})
 })
 router.get('/me', authenticateUser, loadPharmaUser, getCurrentUser)
+router.post('/change-password', authenticateUser, loadPharmaUser, changePassword)
 
 module.exports = router

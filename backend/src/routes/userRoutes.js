@@ -29,6 +29,28 @@ router.patch(
   updateCurrentUserProfile
 )
 
+// Same as /me/profile — the Pharmacy Admin web app uses /profile
+router.get(
+  '/profile',
+  authenticateUser,
+  loadPharmaUser,
+  getCurrentUserProfile
+)
+
+router.put(
+  '/profile',
+  authenticateUser,
+  loadPharmaUser,
+  updateCurrentUserProfile
+)
+
+router.patch(
+  '/profile',
+  authenticateUser,
+  loadPharmaUser,
+  updateCurrentUserProfile
+)
+
 // Get users for Super Admin
 // Only PHARMACY_ADMIN and CUSTOMER are returned by the controller
 router.get(

@@ -1,0 +1,133 @@
+/* File: superadmin-web/src/pages/AuditLogsFilters.css
+   Filter + export controls for the Audit Logs page. */
+
+.audit-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.audit-export-button {
+  height: 38px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #172a3a;
+  border-radius: 9px;
+  background: #172a3a;
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.audit-export-button:hover:not(:disabled) {
+  background: #27475e;
+}
+
+.audit-export-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.audit-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.audit-toolbar .search-box {
+  flex: 1;
+  min-width: 240px;
+}
+
+.audit-search-clear {
+  display: flex;
+  padding: 3px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.audit-search-clear:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.audit-filter {
+  height: 42px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.audit-filter svg {
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
+.audit-filter select {
+  max-width: 220px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #1e293b;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.audit-filter:focus-within {
+  border-color: #508991;
+  box-shadow: 0 0 0 3px rgba(80, 137, 145, 0.18);
+}
+
+.audit-clear-button {
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #475569;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.audit-clear-button:hover {
+  border-color: #508991;
+  background: #f0fdf4;
+}
+
+.audit-filter-note {
+  margin: 10px 0 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .audit-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .audit-toolbar .search-box {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .audit-filter {
+    flex: 1;
+  }
+}

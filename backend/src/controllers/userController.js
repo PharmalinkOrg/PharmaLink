@@ -1,5 +1,7 @@
 const supabase = require('../config/supabase')
 const supabaseAdmin = require('../config/supabaseAdmin')
+const fetchAll = require('../utils/fetchAll')
+const { logActivity } = require('../services/auditLogService')
 
 const getCurrentUserProfile = (req, res) => {
   return res.status(200).json({
@@ -10,16 +12,28 @@ const getCurrentUserProfile = (req, res) => {
 
 const updateCurrentUserProfile = async (req, res) => {
   try {
-    const { first_name, last_name, phone, avatar_url } = req.body
+    // Accept snake_case or camelCase field names.
+    const body = req.body || {}
+    const first_name = body.first_name ?? body.firstName
+    const last_name = body.last_name ?? body.lastName
+    const phone = body.phone ?? body.phoneNumber ?? body.phone_number
+    const avatar_url = body.avatar_url ?? body.avatarUrl
 
-    if (!first_name || first_name.trim() === '') {
+    if (phone !== undefined && phone !== null && typeof phone !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Phone number must be text',
+      })
+    }
+
+    if (typeof first_name !== 'string' || first_name.trim() === '') {
       return res.status(400).json({
         success: false,
         message: 'First name is required',
       })
     }
 
-    if (!last_name || last_name.trim() === '') {
+    if (typeof last_name !== 'string' || last_name.trim() === '') {
       return res.status(400).json({
         success: false,
         message: 'Last name is required',
@@ -199,6 +213,14 @@ const createPharmacyAdmin = async (req, res) => {
       })
     }
 
+    await logActivity(req, {
+      action: 'PHARMACY_ADMIN_CREATED',
+      entityType: 'user',
+      entityId: user.user_id,
+      pharmacyId: user.pharmacy_id,
+      description: `Created pharmacy admin "${user.first_name} ${user.last_name}" (${user.email}) for ${pharmacy.name}`,
+    })
+
     return res.status(201).json({
       success: true,
       message: 'Pharmacy admin created successfully',
@@ -214,40 +236,69 @@ const createPharmacyAdmin = async (req, res) => {
   }
 }
 
+/* ============================================================
+   GET USERS FOR SUPER ADMIN
+   GET /api/users/superadmin
+     ?role=PHARMACY_ADMIN|CUSTOMER   optional
+     ?page=1&limit=100              optional (max 500)
+
+   Without page/limit every matching user is returned, as before.
+============================================================ */
+
+const SUPERADMIN_USER_ROLES = ['PHARMACY_ADMIN', 'CUSTOMER']
+
+const SUPERADMIN_USER_COLUMNS =
+  'user_id, pharmacy_id, role, first_name, last_name, email, phone, status, created_at, updated_at, last_login_at'
+
 const getSuperAdminUsers = async (req, res) => {
   try {
-    const { data: users, error } = await supabaseAdmin
-      .from('users')
-      .select(
-        'user_id, pharmacy_id, role, first_name, last_name, email, phone, status, created_at, updated_at, last_login_at'
-      )
-      .in('role', ['PHARMACY_ADMIN', 'CUSTOMER'])
-      .order('created_at', { ascending: false })
+    const role = String(req.query.role || '').trim().toUpperCase()
+    const paginate = req.query.page !== undefined || req.query.limit !== undefined
+
+    const buildQuery = () => {
+      let query = supabaseAdmin.from('users').select(SUPERADMIN_USER_COLUMNS)
+
+      query = SUPERADMIN_USER_ROLES.includes(role)
+        ? query.eq('role', role)
+        : query.in('role', SUPERADMIN_USER_ROLES)
+
+      return query
+        .order('created_at', { ascending: false })
+        .order('user_id', { ascending: false })
+    }
+
+    if (!paginate) {
+      const users = await fetchAll(buildQuery)
+
+      return res.status(200).json({ success: true, data: users })
+    }
+
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1)
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500)
+    const from = (page - 1) * limit
+
+    const { data: users, error } = await buildQuery().range(from, from + limit - 1)
 
     if (error) {
-      console.error('Get Super Admin users error:', {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-      })
-
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to fetch users',
-      })
+      throw error
     }
 
     return res.status(200).json({
       success: true,
       data: users || [],
+      pagination: { page, limit, returned: (users || []).length },
     })
   } catch (error) {
-    console.error('Get Super Admin users server error:', error)
+    console.error('Get Super Admin users error:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    })
 
     return res.status(500).json({
       success: false,
-      message: 'Server error',
+      message: 'Failed to fetch users',
     })
   }
 }

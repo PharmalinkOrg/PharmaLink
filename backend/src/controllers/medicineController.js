@@ -23,10 +23,15 @@ const isValidId = (value) => {
  * GET all medicines
  * GET /api/medicines
  * GET /api/medicines?pharmacy_id=1
+ * GET /api/medicines?pharmacy_id=1&include_catalog=false
  *
- * Public. Optionally scoped to a single pharmacy via query param.
- * With no pharmacy_id, returns all active medicines across all
- * pharmacies (for future cross-pharmacy customer search).
+ * Public. With pharmacy_id, returns that pharmacy's own medicines
+ * PLUS the global catalog (pharmacy_id IS NULL), so pharmacies can
+ * stock catalog medicines. Pass include_catalog=false for the
+ * pharmacy's own medicines only.
+ *
+ * Every row has is_catalog: true for catalog medicines, which only
+ * the Super Admin can edit.
  */
 const getMedicines = async (req, res) => {
   try {
@@ -45,10 +50,14 @@ const getMedicines = async (req, res) => {
           message: 'Invalid pharmacy_id',
         })
       }
-      query = query.eq('pharmacy_id', Number(pharmacy_id))
+      const includeCatalog = String(req.query.include_catalog ?? 'true') !== 'false'
+
+      query = includeCatalog
+        ? query.or(`pharmacy_id.eq.${Number(pharmacy_id)},pharmacy_id.is.null`)
+        : query.eq('pharmacy_id', Number(pharmacy_id))
     }
 
-    const { data, error } = await query
+    const { data: rows, error } = await query
 
     if (error) {
       console.error('Get medicines error:', error)
@@ -59,6 +68,11 @@ const getMedicines = async (req, res) => {
         code: error.code,
       })
     }
+
+    const data = (rows || []).map((medicine) => ({
+      ...medicine,
+      is_catalog: medicine.pharmacy_id === null,
+    }))
 
     return res.status(200).json({
       success: true,
@@ -250,6 +264,19 @@ const assertOwnership = async (medicineId, pharmaUser) => {
 
   if (findError || !existingMedicine) {
     return { error: { status: 404, message: 'Medicine not found' } }
+  }
+
+  if (
+    pharmaUser.role !== 'SUPER_ADMIN' &&
+    existingMedicine.pharmacy_id === null
+  ) {
+    return {
+      error: {
+        status: 403,
+        message:
+          'Catalog medicines are managed by PharmaLink. Contact the Super Admin to change this medicine.',
+      },
+    }
   }
 
   if (

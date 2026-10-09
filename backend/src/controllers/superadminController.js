@@ -33,16 +33,18 @@ exports.getMetrics = async (req, res) => {
 };
 
 /**
- * GET /api/superadmin/activity-logs?limit=10&offset=0
- * Returns paginated activity logs (pharmacy admin audit logs from last 7 days)
+ * GET /api/superadmin/activity-logs?limit=10&offset=0&days=7
+ * Returns paginated audit logs, newest first.
+ * days is optional: only the last N days (default: all history).
  * Response: { activities, pagination }
  */
 exports.getActivityLogs = async (req, res) => {
   try {
-    const limit = Math.min(parseInt(req.query.limit) || 10, 100);
-    const offset = parseInt(req.query.offset) || 0;
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 10, 1), 100);
+    const offset = Math.max(parseInt(req.query.offset) || 0, 0);
+    const days = parseInt(req.query.days) || null;
 
-    const result = await getActivityLogs(limit, offset);
+    const result = await getActivityLogs(limit, offset, days);
 
     res.status(200).json({
       success: true,

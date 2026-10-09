@@ -3,10 +3,11 @@
 // Real audit log data from GET /superadmin/activity-logs,
 // the same source as the dashboard "Recent activity" tile.
 // Loads the newest 100 entries; "Load older logs" fetches more.
-// Search and paging work on the entries already loaded.
+// Search, filters, paging and export work on the entries
+// already loaded.
 
 import { useMemo, useState } from 'react'
-import { Search } from 'lucide-react'
+import { CalendarRange, Download, Filter, Search, X } from 'lucide-react'
 
 import { useActivityLogs } from '../hooks/useActivityLogs'
 import {
@@ -15,10 +16,19 @@ import {
   formatEntity,
   getActorName,
 } from '../utils/activityFormat'
+import { downloadCsv } from '../services/settingsService'
 import './AuditLogsPage.css'
+import './AuditLogsFilters.css'
 
 const FETCH_SIZE = 100
 const LOGS_PER_PAGE = 15
+
+const DATE_FILTERS = [
+  { value: 'all', label: 'All time' },
+  { value: '1', label: 'Last 24 hours' },
+  { value: '7', label: 'Last 7 days' },
+  { value: '30', label: 'Last 30 days' },
+]
 
 export function AuditLogsPage() {
   const {
@@ -30,6 +40,8 @@ export function AuditLogsPage() {
   } = useActivityLogs(FETCH_SIZE)
 
   const [search, setSearch] = useState('')
+  const [actionFilter, setActionFilter] = useState('all')
+  const [dateFilter, setDateFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
 
   // ---------------------------------------------------------
@@ -51,6 +63,7 @@ export function AuditLogsPage() {
 
         return {
           id: activity.id ?? `${activity.timestamp}-${index}`,
+          time: new Date(activity.timestamp).getTime() || 0,
           date,
           user,
           action,
@@ -63,13 +76,42 @@ export function AuditLogsPage() {
     [activities]
   )
 
+  const actionOptions = useMemo(
+    () => [...new Set(rows.map((row) => row.action).filter(Boolean))].sort(),
+    [rows]
+  )
+
   const filteredLogs = useMemo(() => {
-    const query = search.trim().toLowerCase()
+    const tokens = search.trim().toLowerCase().split(/\s+/).filter(Boolean)
+    const since =
+      dateFilter === 'all' ? 0 : Date.now() - Number(dateFilter) * 24 * 60 * 60 * 1000
 
-    if (!query) return rows
+    return rows.filter((row) => {
+      if (actionFilter !== 'all' && row.action !== actionFilter) return false
+      if (since && row.time < since) return false
 
-    return rows.filter((row) => row.searchText.includes(query))
-  }, [rows, search])
+      return tokens.every((token) => row.searchText.includes(token))
+    })
+  }, [rows, search, actionFilter, dateFilter])
+
+  const activeFilterCount =
+    (search.trim() ? 1 : 0) + (actionFilter !== 'all' ? 1 : 0) + (dateFilter !== 'all' ? 1 : 0)
+
+  const clearFilters = () => {
+    setSearch('')
+    setActionFilter('all')
+    setDateFilter('all')
+    setCurrentPage(1)
+  }
+
+  const handleExport = () => {
+    const stamp = new Date().toISOString().slice(0, 10)
+
+    downloadCsv(`pharmalink-audit-logs-${stamp}.csv`, [
+      ['Date', 'User', 'Action', 'Details'],
+      ...filteredLogs.map((row) => [row.date, row.user, row.action, row.details]),
+    ])
+  }
 
   // ---------------------------------------------------------
   // Paging (client side, over loaded rows)
@@ -114,10 +156,23 @@ export function AuditLogsPage() {
             </p>
           </div>
 
+          <div className="audit-header-actions">
+            <button
+              type="button"
+              className="audit-export-button"
+              onClick={handleExport}
+              disabled={filteredLogs.length === 0}
+              title="Export the logs currently shown (after filters)"
+            >
+              <Download size={16} />
+              Export CSV
+            </button>
+
           <div className="audit-log-count">
             {initialLoading
               ? 'Loading…'
               : `${totalCount.toLocaleString('en-US')} logs`}
+          </div>
           </div>
         </div>
       </div>
@@ -135,8 +190,72 @@ export function AuditLogsPage() {
                 onChange={handleSearch}
                 aria-label="Search audit logs"
               />
+
+              {search && (
+                <button
+                  type="button"
+                  className="audit-search-clear"
+                  onClick={() => {
+                    setSearch('')
+                    setCurrentPage(1)
+                  }}
+                  aria-label="Clear search"
+                >
+                  <X size={15} />
+                </button>
+              )}
             </div>
+
+            <label className="audit-filter">
+              <Filter size={16} />
+              <select
+                value={actionFilter}
+                onChange={(event) => {
+                  setActionFilter(event.target.value)
+                  setCurrentPage(1)
+                }}
+                aria-label="Filter by action"
+              >
+                <option value="all">All actions</option>
+                {actionOptions.map((action) => (
+                  <option key={action} value={action}>
+                    {action}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="audit-filter">
+              <CalendarRange size={16} />
+              <select
+                value={dateFilter}
+                onChange={(event) => {
+                  setDateFilter(event.target.value)
+                  setCurrentPage(1)
+                }}
+                aria-label="Filter by date"
+              >
+                {DATE_FILTERS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {activeFilterCount > 0 && (
+              <button type="button" className="audit-clear-button" onClick={clearFilters}>
+                Clear ({activeFilterCount})
+              </button>
+            )}
           </div>
+
+          {dateFilter !== 'all' && pagination?.hasMore && (
+            <p className="audit-filter-note">
+              Filters apply to the {rows.length.toLocaleString('en-US')} logs loaded so far. Use
+              “Load older logs” below to include older entries.
+            </p>
+          )}
 
           <div className="audit-table-card">
             {initialLoading ? (
@@ -147,8 +266,8 @@ export function AuditLogsPage() {
               </div>
             ) : displayedLogs.length === 0 ? (
               <div className="table-state">
-                {search
-                  ? 'No audit logs match your search.'
+                {activeFilterCount > 0
+                  ? 'No audit logs match your search or filters.'
                   : 'No audit logs recorded yet.'}
               </div>
             ) : (
@@ -191,7 +310,7 @@ export function AuditLogsPage() {
                   filteredLogs.length
                 )}{' '}
                 of {filteredLogs.length}
-                {search ? ' matching' : ''} logs
+                {activeFilterCount > 0 ? ' matching' : ''} logs
                 {pagination?.hasMore ? ' loaded' : ''}
               </span>
 

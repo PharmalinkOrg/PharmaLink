@@ -1,4 +1,11 @@
-const supabase = require('../config/supabase')
+// Admin client: create/update are restricted to SUPER_ADMIN in
+// pharmacyRoutes; the public reads below only return safe fields.
+const supabase = require('../config/supabaseAdmin')
+const { isWithinCebu } = require('../utils/cebu')
+const { logActivity } = require('../services/auditLogService')
+
+const OUTSIDE_CEBU_MESSAGE =
+  'Partner pharmacies must be located within Cebu province'
 
 /* ============================================================
    HELPERS
@@ -127,9 +134,12 @@ const validateCoordinates = (
 
 const getPharmacies = async (req, res) => {
   try {
+    // Public list for customers: only approved, active pharmacies.
+    // (The Super Admin uses /api/superadmin/pharmacies for all of them.)
     const { data, error } = await supabase
       .from('pharmacies')
       .select('*')
+      .eq('status', 'ACTIVE')
       .order('pharmacy_id', {
         ascending: true,
       })
@@ -250,6 +260,19 @@ const createPharmacy = async (req, res) => {
       })
     }
 
+    if (
+      coordinateResult.latitude !== null &&
+      !isWithinCebu(
+        coordinateResult.latitude,
+        coordinateResult.longitude
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: OUTSIDE_CEBU_MESSAGE,
+      })
+    }
+
     /* --------------------------------------------------------
        Create pharmacy
     -------------------------------------------------------- */
@@ -300,6 +323,14 @@ const createPharmacy = async (req, res) => {
         error: error.message,
       })
     }
+
+    await logActivity(req, {
+      action: 'PHARMACY_CREATED',
+      entityType: 'pharmacy',
+      entityId: data.pharmacy_id,
+      pharmacyId: data.pharmacy_id,
+      description: `Registered partner pharmacy "${data.name}"`,
+    })
 
     return res.status(201).json({
       success: true,
@@ -549,7 +580,7 @@ const updatePharmacy = async (
       error: findError,
     } = await supabase
       .from('pharmacies')
-      .select('pharmacy_id')
+      .select('*')
       .eq('pharmacy_id', pharmacyId)
       .maybeSingle()
 
@@ -612,6 +643,25 @@ const updatePharmacy = async (
     }
 
     if (locationWasProvided) {
+      const locationChanged =
+        normalizedLatitude !==
+          (existingPharmacy.latitude === null ? null : Number(existingPharmacy.latitude)) ||
+        normalizedLongitude !==
+          (existingPharmacy.longitude === null ? null : Number(existingPharmacy.longitude))
+
+      // Only a moved pin is checked, so older pharmacies outside
+      // the area can still be edited.
+      if (
+        locationChanged &&
+        normalizedLatitude !== null &&
+        !isWithinCebu(normalizedLatitude, normalizedLongitude)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: OUTSIDE_CEBU_MESSAGE,
+        })
+      }
+
       updates.latitude =
         normalizedLatitude
 
@@ -655,6 +705,24 @@ const updatePharmacy = async (
         message:
           'Failed to update pharmacy',
         error: error.message,
+      })
+    }
+
+    const changedFields = Object.keys(updates).filter(
+      (key) => String(existingPharmacy[key] ?? '') !== String(updates[key] ?? '')
+    )
+
+    if (changedFields.length > 0) {
+      await logActivity(req, {
+        action: 'PHARMACY_UPDATED',
+        entityType: 'pharmacy',
+        entityId: pharmacyId,
+        pharmacyId,
+        description: `Updated pharmacy "${data.name}" (${changedFields.join(', ')})`,
+        metadata: {
+          before: Object.fromEntries(changedFields.map((key) => [key, existingPharmacy[key] ?? null])),
+          after: Object.fromEntries(changedFields.map((key) => [key, updates[key] ?? null])),
+        },
       })
     }
 

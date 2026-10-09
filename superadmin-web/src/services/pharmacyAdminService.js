@@ -1,102 +1,34 @@
-import { getAccessToken } from './authService'
+// File: superadmin-web/src/services/pharmacyAdminService.js
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+import { getAllSuperAdminUsers } from './userService'
+import { createPharmacyAdmin as createPharmacyAdminRequest } from './pharmacyService'
 
-function getAuthHeaders() {
-  const token = getAccessToken()
+export { updateUserStatus as updatePharmacyAdminStatus } from './userService'
 
-  if (!token) {
-    throw new Error(
-      'You are not authenticated. Please sign in again.'
-    )
-  }
-
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  }
-}
+const isPharmacyAdmin = (user) =>
+  String(user?.role || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, '_') === 'PHARMACY_ADMIN'
 
 /* ============================================================
    GET PHARMACY ADMINS
 
-   The existing backend endpoint:
-   GET /api/users/superadmin
-
-   returns PHARMACY_ADMIN and CUSTOMER users.
-
-   For this page, we only keep PHARMACY_ADMIN records.
+   GET /api/users/superadmin returns every user, so this loads
+   them all and keeps only PHARMACY_ADMIN accounts.
 ============================================================ */
 
 export async function getPharmacyAdmins() {
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/users/superadmin`,
-      {
-        method: 'GET',
-        headers: getAuthHeaders(),
-      }
-    )
-
-    const result = await response.json()
-
-    if (!response.ok || !result.success) {
-      throw new Error(
-        result.message ||
-          'Failed to fetch pharmacy admins'
-      )
-    }
-
-    const users = result.data || []
-
-    return users.filter(
-      (user) => user.role === 'PHARMACY_ADMIN'
-    )
-  } catch (error) {
-    console.error(
-      'getPharmacyAdmins error:',
-      error
-    )
-
-    throw error
-  }
+  const users = await getAllSuperAdminUsers({ role: 'PHARMACY_ADMIN' })
+  return users.filter(isPharmacyAdmin)
 }
 
 /* ============================================================
    CREATE PHARMACY ADMIN
 
-   Existing backend:
    POST /api/users/pharmacy-admin
 ============================================================ */
 
 export async function createPharmacyAdmin(payload) {
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/users/pharmacy-admin`,
-      {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(payload),
-      }
-    )
-
-    const result = await response.json()
-
-    if (!response.ok || !result.success) {
-      throw new Error(
-        result.message ||
-          'Failed to create pharmacy admin'
-      )
-    }
-
-    return result.data
-  } catch (error) {
-    console.error(
-      'createPharmacyAdmin error:',
-      error
-    )
-
-    throw error
-  }
+  return createPharmacyAdminRequest(payload)
 }

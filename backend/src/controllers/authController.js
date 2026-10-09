@@ -1,5 +1,22 @@
-  const supabase = require('../config/supabase')
+  const { createClient } = require('@supabase/supabase-js')
   const supabaseAdmin = require('../config/supabaseAdmin')
+  const { logActivity } = require('../services/auditLogService')
+
+  /*
+   * A fresh client for each sign-in.
+   *
+   * Signing in on the shared client in config/supabase.js stores
+   * that user's session on it, so every later query made with the
+   * shared client would run as whoever signed in last.
+   */
+  const createAuthClient = () =>
+    createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    })
 
   const registerCustomer = async (req, res) => {
     try {
@@ -70,7 +87,7 @@
         })
       }
 
-      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+      const { data: loginData, error: loginError } = await createAuthClient().auth.signInWithPassword({
         email: normalizedEmail,
         password,
       })
@@ -144,7 +161,7 @@
     const {
       data,
       error,
-    } = await supabase.auth.signInWithPassword({
+    } = await createAuthClient().auth.signInWithPassword({
       email: normalizedEmail,
       password,
     })
@@ -252,6 +269,38 @@
         })
       }
 
+      // The pharmacy itself must be active (approved and not
+      // deactivated by the Super Admin).
+      const {
+        data: pharmacy,
+        error: pharmacyError,
+      } = await supabaseAdmin
+        .from('pharmacies')
+        .select('pharmacy_id, name, status')
+        .eq('pharmacy_id', pharmaUser.pharmacy_id)
+        .maybeSingle()
+
+      if (pharmacyError) {
+        console.error('Pharmacy status lookup error:', pharmacyError)
+
+        return res.status(500).json({
+          success: false,
+          message: 'Could not verify the pharmacy account',
+        })
+      }
+
+      if (!pharmacy || pharmacy.status !== 'ACTIVE') {
+        const pharmacyStatus = String(pharmacy?.status || '').toUpperCase()
+
+        return res.status(403).json({
+          success: false,
+          message:
+            pharmacyStatus === 'PENDING'
+              ? 'Your pharmacy is still waiting for approval by PharmaLink.'
+              : 'Your pharmacy is not active on PharmaLink. Please contact the PharmaLink team.',
+        })
+      }
+
       return res.status(200).json({
         success: true,
         message: 'Pharmacy Admin login successful',
@@ -290,7 +339,7 @@
 
       const normalizedEmail = email.trim().toLowerCase()
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await createAuthClient().auth.signInWithPassword({
         email: normalizedEmail,
         password,
       })
@@ -342,6 +391,100 @@
     }
   }
 
+  /* ============================================================
+     CHANGE PASSWORD (any signed-in PharmaLink user)
+     POST /api/auth/change-password
+     body: { currentPassword, newPassword }
+  ============================================================ */
+
+  const PASSWORD_RULES = [
+    { test: (value) => value.length >= 8, message: 'at least 8 characters' },
+    { test: (value) => /[a-z]/.test(value) && /[A-Z]/.test(value), message: 'upper and lowercase letters' },
+    { test: (value) => /\d/.test(value), message: 'a number' },
+    { test: (value) => /[^A-Za-z0-9]/.test(value), message: 'a symbol' },
+  ]
+
+  const changePassword = async (req, res) => {
+    try {
+      const currentPassword = req.body?.currentPassword ?? req.body?.current_password
+      const newPassword = req.body?.newPassword ?? req.body?.new_password
+
+      if (typeof currentPassword !== 'string' || !currentPassword) {
+        return res.status(400).json({ success: false, message: 'Current password is required' })
+      }
+
+      if (typeof newPassword !== 'string' || !newPassword) {
+        return res.status(400).json({ success: false, message: 'New password is required' })
+      }
+
+      if (newPassword.length > 72) {
+        return res.status(400).json({ success: false, message: 'New password cannot exceed 72 characters' })
+      }
+
+      const unmet = PASSWORD_RULES.filter((rule) => !rule.test(newPassword))
+
+      if (unmet.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `New password needs ${unmet.map((rule) => rule.message).join(', ')}.`,
+        })
+      }
+
+      if (newPassword === currentPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'The new password must be different from the current one.',
+        })
+      }
+
+      const email = req.pharmaUser?.email
+      const authUserId = req.authUser?.id
+
+      if (!email || !authUserId) {
+        return res.status(401).json({ success: false, message: 'Authenticated user not found' })
+      }
+
+      /* Verify the current password */
+
+      const { error: verifyError } = await createAuthClient().auth.signInWithPassword({
+        email,
+        password: currentPassword,
+      })
+
+      if (verifyError) {
+        return res.status(400).json({ success: false, message: 'Current password is incorrect' })
+      }
+
+      /* Update in Supabase Auth */
+
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(authUserId, {
+        password: newPassword,
+      })
+
+      if (updateError) {
+        console.error('Change password error:', updateError)
+
+        return res.status(400).json({
+          success: false,
+          message: updateError.message || 'Failed to change password',
+        })
+      }
+
+      await logActivity(req, {
+        action: 'PASSWORD_CHANGED',
+        entityType: 'user',
+        entityId: req.pharmaUser.user_id,
+        pharmacyId: req.pharmaUser.pharmacy_id ?? null,
+        description: 'Changed account password',
+      })
+
+      return res.status(200).json({ success: true, message: 'Password changed successfully' })
+    } catch (error) {
+      console.error('Change password server error:', error)
+      return res.status(500).json({ success: false, message: 'Server error' })
+    }
+  }
+
   const getCurrentUser = (req, res) => {
     return res.status(200).json({
       success: true,
@@ -354,4 +497,5 @@
     customerLogin,
     registerCustomer,
     getCurrentUser,
+    changePassword,
   }

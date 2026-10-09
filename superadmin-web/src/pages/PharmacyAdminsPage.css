@@ -1,9 +1,10 @@
 /*
- * PharmacyAdminsPage intentionally reuses the common
- * table/modal classes currently defined by Pharmaciespage.css.
+ * PharmacyAdminsPage reuses the table, toolbar and modal classes
+ * from PharmaciesPage.css. The file name must match exactly
+ * (case-sensitive on Linux hosting).
  */
 
-@import './Pharmaciespage.css';
+@import './PharmaciesPage.css';
 
 .pharmacy-admin-modal {
   max-width: 680px;
@@ -30,4 +31,40 @@
 
 .empty-value {
   color: #94a3b8;
+}
+
+.admin-id {
+  display: block;
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.contact-cell .admin-pharmacy-warning {
+  color: #c2410c;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.contact-cell .admin-pharmacy-warning svg {
+  color: #c2410c;
+}
+
+.admin-show-password {
+  margin-top: 14px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: #508991;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-show-password:hover {
+  color: #172a3a;
 }

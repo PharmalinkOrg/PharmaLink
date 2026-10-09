@@ -8,6 +8,8 @@ import { PharmaciesPage } from '../pages/PharmaciesPage'
 
 import { PharmacyAdminsPage } from '../pages/PharmacyAdminsPage'
 
+import { MedicinesPage } from '../pages/MedicinesPage'
+
 import { LoginPage } from '../pages/LoginPage'
 
 import { NotFoundPage } from '../pages/NotFoundPage'
@@ -44,6 +46,11 @@ function AppRoutes() {
         <Route
           path="pharmacy-admins"
           element={<PharmacyAdminsPage />}
+        />
+
+        <Route
+          path="medicines"
+          element={<MedicinesPage />}
         />
 
         <Route

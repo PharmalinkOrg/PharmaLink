@@ -190,7 +190,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 260px;
+  min-width: 220px;
 }
 
 .pharmacy-icon {
@@ -216,7 +216,7 @@
   align-items: center;
   gap: 4px;
   margin-top: 4px;
-  max-width: 360px;
+  max-width: 300px;
   color: #94a3b8;
   font-size: 12px;
 }
@@ -231,7 +231,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-width: 210px;
+  min-width: 170px;
 }
 
 .contact-cell div {
@@ -318,6 +318,10 @@
 
 .table-state {
   padding: 56px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
   text-align: center;
   color: #64748b;
   font-size: 14px;
@@ -637,115 +641,6 @@
 }
 
 /* ============================================================
-   LOCATION STEP
-============================================================ */
-
-.location-notice {
-  margin-bottom: 16px;
-  padding: 14px;
-  display: flex;
-  align-items: flex-start;
-  gap: 11px;
-  border: 1px solid #bae6fd;
-  border-radius: 10px;
-  background: #f0f9ff;
-  color: #075985;
-}
-
-.location-notice > svg {
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.location-notice strong {
-  display: block;
-  font-size: 13px;
-}
-
-.location-notice p {
-  margin: 4px 0 0;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.selected-address-card {
-  margin-bottom: 18px;
-  padding: 13px 14px;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  background: #f8fafc;
-}
-
-.selected-address-card > svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: #508991;
-}
-
-.selected-address-card div {
-  min-width: 0;
-}
-
-.selected-address-card span {
-  display: block;
-  margin-bottom: 3px;
-  color: #94a3b8;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.selected-address-card strong {
-  color: #334155;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.45;
-}
-
-.location-preview {
-  min-height: 150px;
-  margin-top: 20px;
-  padding: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  border: 1px dashed #cbd5e1;
-  border-radius: 12px;
-  background: #f8fafc;
-  text-align: left;
-}
-
-.location-preview-icon {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: #f0fdf4;
-  color: #166534;
-}
-
-.location-preview strong {
-  color: #334155;
-  font-size: 13px;
-}
-
-.location-preview p {
-  max-width: 370px;
-  margin: 5px 0 0;
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-/* ============================================================
    FORM ERROR
 ============================================================ */
 
@@ -966,110 +861,392 @@
 }
 
 /* ============================================================
-   LOCATION SEARCH
+   NOTICE
 ============================================================ */
 
-.location-search-group {
-  margin-bottom: 18px;
-}
-
-.location-search-input {
-  height: 42px;
+.pharmacy-notice {
+  margin-bottom: 14px;
+  padding: 11px 14px;
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 0 12px;
-  border: 1px solid #dbe2ea;
-  border-radius: 9px;
-  background: #ffffff;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.location-search-input:focus-within {
-  border-color: #508991;
-  box-shadow:
-    0 0 0 3px
-    rgba(80, 137, 145, 0.14);
-}
-
-.location-search-input > svg {
-  flex-shrink: 0;
-  color: #94a3b8;
-}
-
-.location-search-input input {
-  width: 100%;
-  height: auto;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  outline: 0;
-  box-shadow: none;
-}
-
-.location-search-input input:focus {
-  border: 0;
-  box-shadow: none;
-}
-
-/* ============================================================
-   SELECTED ADDRESS
-============================================================ */
-
-.selected-address-card.has-address {
-  border-color: #bbf7d0;
-  background: #f0fdf4;
-}
-
-.selected-address-card.has-address > svg {
-  color: #166534;
-}
-
-.no-selected-address {
-  margin: 2px 0 0;
-  color: #94a3b8;
-  font-size: 12px;
-}
-
-/* ============================================================
-   LOCATION CONFIRMATION
-============================================================ */
-
-.location-confirmation-card {
-  margin-top: 16px;
-  padding: 13px 14px;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
   border: 1px solid #bbf7d0;
   border-radius: 10px;
   background: #f0fdf4;
   color: #166534;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.location-confirmation-card > svg {
-  margin-top: 1px;
-  flex-shrink: 0;
+.pharmacy-notice span {
+  flex: 1;
 }
 
-.location-confirmation-card strong {
-  display: block;
-  font-size: 12px;
-  font-weight: 700;
+.pharmacy-notice button {
+  display: flex;
+  padding: 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
 }
 
-.location-confirmation-card p {
-  margin: 4px 0 0;
+.pharmacy-notice button:hover {
+  background: #dcfce7;
+}
+
+/* ============================================================
+   TOOLBAR FILTERS
+============================================================ */
+
+.pharmacy-toolbar {
+  flex-wrap: wrap;
+}
+
+.search-box {
+  min-width: 260px;
+}
+
+.search-clear-button {
+  display: flex;
+  padding: 3px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.search-clear-button:hover {
+  background: #f1f5f9;
   color: #334155;
-  font-size: 12px;
-  line-height: 1.45;
 }
 
-.location-confirmation-card small {
-  display: block;
-  margin-top: 4px;
-  color: #64748b;
-  font-size: 10px;
+.toolbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sort-box {
+  cursor: pointer;
+}
+
+.sort-box select {
+  padding-right: 4px;
+  font-size: 13px;
+}
+
+.clear-filters-button,
+.toolbar-icon-button {
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #475569;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.clear-filters-button {
+  padding: 0 12px;
+}
+
+.toolbar-icon-button {
+  width: 42px;
+}
+
+.clear-filters-button:hover,
+.toolbar-icon-button:hover:not(:disabled) {
+  border-color: #508991;
+  background: #f0fdf4;
+  color: #172a3a;
+}
+
+.toolbar-icon-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pharmacy-spin {
+  animation: pharmacy-spin 0.8s linear infinite;
+}
+
+@keyframes pharmacy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================
+   TABLE ADDITIONS
+============================================================ */
+
+.pharmacy-name-text {
+  min-width: 0;
+}
+
+.pharmacy-name-cell strong {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contact-cell span {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+a.location-badge {
+  text-decoration: none;
+}
+
+a.location-badge.located:hover {
+  background: #dcfce7;
+}
+
+.actions-heading,
+.actions-cell {
+  width: 1%;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.row-action-button {
+  height: 32px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #dbe2ea;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.row-action-button:hover {
+  border-color: #508991;
+  background: #f0fdf4;
+  color: #172a3a;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================================
+   PAGINATION NUMBERS
+============================================================ */
+
+.pagination {
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pagination button {
+  min-width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font: inherit;
+  font-size: 12px;
+}
+
+.pagination .page-number.active {
+  border-color: #172a3a;
+  background: #172a3a;
+  color: #ffffff;
+}
+
+.page-gap {
+  padding: 0 2px;
+  color: #94a3b8;
+}
+
+/* ============================================================
+   MODAL ADDITIONS
+============================================================ */
+
+.form-step {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.form-step:disabled {
+  cursor: not-allowed;
+}
+
+.form-step:hover:not(.active):not(:disabled) strong {
+  text-decoration: underline;
+}
+
+.form-group .form-select {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #dbe2ea;
+  border-radius: 9px;
+  outline: none;
+  background: #ffffff;
+  color: #1e293b;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.form-group .form-select:focus {
+  border-color: #508991;
+  box-shadow: 0 0 0 3px rgba(80, 137, 145, 0.14);
+}
+
+.location-step-hint p {
+  word-break: break-word;
+}
+
+@media (max-width: 768px) {
+  .search-box {
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .toolbar-filters {
+    width: 100%;
+  }
+
+  .toolbar-filters .sort-box {
+    flex: 1 1 140px;
+  }
+
+  .toolbar-filters .sort-box select {
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   APPROVAL / STATUS ACTIONS
+============================================================ */
+
+.pharmacy-pending-banner {
+  margin-bottom: 14px;
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 13px;
+}
+
+.pharmacy-pending-banner span {
+  flex: 1;
+}
+
+.pharmacy-pending-banner button {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #c2410c;
+  border-radius: 8px;
+  background: #c2410c;
+  color: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pharmacy-pending-banner button:hover {
+  background: #9a3412;
+}
+
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.row-action-button.action-approve,
+.row-action-button.action-activate {
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.row-action-button.action-approve:hover,
+.row-action-button.action-activate:hover {
+  border-color: #166534;
+  background: #f0fdf4;
+}
+
+.row-action-button.action-reject,
+.row-action-button.action-deactivate {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.row-action-button.action-reject:hover,
+.row-action-button.action-deactivate:hover {
+  border-color: #b91c1c;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.row-action-button.icon-only {
+  width: 32px;
+  padding: 0;
+  justify-content: center;
+}
+
+/* Fit the table (with its action buttons) without sideways scroll
+   on a typical laptop screen. */
+.pharmacy-table th,
+.pharmacy-table td {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+.pharmacy-name-cell {
+  min-width: 200px;
+}
+
+/* Long names wrap to a second line instead of widening the table. */
+.pharmacy-name-cell strong {
+  max-width: 230px;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+.pharmacy-address {
+  max-width: 230px;
 }

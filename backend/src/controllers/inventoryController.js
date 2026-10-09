@@ -47,6 +47,48 @@ const isValidDateOnly = (value) => {
 }
 
 /**
+ * A pharmacy may stock its own medicines and global catalog
+ * medicines (pharmacy_id IS NULL) that are not archived.
+ *
+ * Returns null when allowed, otherwise { status, message }.
+ */
+const checkMedicineForPharmacy = async (medicineId, pharmacyId) => {
+  const { data: medicine, error } = await supabaseAdmin
+    .from('medicines')
+    .select('medicine_id, pharmacy_id, status')
+    .eq('medicine_id', Number(medicineId))
+    .maybeSingle()
+
+  if (error) {
+    console.error('Inventory medicine lookup error:', error)
+    return { status: 500, message: 'Failed to verify medicine' }
+  }
+
+  if (!medicine) {
+    return { status: 400, message: 'The specified medicine does not exist' }
+  }
+
+  if (
+    medicine.pharmacy_id !== null &&
+    Number(medicine.pharmacy_id) !== Number(pharmacyId)
+  ) {
+    return {
+      status: 403,
+      message: 'This medicine belongs to another pharmacy',
+    }
+  }
+
+  if (medicine.status !== 'ACTIVE') {
+    return {
+      status: 400,
+      message: 'This medicine has been archived and cannot be stocked',
+    }
+  }
+
+  return null
+}
+
+/**
  * Get today's date in YYYY-MM-DD format
  */
 const getTodayDateOnly = () => {
@@ -259,6 +301,18 @@ const createInventory = async (req, res) => {
       }
     }
 
+    const medicineProblem = await checkMedicineForPharmacy(
+      medicine_id,
+      pharmacyId
+    )
+
+    if (medicineProblem) {
+      return res.status(medicineProblem.status).json({
+        success: false,
+        message: medicineProblem.message,
+      })
+    }
+
     const normalizedQuantity = Number(quantity)
     const normalizedReorderLevel = Number(reorder_level)
     const normalizedUnitPrice = Number(unit_price)
@@ -435,6 +489,20 @@ const updateInventory = async (req, res) => {
           success: false,
           message: 'Invalid medicine ID',
         })
+      }
+
+      if (Number(medicine_id) !== Number(existing.medicine_id)) {
+        const medicineProblem = await checkMedicineForPharmacy(
+          medicine_id,
+          pharmacyId
+        )
+
+        if (medicineProblem) {
+          return res.status(medicineProblem.status).json({
+            success: false,
+            message: medicineProblem.message,
+          })
+        }
       }
 
       updates.medicine_id = Number(medicine_id)
@@ -745,6 +813,38 @@ const getPublicPharmacyInventory = async (
       })
     }
 
+    /**
+     * Only active (approved) pharmacies are visible to customers.
+     */
+    const {
+      data: pharmacy,
+      error: pharmacyError,
+    } = await supabaseAdmin
+      .from('pharmacies')
+      .select('pharmacy_id, status')
+      .eq('pharmacy_id', pharmacyId)
+      .maybeSingle()
+
+    if (pharmacyError) {
+      console.error(
+        'Public inventory pharmacy lookup error:',
+        pharmacyError
+      )
+
+      return res.status(500).json({
+        success: false,
+        message:
+          'Failed to retrieve pharmacy medicines',
+      })
+    }
+
+    if (!pharmacy || pharmacy.status !== 'ACTIVE') {
+      return res.status(404).json({
+        success: false,
+        message: 'Pharmacy not found',
+      })
+    }
+
     const { data, error } = await supabaseAdmin
       .from('inventory')
       .select(`
@@ -796,7 +896,12 @@ const getPublicPharmacyInventory = async (
     /**
      * Return a cleaner API response.
      */
-    const medicines = (data || []).map(
+    // Archived medicines are hidden from customers.
+    const medicines = (data || [])
+      .filter(
+        (item) => item.medicines?.status === 'ACTIVE'
+      )
+      .map(
       (item) => ({
         inventory_id: item.inventory_id,
         pharmacy_id: item.pharmacy_id,
@@ -866,11 +971,16 @@ const getMedicinePharmacies = async (
         unit_price,
         expiration_date,
         status,
+        medicines (
+          status
+        ),
         pharmacies (
           pharmacy_id,
-          pharmacy_name,
+          name,
           address,
           contact_number,
+          latitude,
+          longitude,
           status
         )
       `)
@@ -896,8 +1006,13 @@ const getMedicinePharmacies = async (
       })
     }
 
+    // Only active pharmacies, and nothing for archived medicines.
     const pharmacies = (data || [])
-      .filter((item) => item.pharmacies)
+      .filter(
+        (item) =>
+          item.pharmacies?.status === 'ACTIVE' &&
+          item.medicines?.status === 'ACTIVE'
+      )
       .map((item) => ({
         inventory_id:
           item.inventory_id,

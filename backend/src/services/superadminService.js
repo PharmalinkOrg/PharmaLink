@@ -309,13 +309,17 @@ async function getMetrics() {
 // ============ ACTIVITY LOGS QUERIES ============
 
 /**
- * Get Activity Logs
+ * Get Activity Logs (audit_logs table)
  *
- * Pharmacy admin audit logs (from audit_logs table) from the last 7 days.
+ * Used by the Audit Logs page and the dashboard's recent activity.
+ *
+ * @param {number} limit
+ * @param {number} offset
+ * @param {number|null} days  only the last N days; null = all history
  *
  * Schema:
  * - audit_log_id
- * - user_id (pharmacy admin)
+ * - user_id (pharmacy admin or super admin)
  * - pharmacy_id
  * - action
  * - entity_type
@@ -323,30 +327,29 @@ async function getMetrics() {
  * - description
  * - created_at
  */
-async function getActivityLogs(limit = 10, offset = 0) {
-  const now = new Date()
+async function getActivityLogs(limit = 10, offset = 0, days = null) {
+  const since =
+    Number.isFinite(days) && days > 0
+      ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+      : null
 
-  const sevenDaysAgo = new Date(
-    now.getTime() - 7 * 24 * 60 * 60 * 1000
-  )
+  const withWindow = (query) => (since ? query.gte('created_at', since) : query)
 
   try {
-    // Get total count
-    const { count: total, error: countError } =
-      await supabaseAdmin
+    // Total count
+    const { count: total, error: countError } = await withWindow(
+      supabaseAdmin
         .from('audit_logs')
-        .select('audit_log_id', { count: 'exact' })
-        .gte('created_at', sevenDaysAgo.toISOString())
+        .select('audit_log_id', { count: 'exact', head: true })
+    )
 
     if (countError) {
-      throw new Error(
-        `Count query failed: ${countError.message}`
-      )
+      throw new Error(`Count query failed: ${countError.message}`)
     }
 
-    // Get paginated audit log data
-    const { data: auditLogs, error: dataError } =
-      await supabaseAdmin
+    // Page of logs, newest first
+    const { data: auditLogs, error: dataError } = await withWindow(
+      supabaseAdmin
         .from('audit_logs')
         .select(`
           audit_log_id,
@@ -358,75 +361,71 @@ async function getActivityLogs(limit = 10, offset = 0) {
           description,
           created_at
         `)
-        .gte('created_at', sevenDaysAgo.toISOString())
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1)
+    )
+      .order('created_at', { ascending: false })
+      .order('audit_log_id', { ascending: false })
+      .range(offset, offset + limit - 1)
 
     if (dataError) {
-      throw new Error(
-        `Data query failed: ${dataError.message}`
-      )
+      throw new Error(`Data query failed: ${dataError.message}`)
     }
 
-    // Enrich audit logs with user and pharmacy information
-    const enrichedActivities = await Promise.all(
-      (auditLogs || []).map(async (log) => {
-        // Fetch user (pharmacy admin) details
-        let user = null
-        if (log.user_id) {
-          const { data: userData } = await supabaseAdmin
+    const logs = auditLogs || []
+
+    // Look up all users and pharmacies for this page in two queries
+    // (instead of two queries per log).
+    const userIds = [...new Set(logs.map((log) => log.user_id).filter(Boolean))]
+    const pharmacyIds = [...new Set(logs.map((log) => log.pharmacy_id).filter(Boolean))]
+
+    const [usersResult, pharmaciesResult] = await Promise.all([
+      userIds.length
+        ? supabaseAdmin
             .from('users')
             .select('user_id, first_name, last_name, email, role')
-            .eq('user_id', log.user_id)
-            .maybeSingle()
-
-          user = userData
-        }
-
-        // Fetch pharmacy details
-        let pharmacy = null
-        if (log.pharmacy_id) {
-          const { data: pharmacyData } = await supabaseAdmin
+            .in('user_id', userIds)
+        : Promise.resolve({ data: [] }),
+      pharmacyIds.length
+        ? supabaseAdmin
             .from('pharmacies')
             .select('pharmacy_id, name')
-            .eq('pharmacy_id', log.pharmacy_id)
-            .maybeSingle()
+            .in('pharmacy_id', pharmacyIds)
+        : Promise.resolve({ data: [] }),
+    ])
 
-          pharmacy = pharmacyData
-        }
-
-        return {
-          id: log.audit_log_id,
-          timestamp: log.created_at,
-          action: log.action,
-          description: log.description,
-          entityType: log.entity_type,
-          entityId: log.entity_id,
-          user: user
-            ? {
-                id: user.user_id,
-                name: `${user.first_name} ${user.last_name}`.trim() || user.email,
-                email: user.email,
-                role: user.role,
-              }
-            : null,
-          pharmacy: pharmacy
-            ? {
-                id: pharmacy.pharmacy_id,
-                name: pharmacy.name,
-              }
-            : log.pharmacy_id
-            ? {
-                id: log.pharmacy_id,
-                name: 'Unknown Pharmacy',
-              }
-            : null,
-        }
-      })
+    const usersById = new Map((usersResult.data || []).map((user) => [user.user_id, user]))
+    const pharmaciesById = new Map(
+      (pharmaciesResult.data || []).map((pharmacy) => [pharmacy.pharmacy_id, pharmacy])
     )
 
+    const activities = logs.map((log) => {
+      const user = usersById.get(log.user_id)
+      const pharmacy = pharmaciesById.get(log.pharmacy_id)
+
+      return {
+        id: log.audit_log_id,
+        timestamp: log.created_at,
+        action: log.action,
+        description: log.description,
+        entityType: log.entity_type,
+        entityId: log.entity_id,
+        user: user
+          ? {
+              id: user.user_id,
+              name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email,
+              email: user.email,
+              role: user.role,
+            }
+          : null,
+        pharmacy: pharmacy
+          ? { id: pharmacy.pharmacy_id, name: pharmacy.name }
+          : log.pharmacy_id
+            ? { id: log.pharmacy_id, name: 'Unknown Pharmacy' }
+            : null,
+      }
+    })
+
     return {
-      activities: enrichedActivities,
+      activities,
       pagination: {
         limit,
         offset,
